@@ -544,6 +544,8 @@
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Esri Leaflet (for Cascais dynamic map layer + identify) -->
+<script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
 
 <script>
 // ============================================================
@@ -865,31 +867,26 @@ async function loadSintraRural() {
   }
 }
 
-async function loadCascais() {
-  const queryUrl = `${CASCAIS_BASE}/2/query?where=1%3D1&outFields=Classe%2CCategoria%2CSubcategor&outSR=4326`;
+// Cascais: AML server blocks geometry export — use dynamic map tiles + identify on click
+let cascaisDynamicLayer = null;
+
+function loadCascais() {
   setChip('chip-cascais', 'loading', 'Cascais…');
   try {
-    const features = await fetchAllFeatures(queryUrl);
-    // Check if we got any geometry (the AML server sometimes omits it)
-    const withGeom = features.filter(f => f.geometry && f.geometry.coordinates);
-    if (withGeom.length === 0) {
-      setChip('chip-cascais', 'error', 'Cascais: sem geometria');
-      return;
-    }
-    const geojson = { type: 'FeatureCollection', features: withGeom };
-    L.geoJSON(geojson, {
-      style: f => getCascaisStyle(f.properties),
-      onEachFeature(feature, layer) {
-        layer.on('click', e => {
-          L.DomEvent.stopPropagation(e);
-          const p = feature.properties;
-          const cat = p.Categoria || '';
-          const cfg = CASCAIS_COLORS[cat] || { fill: '#888', label: cat };
-          showDetail(p, cfg, cat);
-        });
-      }
-    }).addTo(cascaisLayer);
-    setChip('chip-cascais', 'ok', `Cascais (${withGeom.length})`);
+    cascaisDynamicLayer = L.esri.dynamicMapLayer({
+      url: CASCAIS_BASE,
+      layers: [2],
+      opacity: 0.55,
+      f: 'image',
+    });
+    cascaisDynamicLayer.addTo(cascaisLayer);
+    cascaisDynamicLayer.once('load', () => setChip('chip-cascais', 'ok', 'Cascais'));
+    cascaisDynamicLayer.on('loaderror', () => setChip('chip-cascais', 'error', 'Cascais: erro'));
+
+    // Click → identify feature under cursor (registered once, checked in main click handler)
+    window._cascaisReady = true;
+
+    setChip('chip-cascais', 'ok', 'Cascais');
   } catch (e) {
     console.error('Cascais error:', e);
     setChip('chip-cascais', 'error', 'Cascais: indispon\u00edvel');
@@ -976,10 +973,25 @@ document.getElementById('toggle-cascais').addEventListener('change', e => {
 });
 
 // ============================================================
-// CLOSE DETAIL ON MAP CLICK
+// MAP CLICK — close panel, or identify Cascais zone
 // ============================================================
 
-map.on('click', closeDetail);
+map.on('click', e => {
+  closeDetail();
+  if (!window._cascaisReady || !map.hasLayer(cascaisLayer)) return;
+  L.esri.identifyFeatures({ url: CASCAIS_BASE })
+    .on(map)
+    .at(e.latlng)
+    .layers('visible:2')
+    .tolerance(2)
+    .run((err, fc) => {
+      if (err || !fc || !fc.features.length) return;
+      const p = fc.features[0].properties;
+      const cat = p.Categoria || '';
+      const cfg = CASCAIS_COLORS[cat] || { fill: '#888888', label: cat };
+      showDetail(p, cfg, cat);
+    });
+});
 
 // ============================================================
 // ADDRESS SEARCH (Nominatim)
