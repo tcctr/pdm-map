@@ -258,7 +258,7 @@
       border-radius: 16px 16px 0 0;
       transform: translateY(100%);
       transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-      max-height: 70vh;
+      max-height: 55vh;
       display: flex;
       flex-direction: column;
     }
@@ -357,66 +357,32 @@
       word-break: break-all;
     }
 
-    /* ---- Building params grid ---- */
-    .params-section-title {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: rgba(255,255,255,0.35);
-      margin: 14px 0 8px;
+    /* ---- Doc buttons ---- */
+    .doc-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 14px;
     }
 
-    .params-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      margin-bottom: 6px;
-    }
-
-    .param-card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 8px;
-      padding: 8px 10px;
-    }
-
-    .param-card.full-width {
-      grid-column: 1 / -1;
-    }
-
-    .param-card-label {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: rgba(255,255,255,0.4);
-      margin-bottom: 3px;
-    }
-
-    .param-card-value {
-      font-size: 15px;
-      font-weight: 700;
+    .doc-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      text-decoration: none;
       color: #fff;
+      transition: background 0.15s;
     }
+    .doc-btn:hover { background: rgba(255,255,255,0.11); }
 
-    .param-card-value.na {
-      font-size: 12px;
-      font-weight: 400;
-      color: rgba(255,255,255,0.35);
-      font-style: italic;
-    }
-
-    .param-note {
-      font-size: 11px;
-      color: rgba(255,255,255,0.45);
-      line-height: 1.4;
-      margin-top: 6px;
-      padding: 8px 10px;
-      background: rgba(255,255,255,0.03);
-      border-radius: 6px;
-      border-left: 2px solid rgba(255,255,255,0.1);
-    }
+    .doc-btn-left { display: flex; flex-direction: column; gap: 2px; }
+    .doc-btn-title { font-size: 13px; font-weight: 600; }
+    .doc-btn-page { font-size: 11px; color: rgba(255,255,255,0.45); }
+    .doc-btn-arrow { font-size: 16px; color: rgba(255,255,255,0.4); flex-shrink: 0; }
 
     /* ---- GPS accuracy circle overrides ---- */
     .gps-dot {
@@ -637,42 +603,6 @@ const CASCAIS_COLORS = {
 };
 
 // ============================================================
-// PDM SINTRA BUILDING PARAMETERS
-// Source: Regulamento PDM Sintra, Resolução CM nº 7-B/2020
-// iu_max: índice de utilização máximo (FAR)
-// ip_min: índice de permeabilidade mínimo (fraction, e.g. 0.30 = 30%)
-// h_max:  altura máxima em metros
-// floors: número máximo de pisos
-// lot_min: área mínima do prédio (m²)
-// build_max: área máxima de construção (m², rural only)
-// ============================================================
-
-const PDM_PARAMS = {
-  // ── Solo Urbano ──────────────────────────────────────────
-  UC:  { iu_max: null,  ip_min: null, h_max: null, floors: null, lot_min: null,  article: 'Art. 98.º',  note: 'Altura e número de pisos seguem o valor modal da frente urbana (Art. 67.º). Piso recuado permitido até +3,5 m.' },
-  UHD: { iu_max: null,  ip_min: 0.30, h_max: null, floors: null, lot_min: null,  article: 'Art. 99.º',  note: 'Tipicamente >3 pisos. Altura segue o valor modal. IP mínimo de 30% pode ser dispensado em malha urbana consolidada.' },
-  UHC: { iu_max: null,  ip_min: 0.30, h_max: null, floors: 3,    lot_min: null,  article: 'Art. 99.º',  note: 'Predominantemente unifamiliar/plurifamiliar até 3 pisos. Altura segue o valor modal.' },
-  UBD: { iu_max: 0.20,  ip_min: 0.50, h_max: 7,    floors: 2,    lot_min: 500,   article: 'Art. 100.º', note: 'Excecionalmente H até 9 m pelo valor modal, sem piso recuado. Fracionamento mínimo: 500 m².' },
-  UAE: { iu_max: 0.60,  ip_min: 0.30, h_max: 11,   floors: null, lot_min: 2000,  article: 'Art. 101.º', note: 'Afastamento ao limite do lote ≥ H/2. Fracionamento mínimo: 2 000 m².' },
-  UT:  { iu_max: 0.20,  ip_min: 0.60, h_max: 11,   floors: null, lot_min: null,  article: 'Art. 102.º', note: 'Excecionalmente H até 15 m pelo valor modal, sem piso recuado.' },
-  UE:  { iu_max: 0.30,  ip_min: 0.30, h_max: 11,   floors: null, lot_min: null,  article: 'Art. 103.º', note: 'Parâmetros para intervenções privadas. Uso público: edificabilidade definida pelo interesse público (sem limite numérico).' },
-  UI:  { iu_max: null,  ip_min: null, h_max: null,  floors: null, lot_min: null,  article: 'Art. 104.º', note: 'Infraestruturas estruturantes de interesse público. Edificabilidade definida pela necessidade pública (sem limite numérico).' },
-  UV:  { iu_max: 0,     ip_min: null, h_max: null,  floors: 0,    lot_min: null,  article: 'Art. 77.º–79.º', note: 'Sem direito de edificação. Apenas instalações de apoio, equipamentos públicos e lazer.' },
-  // ── Solo Rústico ─────────────────────────────────────────
-  N:   { iu_max: 0,     ip_min: null, h_max: null,  floors: 0,    lot_min: null,  article: 'Art. 90.º',  note: 'Sem edificabilidade concreta. Apenas conservação da natureza, percursos e centros de interpretação.' },
-  NF:  { iu_max: 0,     ip_min: null, h_max: null,  floors: 0,    lot_min: null,  article: 'Art. 90.º',  note: 'Sem edificabilidade concreta. Permite criação de floresta autóctone.' },
-  NA:  { iu_max: 0,     ip_min: null, h_max: null,  floors: 0,    lot_min: null,  article: 'Art. 90.º',  note: 'Sem edificabilidade concreta. Permite atividade silvo-pastoril e pastoreio extensivo.' },
-  F:   { iu_max: 0,     ip_min: null, h_max: null,  floors: 0,    lot_min: null,  article: 'Art. 91.º',  note: 'Sem edificabilidade concreta. Apenas operações florestais e turismo de natureza.' },
-  FA:  { iu_max: 0.02,  ip_min: null, h_max: 5,     floors: null, lot_min: 20000, build_max: 500,  article: 'Art. 91.º', note: 'Área mínima: 2 ha. IU ≤ 0,02. Construção total ≤ 500 m². Impermeável total ≤ 750 m². Todos os limites são cumulativos.' },
-  A:   { iu_max: 0.02,  ip_min: null, h_max: 5,     floors: null, lot_min: 20000, build_max: 800,  article: 'Art. 92.º', note: 'Área mínima: 2 ha. IU ≤ 0,02. Construção total ≤ 800 m². Impermeável total ≤ 1 200 m². Todos os limites são cumulativos.' },
-  EI:  { iu_max: 0.30,  ip_min: 0.30, h_max: 9,     floors: null, lot_min: null,  article: 'Art. 96.º', note: 'Parâmetros para intervenções privadas. Uso público: edificabilidade definida pelo interesse público.' },
-  OT:  { iu_max: 0.05,  ip_min: 0.90, h_max: 5,     floors: null, lot_min: 50000, article: 'Art. 95.º', note: 'Área mínima: 5 ha. 90% do solo deve permanecer permeável. Regime muito restritivo.' },
-  I:   { iu_max: 0.60,  ip_min: 0.30, h_max: 9,     floors: null, lot_min: null,  article: 'Art. 94.º', note: 'Solo rústico industrial. Cumulativo com as condições gerais do Art. 58.º.' },
-  ER:  { iu_max: 0,     ip_min: null, h_max: null,  floors: 0,    lot_min: null,  article: 'Art. 93.º', note: 'Sem edificabilidade concreta. Apenas anexos estritamente necessários à exploração, a remover após encerramento.' },
-  AR:  { iu_max: null,  ip_min: null, h_max: null,  floors: null, lot_min: null,  article: '—',          note: 'Aglomerado Rural — parâmetros definidos por plano de pormenor ou AUGI (Art. 133.º).' },
-};
-
-// ============================================================
 // MAP SETUP
 // ============================================================
 
@@ -812,18 +742,7 @@ function getCascaisStyle(props) {
 // DETAIL PANEL
 // ============================================================
 
-function paramCard(label, value, unit = '', full = false) {
-  const isNA = value === null || value === undefined;
-  const display = isNA
-    ? '<span class="na">Não definido</span>'
-    : `${value}${unit ? ' <small style="font-size:11px;font-weight:400;opacity:.6">' + unit + '</small>' : ''}`;
-  return `<div class="param-card${full ? ' full-width' : ''}">
-    <div class="param-card-label">${label}</div>
-    <div class="param-card-value${isNA ? ' na' : ''}">${isNA ? 'Não definido' : display}</div>
-  </div>`;
-}
-
-function showDetail(props, colorCfg, codeLabel, zoneCode) {
+function showDetail(props, colorCfg, codeLabel) {
   const panel = document.getElementById('detail-panel');
 
   document.getElementById('detail-swatch').style.background = colorCfg.fill;
@@ -839,44 +758,33 @@ function showDetail(props, colorCfg, codeLabel, zoneCode) {
   const rowsEl = document.getElementById('detail-rows');
   let html = '';
 
-  // ── Building parameters (Sintra only) ──
-  const pdm = zoneCode ? PDM_PARAMS[zoneCode] : null;
-  if (pdm) {
-    html += `<div class="params-section-title">&#x1F3D7; Par\u00e2metros Urban\u00edsticos &mdash; ${pdm.article}</div>`;
-    html += '<div class="params-grid">';
-    html += paramCard('IU m\u00e1x.', pdm.iu_max !== null ? (pdm.iu_max === 0 ? '0' : pdm.iu_max.toFixed(2)) : null, pdm.iu_max !== null && pdm.iu_max > 0 ? 'm²/m²' : '');
-    html += paramCard('Pisos m\u00e1x.', pdm.floors !== null ? (pdm.floors === 0 ? 'Proibido' : pdm.floors) : null, pdm.floors > 0 ? 'pisos' : '');
-    html += paramCard('Altura m\u00e1x.', pdm.h_max !== null ? pdm.h_max : null, pdm.h_max ? 'm' : '');
-    html += paramCard('IP m\u00edn.', pdm.ip_min !== null ? Math.round(pdm.ip_min * 100) : null, pdm.ip_min !== null ? '%' : '');
-    if (pdm.lot_min) html += paramCard('Lote m\u00edn.', pdm.lot_min >= 10000 ? (pdm.lot_min/10000).toFixed(1) + ' ha' : pdm.lot_min + ' m²', '', false);
-    if (pdm.build_max) html += paramCard('Constru\u00e7\u00e3o m\u00e1x.', pdm.build_max, 'm²');
-    html += '</div>';
-    if (pdm.note) html += `<div class="param-note">${pdm.note}</div>`;
+  // ── Metadata row ──
+  const area = props.area_ha || props.Area_Ha;
+  const metaItems = [];
+  if (area) metaItems.push(`<strong>\u00c1rea:</strong> ${parseFloat(area).toFixed(2)} ha`);
+  if (props.Classe) metaItems.push(`<strong>Classe:</strong> ${props.Classe}`);
+  if (metaItems.length) {
+    html += `<div class="detail-row" style="margin-bottom:14px"><div class="detail-row-value" style="color:rgba(255,255,255,0.5);font-size:12px">${metaItems.join(' &nbsp;·&nbsp; ')}</div></div>`;
   }
 
-  // ── Document links & metadata ──
-  const docRows = [];
-  const area = props.area_ha || props.Area_Ha;
-  if (area) docRows.push(['&#x1F4D0; \u00c1rea', parseFloat(area).toFixed(2) + ' ha', false]);
-  if (props.Classe) docRows.push(['Classe', props.Classe, false]);
-  if (props.Regulamento) docRows.push(['Regulamento', props.Regulamento, true]);
-  if (props.Pag_Regulamento) docRows.push(['P\u00e1g. Regulamento', props.Pag_Regulamento, false]);
-  if (props.Guiao) docRows.push(['Guia\u00e3o', props.Guiao, true]);
-  if (props.Pag_Guiao) docRows.push(['P\u00e1g. Guia\u00e3o', props.Pag_Guiao, false]);
-  if (props.Relatorio) docRows.push(['Relat\u00f3rio', props.Relatorio, true]);
-  if (props.Pag_relatorio) docRows.push(['P\u00e1g. Relat\u00f3rio', props.Pag_relatorio, false]);
+  // ── Document buttons ──
+  const docs = [
+    { label: 'Regulamento', url: props.Regulamento, page: props.Pag_Regulamento },
+    { label: 'Guia\u00e3o',     url: props.Guiao,        page: props.Pag_Guiao },
+    { label: 'Relat\u00f3rio',  url: props.Relatorio,    page: props.Pag_relatorio },
+  ].filter(d => d.url);
 
-  if (docRows.length) {
-    html += `<div class="params-section-title" style="margin-top:${pdm ? 14 : 0}px">&#x1F4C4; Documentos e Metadados</div>`;
-    html += docRows.map(([label, value, isLink]) => `
-      <div class="detail-row">
-        <div class="detail-row-label">${label}</div>
-        <div class="detail-row-value">${
-          isLink && typeof value === 'string' && value.startsWith('http')
-            ? `<a href="${value}" target="_blank" rel="noopener">Abrir documento &#x2197;</a>`
-            : value
-        }</div>
-      </div>`).join('');
+  if (docs.length) {
+    html += '<div class="doc-buttons">';
+    html += docs.map(d => `
+      <a class="doc-btn" href="${d.url}" target="_blank" rel="noopener">
+        <div class="doc-btn-left">
+          <div class="doc-btn-title">${d.label}</div>
+          ${d.page ? `<div class="doc-btn-page">P\u00e1gina ${d.page}</div>` : ''}
+        </div>
+        <div class="doc-btn-arrow">&#x2197;</div>
+      </a>`).join('');
+    html += '</div>';
   }
 
   rowsEl.innerHTML = html;
@@ -908,7 +816,7 @@ function setChip(id, state, text) {
 }
 
 async function loadSintraUrban() {
-  const queryUrl = `${SINTRA_BASE}/55/query?where=1%3D1&outFields=CAT%2CDescricao%2CRegulamento%2CPag_Regulamento%2CGuiao%2CRelatorio%2Carea_ha&outSR=4326`;
+  const queryUrl = `${SINTRA_BASE}/55/query?where=1%3D1&outFields=CAT%2CDescricao%2CRegulamento%2CPag_Regulamento%2CGuiao%2CPag_Guiao%2CRelatorio%2CPag_relatorio%2Carea_ha&outSR=4326`;
   setChip('chip-sintra-urban', 'loading', 'Sintra Urbano…');
   try {
     const features = await fetchAllFeatures(queryUrl);
@@ -921,7 +829,7 @@ async function loadSintraUrban() {
           const p = feature.properties;
           const cat = p.CAT || '';
           const cfg = URBAN_COLORS[cat] || { fill: '#888', label: cat };
-          showDetail(p, cfg, cat + (cfg.label ? ' — ' + cfg.label : ''), cat);
+          showDetail(p, cfg, cat + (cfg.label ? ' — ' + cfg.label : ''));
         });
       }
     }).addTo(urbanLayer);
@@ -933,7 +841,7 @@ async function loadSintraUrban() {
 }
 
 async function loadSintraRural() {
-  const queryUrl = `${SINTRA_BASE}/54/query?where=1%3D1&outFields=Ord_Categ%2CDescricao%2CRegulamento%2CPag_Regulamento%2CArea_Ha&outSR=4326`;
+  const queryUrl = `${SINTRA_BASE}/54/query?where=1%3D1&outFields=Ord_Categ%2CDescricao%2CRegulamento%2CPag_Regulamento%2CGuiao%2CPag_Guiao%2CRelatorio%2CPag_relatorio%2CArea_Ha&outSR=4326`;
   setChip('chip-sintra-rural', 'loading', 'Sintra Rústico…');
   try {
     const features = await fetchAllFeatures(queryUrl);
@@ -946,7 +854,7 @@ async function loadSintraRural() {
           const p = feature.properties;
           const cat = p.Ord_Categ || '';
           const cfg = RURAL_COLORS[cat] || { fill: '#888', label: cat };
-          showDetail(p, cfg, cat + (cfg.label ? ' — ' + cfg.label : ''), cat);
+          showDetail(p, cfg, cat + (cfg.label ? ' — ' + cfg.label : ''));
         });
       }
     }).addTo(ruralLayer);
@@ -977,7 +885,7 @@ async function loadCascais() {
           const p = feature.properties;
           const cat = p.Categoria || '';
           const cfg = CASCAIS_COLORS[cat] || { fill: '#888', label: cat };
-          showDetail(p, cfg, cat, null); // Cascais: no PDM_PARAMS lookup
+          showDetail(p, cfg, cat);
         });
       }
     }).addTo(cascaisLayer);
