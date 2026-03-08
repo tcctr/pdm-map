@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>PDM Sintra-Cascais</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      overflow: hidden;
+    }
+
+    #map {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* ---- Top bar ---- */
+    #topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(15, 15, 30, 0.88);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    #topbar h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      flex: 1;
+    }
+
+    .btn-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 16px;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-icon:hover { background: rgba(255,255,255,0.18); }
+
+    /* ---- Status bar ---- */
+    #statusbar {
+      position: fixed;
+      top: 56px; left: 0; right: 0;
+      z-index: 999;
+      display: flex;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(15, 15, 30, 0.75);
+      backdrop-filter: blur(6px);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    #statusbar::-webkit-scrollbar { display: none; }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .status-chip .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+    }
+    .chip-loading { background: rgba(255,193,7,0.15); color: #ffc107; }
+    .chip-loading .dot { background: #ffc107; animation: pulse 1s infinite; }
+    .chip-ok { background: rgba(40,167,69,0.15); color: #28a745; }
+    .chip-ok .dot { background: #28a745; }
+    .chip-error { background: rgba(220,53,69,0.15); color: #dc3545; }
+    .chip-error .dot { background: #dc3545; }
+    .chip-gps { background: rgba(66,153,225,0.15); color: #4299e1; }
+    .chip-gps .dot { background: #4299e1; animation: pulse 1.5s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ---- Legend panel ---- */
+    #legend {
+      position: fixed;
+      right: 10px;
+      top: 120px;
+      z-index: 1000;
+      background: rgba(15, 15, 30, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      width: 230px;
+      max-height: calc(100vh - 200px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.2s, max-height 0.2s;
+    }
+
+    #legend.collapsed {
+      width: 44px;
+      max-height: 44px;
+    }
+
+    #legend-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    #legend-header span {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    #legend-toggle {
+      color: rgba(255,255,255,0.5);
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    #legend.collapsed #legend-header span,
+    #legend.collapsed #legend-toggle { display: none; }
+
+    #legend-body {
+      overflow-y: auto;
+      padding: 0 12px 12px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.2) transparent;
+    }
+
+    #legend.collapsed #legend-body { display: none; }
+
+    .legend-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: rgba(255,255,255,0.4);
+      margin: 10px 0 6px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+
+    .legend-swatch {
+      width: 16px; height: 16px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .legend-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.3;
+    }
+
+    /* ---- Detail bottom sheet ---- */
+    #detail-panel {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 2000;
+      background: rgba(15, 15, 30, 0.97);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px 16px 0 0;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 55vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #detail-panel.open {
+      transform: translateY(0);
+    }
+
+    #detail-handle {
+      width: 36px; height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      margin: 10px auto 0;
+      flex-shrink: 0;
+    }
+
+    #detail-close {
+      position: absolute;
+      top: 10px; right: 14px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 50%;
+      width: 28px; height: 28px;
+      color: rgba(255,255,255,0.6);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #detail-content {
+      overflow-y: auto;
+      padding: 14px 16px 20px;
+      scrollbar-width: thin;
+    }
+
+    #detail-cat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    #detail-cat-badge .swatch {
+      width: 10px; height: 10px;
+      border-radius: 2px;
+    }
+
+    #detail-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    #detail-sub {
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 14px;
+    }
+
+    .detail-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .detail-row-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.4);
+      min-width: 90px;
+      flex-shrink: 0;
+      padding-top: 1px;
+    }
+
+    .detail-row-value {
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.4;
+    }
+
+    .detail-row-value a {
+      color: #4299e1;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    /* ---- GPS accuracy circle overrides ---- */
+    .gps-dot {
+      background: #4299e1;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(66,153,225,0.5);
+    }
+
+    /* ---- Locate button ---- */
+    #locate-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 14px;
+      z-index: 1000;
+      width: 44px; height: 44px;
+      background: rgba(15, 15, 30, 0.92);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      color: #4299e1;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: background 0.15s;
+    }
+    #locate-btn:hover { background: rgba(30, 30, 60, 0.95); }
+
+    /* ---- Layer toggle ---- */
+    #layer-panel {
+      position: fixed;
+      left: 10px;
+      top: 120px;
+      z-index: 1000;
+      background: rgba(15, 15, 30, 0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .layer-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .layer-toggle input[type=checkbox] {
+      accent-color: #4299e1;
+      width: 14px; height: 14px;
+      cursor: pointer;
+    }
+
+    .layer-toggle label {
+      font-size: 12px;
+      color: rgba(255,255,255,0.8);
+      cursor: pointer;
+    }
+
+    /* ---- Mobile adjustments ---- */
+    @media (max-width: 480px) {
+      #legend { right: 8px; width: 200px; }
+      #legend.collapsed { width: 40px; }
+      #layer-panel { left: 8px; }
+    }
+
+    /* Leaflet popup overrides */
+    .leaflet-popup-content-wrapper {
+      display: none; /* we use our own panel */
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Top bar -->
+<div id="topbar">
+  <h1>PDM Sintra-Cascais</h1>
+  <div class="btn-icon" id="info-btn" title="Sobre">&#x2139;</div>
+</div>
+
+<!-- Status chips -->
+<div id="statusbar">
+  <div class="status-chip chip-loading" id="chip-sintra-urban">
+    <div class="dot"></div><span>Sintra Urbano</span>
+  </div>
+  <div class="status-chip chip-loading" id="chip-sintra-rural">
+    <div class="dot"></div><span>Sintra R&uacute;stico</span>
+  </div>
+  <div class="status-chip chip-loading" id="chip-cascais">
+    <div class="dot"></div><span>Cascais</span>
+  </div>
+  <div class="status-chip chip-loading" id="chip-gps">
+    <div class="dot"></div><span>GPS</span>
+  </div>
+</div>
+
+<!-- Layer toggles -->
+<div id="layer-panel">
+  <div class="layer-toggle">
+    <input type="checkbox" id="toggle-urban" checked />
+    <label for="toggle-urban">Urbano</label>
+  </div>
+  <div class="layer-toggle">
+    <input type="checkbox" id="toggle-rural" checked />
+    <label for="toggle-rural">R&uacute;stico</label>
+  </div>
+  <div class="layer-toggle">
+    <input type="checkbox" id="toggle-cascais" checked />
+    <label for="toggle-cascais">Cascais</label>
+  </div>
+</div>
+
+<!-- Legend -->
+<div id="legend">
+  <div id="legend-header" onclick="toggleLegend()">
+    <span>&#x1F5FA; Legenda</span>
+    <div id="legend-toggle">&#9650;</div>
+  </div>
+  <div id="legend-body">
+    <div class="legend-section-title">Solo Urbano (Sintra)</div>
+    <div id="legend-urban"></div>
+    <div class="legend-section-title">Solo R&uacute;stico (Sintra)</div>
+    <div id="legend-rural"></div>
+    <div class="legend-section-title">Cascais</div>
+    <div id="legend-cascais"></div>
+  </div>
+</div>
+
+<!-- Detail bottom sheet -->
+<div id="detail-panel">
+  <div id="detail-handle"></div>
+  <button id="detail-close" onclick="closeDetail()">&#x2715;</button>
+  <div id="detail-content">
+    <div id="detail-cat-badge">
+      <div class="swatch" id="detail-swatch"></div>
+      <span id="detail-cat-code"></span>
+    </div>
+    <div id="detail-title"></div>
+    <div id="detail-sub"></div>
+    <div id="detail-rows"></div>
+  </div>
+</div>
+
+<!-- Locate button -->
+<button id="locate-btn" onclick="locateUser()" title="Centrar no GPS">&#x2316;</button>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// ============================================================
+// CONSTANTS & CONFIG
+// ============================================================
+
+const SINTRA_BASE = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer';
+const CASCAIS_BASE = 'https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer';
+
+const DEFAULT_CENTER = [38.75, -9.42];
+const DEFAULT_ZOOM = 13;
+
+// Color palette for Sintra Urban zones (CAT field, layer 55)
+const URBAN_COLORS = {
+  UC:  { fill: '#e63946', label: 'Espa\u00e7o Central' },
+  UHD: { fill: '#f4845f', label: 'Habitacional Dominante' },
+  UHC: { fill: '#f4a261', label: 'Habitacional Complementar' },
+  UBD: { fill: '#e9c46a', label: 'Baixa Densidade Urbana' },
+  UAE: { fill: '#9b5de5', label: 'Atividades Econ\u00f3micas' },
+  UT:  { fill: '#43aa8b', label: 'Uso Tur\u00edstico' },
+  UE:  { fill: '#4895ef', label: 'Equipamentos' },
+  UI:  { fill: '#adb5bd', label: 'Infraestruturas' },
+  UV:  { fill: '#2d6a4f', label: 'Verde Urbano' },
+};
+
+// Color palette for Sintra Rural zones (Ord_Categ field, layer 54)
+const RURAL_COLORS = {
+  N:   { fill: '#1a9850', label: 'Espa\u00e7o Natural 1' },
+  NF:  { fill: '#52b788', label: 'Espa\u00e7o Natural 2' },
+  NA:  { fill: '#74c69d', label: 'Espa\u00e7o Natural 3' },
+  F:   { fill: '#95d5b2', label: 'Espa\u00e7o Florestal 1' },
+  FA:  { fill: '#b7e4c7', label: 'Espa\u00e7o Florestal 2' },
+  A:   { fill: '#d4a017', label: 'Espa\u00e7o Agr\u00edcola' },
+  EI:  { fill: '#f4a261', label: 'Equipamentos/Infraestrutura' },
+  OT:  { fill: '#43aa8b', label: 'Ocupa\u00e7\u00e3o Tur\u00edstica' },
+  I:   { fill: '#6a4c93', label: 'Atividades Industriais' },
+  ER:  { fill: '#c77dff', label: 'Recursos Geol\u00f3gicos' },
+  AR:  { fill: '#9e9e9e', label: 'Aglomerado Rural' },
+};
+
+// Color palette for Cascais zones (Categoria field, layer 2)
+const CASCAIS_COLORS = {
+  'Espa\u00e7o Canal':                        { fill: '#555555', label: 'Canal' },
+  'Espa\u00e7o Central':                      { fill: '#c1121f', label: 'Central' },
+  'Espa\u00e7o Natural':                      { fill: '#2d6a4f', label: 'Natural' },
+  'Espa\u00e7o Residencial':                  { fill: '#f4845f', label: 'Residencial' },
+  'Espa\u00e7o Verde':                        { fill: '#52b788', label: 'Verde' },
+  'Espa\u00e7o de Aglomerados Rurais':        { fill: '#9e9e9e', label: 'Aglomerados Rurais' },
+  'Espa\u00e7o de Atividades Econ\u00f3micas':         { fill: '#9b5de5', label: 'Atividades Econ\u00f3micas' },
+  'Espa\u00e7o de Atividades Econ\u00f3micas Proposto':{ fill: '#c77dff', label: 'At. Econ. Proposto' },
+  'Espa\u00e7o de Equipamento':               { fill: '#4895ef', label: 'Equipamento' },
+  'Espa\u00e7o de Ocupa\u00e7\u00e3o Tur\u00edstica':  { fill: '#43aa8b', label: 'Ocupa\u00e7\u00e3o Tur\u00edstica' },
+  'Espa\u00e7o de Recursos Geol\u00f3gicos':  { fill: '#c77dff', label: 'Recursos Geol\u00f3gicos' },
+  'Espa\u00e7o de Uso Especial':              { fill: '#e9c46a', label: 'Uso Especial' },
+  'Espa\u00e7o de Uso Especial Proposto':     { fill: '#ffe8a1', label: 'Uso Especial Proposto' },
+  'PMOT em vigor':                            { fill: '#cccccc', label: 'PMOT em vigor' },
+};
+
+// ============================================================
+// MAP SETUP
+// ============================================================
+
+const map = L.map('map', {
+  center: DEFAULT_CENTER,
+  zoom: DEFAULT_ZOOM,
+  zoomControl: false,
+  attributionControl: false,
+});
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap contributors',
+}).addTo(map);
+
+// Attribution bottom-left, small
+L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);
+
+// Zoom control bottom-right above locate button
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+// Layer groups
+const urbanLayer   = L.layerGroup().addTo(map);
+const ruralLayer   = L.layerGroup().addTo(map);
+const cascaisLayer = L.layerGroup().addTo(map);
+
+// ============================================================
+// LEGEND BUILDER
+// ============================================================
+
+function buildLegend() {
+  const urbanEl = document.getElementById('legend-urban');
+  const ruralEl = document.getElementById('legend-rural');
+  const cascaisEl = document.getElementById('legend-cascais');
+
+  for (const [code, cfg] of Object.entries(URBAN_COLORS)) {
+    urbanEl.innerHTML += `<div class="legend-item">
+      <div class="legend-swatch" style="background:${cfg.fill}88;border-color:${cfg.fill}"></div>
+      <div class="legend-label"><strong>${code}</strong> ${cfg.label}</div>
+    </div>`;
+  }
+
+  for (const [code, cfg] of Object.entries(RURAL_COLORS)) {
+    ruralEl.innerHTML += `<div class="legend-item">
+      <div class="legend-swatch" style="background:${cfg.fill}88;border-color:${cfg.fill}"></div>
+      <div class="legend-label"><strong>${code}</strong> ${cfg.label}</div>
+    </div>`;
+  }
+
+  for (const [cat, cfg] of Object.entries(CASCAIS_COLORS)) {
+    cascaisEl.innerHTML += `<div class="legend-item">
+      <div class="legend-swatch" style="background:${cfg.fill}88;border-color:${cfg.fill}"></div>
+      <div class="legend-label">${cfg.label}</div>
+    </div>`;
+  }
+}
+
+buildLegend();
+
+// ============================================================
+// LEGEND TOGGLE
+// ============================================================
+
+function toggleLegend() {
+  const el = document.getElementById('legend');
+  const arrow = document.getElementById('legend-toggle');
+  const collapsed = el.classList.toggle('collapsed');
+  arrow.innerHTML = collapsed ? '&#9660;' : '&#9650;';
+}
+
+// Start collapsed on small screens
+if (window.innerWidth < 480) {
+  document.getElementById('legend').classList.add('collapsed');
+  document.getElementById('legend-toggle').innerHTML = '&#9660;';
+}
+
+// ============================================================
+// ARCGIS QUERY HELPERS
+// ============================================================
+
+async function fetchGeoJSONPage(url, offset, count = 1000) {
+  const sep = url.includes('?') ? '&' : '?';
+  const full = `${url}${sep}resultOffset=${offset}&resultRecordCount=${count}&f=geojson`;
+  const res = await fetch(full, { signal: AbortSignal.timeout(30000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function fetchAllFeatures(baseQueryUrl) {
+  const features = [];
+  let offset = 0;
+  const pageSize = 1000;
+  while (true) {
+    const data = await fetchGeoJSONPage(baseQueryUrl, offset, pageSize);
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    const batch = data.features || [];
+    features.push(...batch);
+    if (!data.exceededTransferLimit || batch.length === 0) break;
+    offset += batch.length;
+  }
+  return features;
+}
+
+// ============================================================
+// STYLE HELPERS
+// ============================================================
+
+function makeStyle(fill, opacity = 0.42) {
+  return {
+    fillColor: fill,
+    fillOpacity: opacity,
+    color: fill,
+    weight: 1,
+    opacity: 0.75,
+  };
+}
+
+function getUrbanStyle(props) {
+  const cat = props.CAT || '';
+  const cfg = URBAN_COLORS[cat];
+  return makeStyle(cfg ? cfg.fill : '#888888');
+}
+
+function getRuralStyle(props) {
+  const cat = props.Ord_Categ || '';
+  const cfg = RURAL_COLORS[cat];
+  return makeStyle(cfg ? cfg.fill : '#888888');
+}
+
+function getCascaisStyle(props) {
+  const cat = props.Categoria || '';
+  const cfg = CASCAIS_COLORS[cat];
+  return makeStyle(cfg ? cfg.fill : '#888888');
+}
+
+// ============================================================
+// DETAIL PANEL
+// ============================================================
+
+function showDetail(props, colorCfg, codeLabel) {
+  const panel = document.getElementById('detail-panel');
+
+  document.getElementById('detail-swatch').style.background = colorCfg.fill;
+  document.getElementById('detail-cat-badge').style.background = colorCfg.fill + '22';
+  document.getElementById('detail-cat-badge').style.color = colorCfg.fill;
+  document.getElementById('detail-cat-code').textContent = codeLabel;
+
+  document.getElementById('detail-title').textContent =
+    props.Descricao || props.Categoria || props.label || codeLabel;
+  document.getElementById('detail-sub').textContent =
+    props.Subcategor && props.Subcategor !== props.Categoria ? props.Subcategor : '';
+
+  const rows = [];
+  if (props.Classe) rows.push(['Classe', props.Classe]);
+  if (props.Regulamento) rows.push(['Regulamento', props.Regulamento, true]);
+  if (props.Pag_Regulamento) rows.push(['P\u00e1gina', props.Pag_Regulamento]);
+  if (props.Guiao) rows.push(['Guia', props.Guiao, true]);
+  if (props.Relatorio) rows.push(['Relat\u00f3rio', props.Relatorio, true]);
+  if (props.area_ha || props.Area_Ha) rows.push(['Area', ((props.area_ha || props.Area_Ha) || 0).toFixed(2) + ' ha']);
+
+  const rowsEl = document.getElementById('detail-rows');
+  rowsEl.innerHTML = rows.map(([label, value, isLink]) => `
+    <div class="detail-row">
+      <div class="detail-row-label">${label}</div>
+      <div class="detail-row-value">${
+        isLink && value.startsWith('http')
+          ? `<a href="${value}" target="_blank" rel="noopener">Abrir documento &#x2197;</a>`
+          : value
+      }</div>
+    </div>
+  `).join('');
+
+  panel.classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+// Swipe down to close
+let touchStartY = 0;
+document.getElementById('detail-panel').addEventListener('touchstart', e => {
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+document.getElementById('detail-panel').addEventListener('touchend', e => {
+  if (e.changedTouches[0].clientY - touchStartY > 60) closeDetail();
+}, { passive: true });
+
+// ============================================================
+// LAYER LOADING
+// ============================================================
+
+function setChip(id, state, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'status-chip chip-' + state;
+  el.innerHTML = `<div class="dot"></div><span>${text}</span>`;
+}
+
+async function loadSintraUrban() {
+  const queryUrl = `${SINTRA_BASE}/55/query?where=1%3D1&outFields=CAT%2CDescricao%2CRegulamento%2CPag_Regulamento%2CGuiao%2CRelatorio%2Carea_ha&outSR=4326`;
+  setChip('chip-sintra-urban', 'loading', 'Sintra Urbano…');
+  try {
+    const features = await fetchAllFeatures(queryUrl);
+    const geojson = { type: 'FeatureCollection', features };
+    L.geoJSON(geojson, {
+      style: f => getUrbanStyle(f.properties),
+      onEachFeature(feature, layer) {
+        layer.on('click', e => {
+          L.DomEvent.stopPropagation(e);
+          const p = feature.properties;
+          const cat = p.CAT || '';
+          const cfg = URBAN_COLORS[cat] || { fill: '#888', label: cat };
+          showDetail(p, cfg, cat + (cfg.label ? ' — ' + cfg.label : ''));
+        });
+      }
+    }).addTo(urbanLayer);
+    setChip('chip-sintra-urban', 'ok', `Urbano (${features.length})`);
+  } catch (e) {
+    console.error('Sintra urban error:', e);
+    setChip('chip-sintra-urban', 'error', 'Urbano: erro');
+  }
+}
+
+async function loadSintraRural() {
+  const queryUrl = `${SINTRA_BASE}/54/query?where=1%3D1&outFields=Ord_Categ%2CDescricao%2CRegulamento%2CPag_Regulamento%2CArea_Ha&outSR=4326`;
+  setChip('chip-sintra-rural', 'loading', 'Sintra Rústico…');
+  try {
+    const features = await fetchAllFeatures(queryUrl);
+    const geojson = { type: 'FeatureCollection', features };
+    L.geoJSON(geojson, {
+      style: f => getRuralStyle(f.properties),
+      onEachFeature(feature, layer) {
+        layer.on('click', e => {
+          L.DomEvent.stopPropagation(e);
+          const p = feature.properties;
+          const cat = p.Ord_Categ || '';
+          const cfg = RURAL_COLORS[cat] || { fill: '#888', label: cat };
+          showDetail(p, cfg, cat + (cfg.label ? ' — ' + cfg.label : ''));
+        });
+      }
+    }).addTo(ruralLayer);
+    setChip('chip-sintra-rural', 'ok', `R\u00fastico (${features.length})`);
+  } catch (e) {
+    console.error('Sintra rural error:', e);
+    setChip('chip-sintra-rural', 'error', 'Rústico: erro');
+  }
+}
+
+async function loadCascais() {
+  const queryUrl = `${CASCAIS_BASE}/2/query?where=1%3D1&outFields=Classe%2CCategoria%2CSubcategor&outSR=4326`;
+  setChip('chip-cascais', 'loading', 'Cascais…');
+  try {
+    const features = await fetchAllFeatures(queryUrl);
+    // Check if we got any geometry (the AML server sometimes omits it)
+    const withGeom = features.filter(f => f.geometry && f.geometry.coordinates);
+    if (withGeom.length === 0) {
+      setChip('chip-cascais', 'error', 'Cascais: sem geometria');
+      return;
+    }
+    const geojson = { type: 'FeatureCollection', features: withGeom };
+    L.geoJSON(geojson, {
+      style: f => getCascaisStyle(f.properties),
+      onEachFeature(feature, layer) {
+        layer.on('click', e => {
+          L.DomEvent.stopPropagation(e);
+          const p = feature.properties;
+          const cat = p.Categoria || '';
+          const cfg = CASCAIS_COLORS[cat] || { fill: '#888', label: cat };
+          showDetail(p, cfg, cat);
+        });
+      }
+    }).addTo(cascaisLayer);
+    setChip('chip-cascais', 'ok', `Cascais (${withGeom.length})`);
+  } catch (e) {
+    console.error('Cascais error:', e);
+    setChip('chip-cascais', 'error', 'Cascais: indispon\u00edvel');
+  }
+}
+
+// ============================================================
+// GPS TRACKING
+// ============================================================
+
+let gpsMarker = null;
+let gpsAccuracy = null;
+let watchId = null;
+let firstFix = true;
+
+const gpsDotIcon = L.divIcon({
+  className: '',
+  html: '<div class="gps-dot" style="width:14px;height:14px"></div>',
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+});
+
+function onGpsSuccess(pos) {
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
+  const acc = pos.coords.accuracy;
+  const latlng = [lat, lng];
+
+  if (!gpsMarker) {
+    gpsMarker = L.marker(latlng, { icon: gpsDotIcon, zIndexOffset: 500 }).addTo(map);
+    gpsAccuracy = L.circle(latlng, { radius: acc, weight: 1, color: '#4299e1', fillColor: '#4299e1', fillOpacity: 0.08 }).addTo(map);
+  } else {
+    gpsMarker.setLatLng(latlng);
+    gpsAccuracy.setLatLng(latlng).setRadius(acc);
+  }
+
+  if (firstFix) {
+    map.setView(latlng, 15);
+    firstFix = false;
+  }
+
+  setChip('chip-gps', 'gps', `GPS \u00b1${Math.round(acc)}m`);
+}
+
+function onGpsError(err) {
+  setChip('chip-gps', 'error', 'GPS: ' + (err.code === 1 ? 'bloqueado' : 'erro'));
+}
+
+function startGPS() {
+  if (!navigator.geolocation) {
+    setChip('chip-gps', 'error', 'GPS: N/A');
+    return;
+  }
+  setChip('chip-gps', 'loading', 'GPS…');
+  watchId = navigator.geolocation.watchPosition(onGpsSuccess, onGpsError, {
+    enableHighAccuracy: true,
+    maximumAge: 5000,
+    timeout: 15000,
+  });
+}
+
+function locateUser() {
+  if (gpsMarker) {
+    map.setView(gpsMarker.getLatLng(), Math.max(map.getZoom(), 15));
+  } else if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+    }, onGpsError, { enableHighAccuracy: true, timeout: 10000 });
+  }
+}
+
+// ============================================================
+// LAYER TOGGLES
+// ============================================================
+
+document.getElementById('toggle-urban').addEventListener('change', e => {
+  e.target.checked ? map.addLayer(urbanLayer) : map.removeLayer(urbanLayer);
+});
+document.getElementById('toggle-rural').addEventListener('change', e => {
+  e.target.checked ? map.addLayer(ruralLayer) : map.removeLayer(ruralLayer);
+});
+document.getElementById('toggle-cascais').addEventListener('change', e => {
+  e.target.checked ? map.addLayer(cascaisLayer) : map.removeLayer(cascaisLayer);
+});
+
+// ============================================================
+// CLOSE DETAIL ON MAP CLICK
+// ============================================================
+
+map.on('click', closeDetail);
+
+// ============================================================
+// INIT
+// ============================================================
+
+startGPS();
+
+// Load all layers concurrently; rural is largest so show urban first
+loadSintraUrban();
+loadSintraRural();
+loadCascais();
+</script>
+</body>
+</html>
