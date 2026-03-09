@@ -540,6 +540,7 @@ const CASCAIS_BASE = 'https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenam
 
 const DEFAULT_CENTER = [38.75, -9.42];
 const DEFAULT_ZOOM = 13;
+const MIN_DATA_ZOOM = 12;
 
 // Color palette for Sintra Urban zones (CAT field, layer 55)
 const URBAN_COLORS = {
@@ -813,6 +814,7 @@ async function loadSintraUrban() {
       }
     }).addTo(urbanLayer);
     setChip('chip-sintra-urban', 'ok', `Urbano (${features.length})`);
+    updateLayerVisibility();
   } catch (e) {
     console.error('Sintra urban error:', e);
     setChip('chip-sintra-urban', 'error', 'Urbano: erro');
@@ -838,6 +840,7 @@ async function loadSintraRural() {
       }
     }).addTo(ruralLayer);
     setChip('chip-sintra-rural', 'ok', `R\u00fastico (${features.length})`);
+    updateLayerVisibility();
   } catch (e) {
     console.error('Sintra rural error:', e);
     setChip('chip-sintra-rural', 'error', 'Rústico: erro');
@@ -852,7 +855,7 @@ function loadCascais() {
   try {
     const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [2], opacity: 0.55 });
     layer.addTo(cascaisLayer);
-    layer.once('load', () => setChip('chip-cascais', 'ok', 'Cascais'));
+    layer.once('load', () => { setChip('chip-cascais', 'ok', 'Cascais'); updateLayerVisibility(); });
     layer.on('loaderror', () => setChip('chip-cascais', 'error', 'Cascais: erro'));
     cascaisReady = true;
   } catch (e) {
@@ -926,18 +929,42 @@ function locateUser() {
 }
 
 // ============================================================
-// LAYER TOGGLES
+// LAYER TOGGLES + ZOOM VISIBILITY
 // ============================================================
 
-document.getElementById('toggle-urban').addEventListener('change', e => {
-  e.target.checked ? map.addLayer(urbanLayer) : map.removeLayer(urbanLayer);
-});
-document.getElementById('toggle-rural').addEventListener('change', e => {
-  e.target.checked ? map.addLayer(ruralLayer) : map.removeLayer(ruralLayer);
-});
-document.getElementById('toggle-cascais').addEventListener('change', e => {
-  e.target.checked ? map.addLayer(cascaisLayer) : map.removeLayer(cascaisLayer);
-});
+function updateLayerVisibility() {
+  const zoomed = map.getZoom() >= MIN_DATA_ZOOM;
+
+  const layers = [
+    { id: 'toggle-urban',   layer: urbanLayer,   chip: 'chip-sintra-urban' },
+    { id: 'toggle-rural',   layer: ruralLayer,   chip: 'chip-sintra-rural' },
+    { id: 'toggle-cascais', layer: cascaisLayer, chip: 'chip-cascais' },
+  ];
+
+  layers.forEach(({ id, layer, chip }) => {
+    const checked = document.getElementById(id).checked;
+    const visible = checked && zoomed;
+    visible ? map.addLayer(layer) : map.removeLayer(layer);
+
+    // Only update chip if it's already in a stable (non-loading) state
+    const el = document.getElementById(chip);
+    if (el && !el.classList.contains('chip-loading')) {
+      if (!checked) {
+        el.className = 'status-chip chip-error';
+        el.innerHTML = '<div class="dot"></div><span>Oculto</span>';
+      } else if (!zoomed) {
+        el.className = 'status-chip chip-error';
+        el.innerHTML = '<div class="dot"></div><span>Aproxime</span>';
+      }
+      // If checked && zoomed, leave the chip as-is (ok/error set by loader)
+    }
+  });
+}
+
+document.getElementById('toggle-urban').addEventListener('change', updateLayerVisibility);
+document.getElementById('toggle-rural').addEventListener('change', updateLayerVisibility);
+document.getElementById('toggle-cascais').addEventListener('change', updateLayerVisibility);
+map.on('zoomend', updateLayerVisibility);
 
 // ============================================================
 // MAP CLICK — close panel, or identify Cascais zone
@@ -1044,8 +1071,7 @@ function closeSearch() {
 // ============================================================
 
 startGPS();
-
-// Load all layers concurrently; rural is largest so show urban first
+updateLayerVisibility();
 loadSintraUrban();
 loadSintraRural();
 loadCascais();
