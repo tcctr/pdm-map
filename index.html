@@ -961,7 +961,6 @@ function updateSintraChip() {
 
   // Update tooltip content (shown on hover via mouseenter below)
   const dotColor = s => s === 'ok' ? '#28a745' : s === 'loading' ? '#ffc107' : '#dc3545';
-  const chip = document.getElementById('chip-sintra');
   if (state !== 'ok' && state !== 'loading') {
     chip._tooltipHtml = `
       <div class="tooltip-row"><div class="tooltip-dot" style="background:${dotColor(u)}"></div>Urbano: ${sintraStatus.urbanText || u}</div>
