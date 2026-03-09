@@ -605,6 +605,9 @@ L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);
 // Zoom control bottom-right above locate button
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
+// SVG renderer with extra padding so polygons don't get clipped at high zoom
+const renderer = L.svg({ padding: 1 });
+
 // Layer groups
 const urbanLayer   = L.layerGroup().addTo(map);
 const ruralLayer   = L.layerGroup().addTo(map);
@@ -784,6 +787,7 @@ async function loadSintraUrban() {
     const features = await fetchAllFeatures(queryUrl);
     const geojson = { type: 'FeatureCollection', features };
     L.geoJSON(geojson, {
+      renderer,
       style: f => getUrbanStyle(f.properties),
       onEachFeature(feature, layer) {
         layer.on('click', e => {
@@ -811,6 +815,7 @@ async function loadSintraRural() {
     const features = await fetchAllFeatures(queryUrl);
     const geojson = { type: 'FeatureCollection', features };
     L.geoJSON(geojson, {
+      renderer,
       style: f => getRuralStyle(f.properties),
       onEachFeature(feature, layer) {
         layer.on('click', e => {
