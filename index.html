@@ -334,27 +334,10 @@
       margin-bottom: 8px;
     }
 
-    .detail-row-label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: rgba(255,255,255,0.4);
-      min-width: 90px;
-      flex-shrink: 0;
-      padding-top: 1px;
-    }
-
     .detail-row-value {
       font-size: 13px;
       color: rgba(255,255,255,0.85);
       line-height: 1.4;
-    }
-
-    .detail-row-value a {
-      color: #4299e1;
-      text-decoration: none;
-      word-break: break-all;
     }
 
     /* ---- Doc buttons ---- */
@@ -734,12 +717,6 @@ function getRuralStyle(props) {
   return makeStyle(cfg ? cfg.fill : '#888888');
 }
 
-function getCascaisStyle(props) {
-  const cat = props.Categoria || '';
-  const cfg = CASCAIS_COLORS[cat];
-  return makeStyle(cfg ? cfg.fill : '#888888');
-}
-
 // ============================================================
 // DETAIL PANEL
 // ============================================================
@@ -868,25 +845,16 @@ async function loadSintraRural() {
 }
 
 // Cascais: AML server blocks geometry export — use dynamic map tiles + identify on click
-let cascaisDynamicLayer = null;
+let cascaisReady = false;
 
 function loadCascais() {
   setChip('chip-cascais', 'loading', 'Cascais…');
   try {
-    cascaisDynamicLayer = L.esri.dynamicMapLayer({
-      url: CASCAIS_BASE,
-      layers: [2],
-      opacity: 0.55,
-      f: 'image',
-    });
-    cascaisDynamicLayer.addTo(cascaisLayer);
-    cascaisDynamicLayer.once('load', () => setChip('chip-cascais', 'ok', 'Cascais'));
-    cascaisDynamicLayer.on('loaderror', () => setChip('chip-cascais', 'error', 'Cascais: erro'));
-
-    // Click → identify feature under cursor (registered once, checked in main click handler)
-    window._cascaisReady = true;
-
-    setChip('chip-cascais', 'ok', 'Cascais');
+    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [2], opacity: 0.55 });
+    layer.addTo(cascaisLayer);
+    layer.once('load', () => setChip('chip-cascais', 'ok', 'Cascais'));
+    layer.on('loaderror', () => setChip('chip-cascais', 'error', 'Cascais: erro'));
+    cascaisReady = true;
   } catch (e) {
     console.error('Cascais error:', e);
     setChip('chip-cascais', 'error', 'Cascais: indispon\u00edvel');
@@ -899,7 +867,6 @@ function loadCascais() {
 
 let gpsMarker = null;
 let gpsAccuracy = null;
-let watchId = null;
 let firstFix = true;
 
 const gpsDotIcon = L.divIcon({
@@ -941,7 +908,7 @@ function startGPS() {
     return;
   }
   setChip('chip-gps', 'loading', 'GPS…');
-  watchId = navigator.geolocation.watchPosition(onGpsSuccess, onGpsError, {
+  navigator.geolocation.watchPosition(onGpsSuccess, onGpsError, {
     enableHighAccuracy: true,
     maximumAge: 5000,
     timeout: 15000,
@@ -978,7 +945,7 @@ document.getElementById('toggle-cascais').addEventListener('change', e => {
 
 map.on('click', e => {
   closeDetail();
-  if (!window._cascaisReady || !map.hasLayer(cascaisLayer)) return;
+  if (!cascaisReady || !map.hasLayer(cascaisLayer)) return;
   L.esri.identifyFeatures({ url: CASCAIS_BASE })
     .on(map)
     .at(e.latlng)
@@ -1034,7 +1001,7 @@ function renderResults(items) {
     searchResults.innerHTML = '<div class="search-result-item no-results">Sem resultados</div>';
   } else {
     searchResults.innerHTML = items.map((item, i) =>
-      `<div class="search-result-item" data-i="${i}">${item.display_name}</div>`
+      `<div class="search-result-item">${item.display_name}</div>`
     ).join('');
     searchResults.querySelectorAll('.search-result-item').forEach((el, i) => {
       el.addEventListener('click', () => selectResult(items[i]));
