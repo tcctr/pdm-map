@@ -800,7 +800,7 @@ async function loadSintraUrban() {
         });
       }
     }).addTo(urbanLayer);
-    setChip('chip-sintra-urban', 'ok', `Urbano (${features.length})`);
+    setChipLoaded('chip-sintra-urban', 'ok', `Urbano (${features.length})`);
     updateLayerVisibility();
   } catch (e) {
     console.error('Sintra urban error:', e);
@@ -826,7 +826,7 @@ async function loadSintraRural() {
         });
       }
     }).addTo(ruralLayer);
-    setChip('chip-sintra-rural', 'ok', `R\u00fastico (${features.length})`);
+    setChipLoaded('chip-sintra-rural', 'ok', `R\u00fastico (${features.length})`);
     updateLayerVisibility();
   } catch (e) {
     console.error('Sintra rural error:', e);
@@ -842,7 +842,7 @@ function loadCascais() {
   try {
     const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [2], opacity: 0.55 });
     layer.addTo(cascaisLayer);
-    layer.once('load', () => { setChip('chip-cascais', 'ok', 'Cascais'); updateLayerVisibility(); });
+    layer.once('load', () => { setChipLoaded('chip-cascais', 'ok', 'Cascais'); updateLayerVisibility(); });
     layer.on('loaderror', () => setChip('chip-cascais', 'error', 'Cascais: erro'));
     cascaisReady = true;
   } catch (e) {
@@ -919,6 +919,14 @@ function locateUser() {
 // LAYER TOGGLES + ZOOM VISIBILITY
 // ============================================================
 
+// Remember the last loaded chip state so we can restore it after zooming out
+const chipLoadedState = {};
+
+function setChipLoaded(id, state, text) {
+  chipLoadedState[id] = { state, text };
+  setChip(id, state, text);
+}
+
 function updateLayerVisibility() {
   const zoomed = map.getZoom() >= MIN_DATA_ZOOM;
 
@@ -933,17 +941,15 @@ function updateLayerVisibility() {
     const visible = checked && zoomed;
     visible ? map.addLayer(layer) : map.removeLayer(layer);
 
-    // Only update chip if it's already in a stable (non-loading) state
     const el = document.getElementById(chip);
-    if (el && !el.classList.contains('chip-loading')) {
-      if (!checked) {
-        el.className = 'status-chip chip-error';
-        el.innerHTML = '<div class="dot"></div><span>Oculto</span>';
-      } else if (!zoomed) {
-        el.className = 'status-chip chip-error';
-        el.innerHTML = '<div class="dot"></div><span>Aproxime</span>';
-      }
-      // If checked && zoomed, leave the chip as-is (ok/error set by loader)
+    if (!el || el.classList.contains('chip-loading')) return;
+
+    if (!checked) {
+      setChip(chip, 'error', 'Oculto');
+    } else if (!zoomed) {
+      setChip(chip, 'error', 'Aproxime');
+    } else if (chipLoadedState[chip]) {
+      setChip(chip, chipLoadedState[chip].state, chipLoadedState[chip].text);
     }
   });
 }
