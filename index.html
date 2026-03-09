@@ -155,25 +155,6 @@
     .chip-gps { background: rgba(66,153,225,0.15); color: #4299e1; }
     .chip-gps .dot { background: #4299e1; animation: pulse 1.5s infinite; }
 
-    .status-chip { position: relative; }
-    .chip-tooltip {
-      display: none;
-      position: absolute;
-      top: calc(100% + 6px);
-      left: 0;
-      background: rgba(15,15,30,0.97);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 8px;
-      padding: 8px 10px;
-      white-space: nowrap;
-      z-index: 2000;
-      font-size: 11px;
-      line-height: 1.8;
-    }
-    .status-chip:hover .chip-tooltip { display: block; }
-    .tooltip-row { display: flex; align-items: center; gap: 6px; }
-    .tooltip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.3; }
@@ -484,7 +465,6 @@
 <div id="statusbar">
   <div class="status-chip chip-loading" id="chip-sintra">
     <div class="dot"></div><span>Sintra</span>
-    <div class="chip-tooltip" id="chip-sintra-tooltip"></div>
   </div>
   <div class="status-chip chip-loading" id="chip-cascais">
     <div class="dot"></div><span>Cascais</span>
@@ -962,16 +942,6 @@ function updateSintraChip() {
 
   setChip('chip-sintra', state, label);
 
-  // Tooltip (only useful when not both-ok)
-  const tooltip = document.getElementById('chip-sintra-tooltip');
-  if (tooltip && state !== 'ok' && state !== 'loading') {
-    const dotColor = s => s === 'ok' ? '#28a745' : s === 'loading' ? '#ffc107' : '#dc3545';
-    tooltip.innerHTML = `
-      <div class="tooltip-row"><div class="tooltip-dot" style="background:${dotColor(u)}"></div>Urbano: ${sintraStatus.urbanText || u}</div>
-      <div class="tooltip-row"><div class="tooltip-dot" style="background:${dotColor(r)}"></div>R\u00fastico: ${sintraStatus.ruralText || r}</div>`;
-  } else if (tooltip) {
-    tooltip.innerHTML = '';
-  }
 }
 
 // ── Layer visibility ─────────────────────────────────────────
