@@ -747,25 +747,12 @@ function showDetail(props, colorCfg, codeLabel) {
     html += `<div class="detail-row" style="margin-bottom:14px"><div class="detail-row-value" style="color:rgba(255,255,255,0.5);font-size:12px">${metaItems.join(' &nbsp;·&nbsp; ')}</div></div>`;
   }
 
-  // ── Document buttons ──
-  const docs = [
-    { label: 'Regulamento', url: props.Regulamento, page: props.Pag_Regulamento },
-    { label: 'Guia\u00e3o',     url: props.Guiao,        page: props.Pag_Guiao },
-    { label: 'Relat\u00f3rio',  url: props.Relatorio,    page: props.Pag_relatorio },
-  ].filter(d => d.url);
-
-  if (docs.length) {
-    html += '<div class="doc-buttons">';
-    html += docs.map(d => `
-      <a class="doc-btn" href="${d.url}" target="_blank" rel="noopener">
-        <div class="doc-btn-left">
-          <div class="doc-btn-title">${d.label}</div>
-          ${d.page ? `<div class="doc-btn-page">P\u00e1gina ${d.page}</div>` : ''}
-        </div>
-        <div class="doc-btn-arrow">&#x2197;</div>
-      </a>`).join('');
-    html += '</div>';
-  }
+  // ── Document buttons (hidden for now) ──
+  // const docs = [
+  //   { label: 'Regulamento', url: props.Regulamento, page: props.Pag_Regulamento },
+  //   { label: 'Guião',       url: props.Guiao,        page: props.Pag_Guiao },
+  //   { label: 'Relatório',   url: props.Relatorio,    page: props.Pag_relatorio },
+  // ].filter(d => d.url);
 
   rowsEl.innerHTML = html;
   panel.classList.add('open');
