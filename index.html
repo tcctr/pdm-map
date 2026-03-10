@@ -1277,7 +1277,7 @@ async function loadOverlay(id) {
     const url = `${def.server}/${def.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`;
     const features = await fetchAllFeatures(url);
     L.geoJSON({ type: 'FeatureCollection', features }, {
-      renderer: overlayRenderer,
+      renderer: def.hatch ? renderer : overlayRenderer,
       style: () => makeOverlayStyle(def),
       filter: f => !!f.geometry,
       onEachFeature(feature, layer) {
