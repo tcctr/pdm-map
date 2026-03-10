@@ -599,12 +599,12 @@
       <line x1="0" y1="0" x2="0" y2="10" stroke="#b47832" stroke-width="3" stroke-opacity="0.7"/>
     </pattern>
     <pattern id="hatch-risk-red" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
-      <rect width="10" height="10" fill="transparent"/>
-      <line x1="0" y1="0" x2="0" y2="10" stroke="#dc3545" stroke-width="1" stroke-opacity="0.25"/>
+      <rect width="10" height="10" fill="rgba(220,53,69,0.1)"/>
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#dc3545" stroke-width="2" stroke-opacity="0.55"/>
     </pattern>
     <pattern id="hatch-risk-orange" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
-      <rect width="10" height="10" fill="transparent"/>
-      <line x1="0" y1="0" x2="0" y2="10" stroke="#e07800" stroke-width="1" stroke-opacity="0.25"/>
+      <rect width="10" height="10" fill="rgba(224,120,0,0.1)"/>
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#e07800" stroke-width="2" stroke-opacity="0.55"/>
     </pattern>
   </defs>
 </svg>
@@ -1243,7 +1243,7 @@ for (const def of OVERLAY_DEFS) {
 
 function makeOverlayStyle(def) {
   if (def.hatch) {
-    return { fillColor: `url(#${def.hatch})`, fillOpacity: 1, color: def.color, weight: 0.8, opacity: 0.35 };
+    return { fillColor: `url(#${def.hatch})`, fillOpacity: 1, color: def.color, weight: 1.2, opacity: 0.6 };
   }
   return { fillColor: def.color, fillOpacity: def.fillOpacity ?? 0.35, color: def.color, weight: 1, opacity: 0.75 };
 }
