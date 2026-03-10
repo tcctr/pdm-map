@@ -398,47 +398,106 @@
     }
     #locate-btn:hover { background: rgba(30, 30, 60, 0.95); }
 
-    /* ---- Layer toggle ---- */
-    #layer-panel {
+    /* ---- Left panel column (layer toggles + overlays) ---- */
+    #left-panels {
       position: fixed;
       left: 10px;
       top: 120px;
       z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 210px;
+    }
+
+    /* ---- Layer selector panel ---- */
+    #overlay-panel {
       background: rgba(15, 15, 30, 0.92);
       backdrop-filter: blur(8px);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 12px;
-      padding: 10px 12px;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      max-height: 44px;
+      transition: max-height 0.2s ease;
     }
+    #overlay-panel.expanded { max-height: 60vh; }
 
-    .layer-toggle {
+    #overlay-header {
       display: flex;
       align-items: center;
       gap: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    #overlay-header > span {
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      flex: 1;
+      white-space: nowrap;
+    }
+    #overlay-toggle {
+      color: rgba(255,255,255,0.5);
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+    #overlay-body {
+      overflow-y: auto;
+      padding: 0 10px 10px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.2) transparent;
+    }
+    .overlay-group-title {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: rgba(255,255,255,0.35);
+      margin: 10px 0 4px;
+    }
+    .overlay-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 5px;
       cursor: pointer;
       user-select: none;
     }
-
-    .layer-toggle input[type=checkbox] {
+    .overlay-item input[type=radio] {
       accent-color: #4299e1;
-      width: 14px; height: 14px;
+      width: 13px; height: 13px;
       cursor: pointer;
+      flex-shrink: 0;
     }
-
-    .layer-toggle label {
-      font-size: 12px;
+    .overlay-dot {
+      width: 13px; height: 13px;
+      border-radius: 2px;
+      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .overlay-name {
+      font-size: 11px;
       color: rgba(255,255,255,0.8);
-      cursor: pointer;
+      line-height: 1.3;
+      flex: 1;
     }
+    .overlay-spinner {
+      font-size: 13px;
+      color: #ffc107;
+      flex-shrink: 0;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ---- Mobile adjustments ---- */
     @media (max-width: 480px) {
       #legend { right: 8px; width: 200px; }
       #legend.collapsed { width: 40px; }
-      #layer-panel { left: 8px; }
+      #left-panels { left: 8px; }
     }
 
     /* Leaflet popup overrides */
@@ -474,15 +533,15 @@
   </div>
 </div>
 
-<!-- Layer toggles -->
-<div id="layer-panel">
-  <div class="layer-toggle">
-    <input type="checkbox" id="toggle-sintra" checked />
-    <label for="toggle-sintra">Sintra</label>
-  </div>
-  <div class="layer-toggle">
-    <input type="checkbox" id="toggle-cascais" checked />
-    <label for="toggle-cascais">Cascais</label>
+<!-- Left panel column -->
+<div id="left-panels">
+  <!-- Unified layer selector -->
+  <div id="overlay-panel" class="expanded">
+    <div id="overlay-header" onclick="toggleOverlayPanel()">
+      <span>Camadas</span>
+      <div id="overlay-toggle">&#9650;</div>
+    </div>
+    <div id="overlay-body"></div>
   </div>
 </div>
 
@@ -520,6 +579,24 @@
 <!-- Locate button -->
 <button id="locate-btn" onclick="locateUser()" title="Centrar no GPS">&#x2316;</button>
 
+<!-- SVG hatch pattern definitions for overlay layers -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <pattern id="hatch-ran" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+      <rect width="10" height="10" fill="rgba(180,120,50,0.22)"/>
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#b47832" stroke-width="3" stroke-opacity="0.7"/>
+    </pattern>
+    <pattern id="hatch-risk-red" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+      <rect width="10" height="10" fill="rgba(220,53,69,0.18)"/>
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#dc3545" stroke-width="2.5" stroke-opacity="0.7"/>
+    </pattern>
+    <pattern id="hatch-risk-orange" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+      <rect width="10" height="10" fill="rgba(224,120,0,0.18)"/>
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#e07800" stroke-width="2.5" stroke-opacity="0.7"/>
+    </pattern>
+  </defs>
+</svg>
+
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <!-- Esri Leaflet (for Cascais dynamic map layer + identify) -->
@@ -530,8 +607,10 @@
 // CONSTANTS & CONFIG
 // ============================================================
 
-const SINTRA_BASE = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer';
-const CASCAIS_BASE = 'https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer';
+const SINTRA_BASE        = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer';
+const CASCAIS_BASE       = 'https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer';
+const REN_RAN_BASE       = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer';
+const CONDICIONANTES_BASE = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer';
 
 const DEFAULT_CENTER = [38.75, -9.42];
 const DEFAULT_ZOOM = 13;
@@ -582,6 +661,34 @@ const CASCAIS_COLORS = {
   'Espa\u00e7o de Uso Especial Proposto':     { fill: '#ffe8a1', label: 'Uso Especial Proposto' },
   'PMOT em vigor':                            { fill: '#cccccc', label: 'PMOT em vigor' },
 };
+
+// Fire hazard classes → colors (PMDFCI CLASSE field)
+const FIRE_COLORS = {
+  'Muito baixa': '#ffffb2',
+  'Baixa':       '#fecc5c',
+  'M\u00e9dia':  '#fd8d3c',
+  'Alta':        '#f03b20',
+  'Muito alta':  '#bd0026',
+};
+
+// Overlay layer definitions — loaded lazily when toggled on
+const OVERLAY_DEFS = [
+  // ─── Reservas (REN/RAN) ─────────────────────────────────
+  { id: 'ran',       name: 'RAN \u2014 Reserva Agr\u00edcola',    group: 'Reservas (REN/RAN)',                server: REN_RAN_BASE,        layerId: 2,   color: '#b47832', hatch: 'hatch-ran' },
+  { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                server: REN_RAN_BASE,        layerId: 6,   color: '#4361ee', fillOpacity: 0.35 },
+  { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                server: REN_RAN_BASE,        layerId: 7,   color: '#e9c46a', fillOpacity: 0.5 },
+  // ─── Riscos Naturais ────────────────────────────────────
+  { id: 'vertentes', name: 'Instabilidade de Vertentes',            group: 'Riscos Naturais',                   server: REN_RAN_BASE,        layerId: 16,  color: '#dc3545', hatch: 'hatch-risk-red' },
+  { id: 'erosao',    name: 'Eros\u00e3o H\u00eddrica',              group: 'Riscos Naturais',                   server: REN_RAN_BASE,        layerId: 17,  color: '#e07800', hatch: 'hatch-risk-orange' },
+  { id: 'mar',       name: 'Amea\u00e7a Costeira (Mar)',            group: 'Riscos Naturais',                   server: REN_RAN_BASE,        layerId: 15,  color: '#3a86ff', fillOpacity: 0.4 },
+  { id: 'cheias',    name: 'Zonas de Cheias',                       group: 'Riscos Naturais',                   server: REN_RAN_BASE,        layerId: 14,  color: '#0077b6', fillOpacity: 0.4 },
+  // ─── Incêndio ───────────────────────────────────────────
+  { id: 'incendio',  name: 'Perigosidade de Inc\u00eandio',         group: 'Risco de Inc\u00eandio',            server: CONDICIONANTES_BASE, layerId: 371, color: '#fd8d3c', categorized: 'fire' },
+  // ─── Património ─────────────────────────────────────────
+  { id: 'patrimonio',name: 'Bens Im\u00f3veis Classificados',       group: 'Patrim\u00f3nio e Infraestruturas', server: CONDICIONANTES_BASE, layerId: 299, color: '#9b5de5', fillOpacity: 0.35 },
+  { id: 'zep',       name: 'Zona Especial de Prote\u00e7\u00e3o',  group: 'Patrim\u00f3nio e Infraestruturas', server: CONDICIONANTES_BASE, layerId: 302, color: '#c77dff', fillOpacity: 0.25 },
+  { id: 'perigosos', name: 'Equipamentos Perigosos',                 group: 'Patrim\u00f3nio e Infraestruturas', server: CONDICIONANTES_BASE, layerId: 368, color: '#6c757d', fillOpacity: 0.4 },
+];
 
 // ============================================================
 // MAP SETUP
@@ -842,7 +949,7 @@ let cascaisReady = false;
 function loadCascais() {
   setChip('chip-cascais', 'loading', 'Cascais…');
   try {
-    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [2], opacity: 0.55 });
+    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [2], opacity: 0.55, maxZoom: 17 });
     layer.addTo(cascaisLayer);
     layer.once('load', () => { setChipLoaded('chip-cascais', 'ok', 'Cascais'); updateLayerVisibility(); });
     layer.on('loaderror', () => setChip('chip-cascais', 'error', 'Cascais: erro'));
@@ -921,20 +1028,50 @@ function locateUser() {
 // LAYER TOGGLES + ZOOM VISIBILITY
 // ============================================================
 
+// ── Active layer selection ────────────────────────────────────
+let activeLayer = 'zoning';
+
+function handleLayerSelect(value) {
+  activeLayer = value;
+  if (value === 'zoning') {
+    // Deactivate all overlays
+    for (const def of OVERLAY_DEFS) {
+      ovlState[def.id].active = false;
+      if (ovlState[def.id].leafletLayer) map.removeLayer(ovlState[def.id].leafletLayer);
+    }
+    updateLayerVisibility();
+  } else {
+    // Hide zoning
+    [urbanLayer, ruralLayer, cascaisLayer].forEach(l => map.removeLayer(l));
+    setChip('chip-sintra', 'error', 'Oculto');
+    setChip('chip-cascais', 'error', 'Oculto');
+    // Deactivate all other overlays, activate this one
+    for (const def of OVERLAY_DEFS) {
+      if (def.id === value) {
+        ovlState[def.id].active = true;
+        loadOverlay(def.id);
+      } else {
+        ovlState[def.id].active = false;
+        if (ovlState[def.id].leafletLayer) map.removeLayer(ovlState[def.id].leafletLayer);
+      }
+    }
+  }
+}
+
 // ── Sintra combined chip logic ──────────────────────────────
 const sintraStatus = { urban: 'loading', urbanText: '', rural: 'loading', ruralText: '' };
 
 function updateSintraChip() {
   const zoomed = map.getZoom() >= MIN_DATA_ZOOM;
-  const checked = document.getElementById('toggle-sintra').checked;
+  const on = activeLayer === 'zoning';
 
-  [urbanLayer, ruralLayer].forEach(l => checked && zoomed ? map.addLayer(l) : map.removeLayer(l));
+  [urbanLayer, ruralLayer].forEach(l => on && zoomed ? map.addLayer(l) : map.removeLayer(l));
 
   const chip = document.getElementById('chip-sintra');
   if (!chip) return;
 
-  if (!checked) { setChip('chip-sintra', 'error', 'Oculto'); return; }
-  if (!zoomed)  { setChip('chip-sintra', 'error', 'Aproxime'); return; }
+  if (!on)     { setChip('chip-sintra', 'error', 'Oculto');   return; }
+  if (!zoomed) { setChip('chip-sintra', 'error', 'Aproxime'); return; }
 
   const u = sintraStatus.urban;
   const r = sintraStatus.rural;
@@ -946,7 +1083,6 @@ function updateSintraChip() {
   else                                    { state = 'warn';    label = 'Sintra'; }
 
   setChip('chip-sintra', state, label);
-
 }
 
 // ── Layer visibility ─────────────────────────────────────────
@@ -961,20 +1097,18 @@ function updateLayerVisibility() {
   updateSintraChip();
 
   const zoomed = map.getZoom() >= MIN_DATA_ZOOM;
-  const checked = document.getElementById('toggle-cascais').checked;
-  checked && zoomed ? map.addLayer(cascaisLayer) : map.removeLayer(cascaisLayer);
+  const on = activeLayer === 'zoning';
+  on && zoomed ? map.addLayer(cascaisLayer) : map.removeLayer(cascaisLayer);
 
   const el = document.getElementById('chip-cascais');
   if (!el || el.classList.contains('chip-loading')) return;
-  if (!checked)     setChip('chip-cascais', 'error', 'Oculto');
+  if (!on)      setChip('chip-cascais', 'error', 'Oculto');
   else if (!zoomed) setChip('chip-cascais', 'error', 'Aproxime');
   else if (chipLoadedState['chip-cascais']) {
     setChip('chip-cascais', chipLoadedState['chip-cascais'].state, chipLoadedState['chip-cascais'].text);
   }
 }
 
-document.getElementById('toggle-sintra').addEventListener('change', updateLayerVisibility);
-document.getElementById('toggle-cascais').addEventListener('change', updateLayerVisibility);
 map.on('zoomend', updateLayerVisibility);
 
 // ============================================================
@@ -1078,9 +1212,121 @@ function closeSearch() {
 }
 
 // ============================================================
+// OVERLAY / CONDICIONANTES LAYERS
+// ============================================================
+
+// Per-layer runtime state
+const ovlState = {};
+for (const def of OVERLAY_DEFS) {
+  ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null };
+}
+
+function makeOverlayStyle(def) {
+  if (def.hatch) {
+    return { fillColor: `url(#${def.hatch})`, fillOpacity: 1, color: def.color, weight: 1.5, opacity: 0.85 };
+  }
+  return { fillColor: def.color, fillOpacity: def.fillOpacity ?? 0.35, color: def.color, weight: 1, opacity: 0.75 };
+}
+
+async function loadOverlay(id) {
+  const def = OVERLAY_DEFS.find(d => d.id === id);
+  const st = ovlState[id];
+  if (st.loaded) { if (st.active) st.leafletLayer.addTo(map); return; }
+  if (st.loading) return;
+  st.loading = true;
+  const spin = document.getElementById('ovl-spin-' + id);
+  if (spin) spin.style.display = '';
+  try {
+    const url = `${def.server}/${def.layerId}/query?where=1%3D1&outFields=*&outSR=4326`;
+    const features = await fetchAllFeatures(url);
+    const geojson = { type: 'FeatureCollection', features };
+    const leafletLayer = L.layerGroup();
+    const styleFunc = def.categorized === 'fire'
+      ? f => {
+          const fill = FIRE_COLORS[f.properties.CLASSE] || def.color;
+          return { fillColor: fill, fillOpacity: 0.45, color: fill, weight: 0.5, opacity: 0.8 };
+        }
+      : () => makeOverlayStyle(def);
+    L.geoJSON(geojson, {
+      renderer,
+      style: styleFunc,
+      filter: f => !!f.geometry,
+      onEachFeature(feature, layer) {
+        layer.on('click', e => {
+          L.DomEvent.stopPropagation(e);
+          showOverlayDetail(def, feature.properties);
+        });
+      },
+    }).addTo(leafletLayer);
+    st.leafletLayer = leafletLayer;
+    st.loaded = true;
+    st.loading = false;
+    if (spin) spin.style.display = 'none';
+    if (st.active) leafletLayer.addTo(map);
+  } catch (e) {
+    console.error('Overlay error [' + id + ']:', e);
+    st.loading = false;
+    if (spin) spin.style.display = 'none';
+  }
+}
+
+function toggleOverlay(id, checked) {
+  const st = ovlState[id];
+  st.active = checked;
+  if (checked) {
+    loadOverlay(id);
+  } else if (st.leafletLayer) {
+    map.removeLayer(st.leafletLayer);
+  }
+}
+
+function showOverlayDetail(def, props) {
+  let fill = def.color;
+  let code = def.name;
+  if (def.categorized === 'fire') {
+    const cl = props.CLASSE || '';
+    fill = FIRE_COLORS[cl] || def.color;
+    code = cl || def.name;
+  }
+  showDetail(props, { fill, label: def.name }, code);
+}
+
+function toggleOverlayPanel() {
+  const panel = document.getElementById('overlay-panel');
+  const expanded = panel.classList.toggle('expanded');
+  document.getElementById('overlay-toggle').innerHTML = expanded ? '&#9650;' : '&#9660;';
+}
+
+function buildOverlayPanel() {
+  const body = document.getElementById('overlay-body');
+  const groups = [...new Set(OVERLAY_DEFS.map(d => d.group))];
+  let html = `<label class="overlay-item">
+    <input type="radio" name="active-layer" value="zoning" checked onchange="handleLayerSelect('zoning')" />
+    <span class="overlay-dot" style="background:linear-gradient(135deg,#e63946 33%,#1a9850 33% 66%,#f4a261 66%)"></span>
+    <span class="overlay-name">Qualifica\u00e7\u00e3o do Solo</span>
+  </label>`;
+  for (const grp of groups) {
+    html += `<div class="overlay-group-title">${grp}</div>`;
+    for (const def of OVERLAY_DEFS.filter(d => d.group === grp)) {
+      const dotBg = def.hatch
+        ? `background:repeating-linear-gradient(45deg,${def.color}66,${def.color}66 2px,transparent 2px,transparent 7px),${def.color}22`
+        : `background:${def.color}`;
+      html += `<label class="overlay-item">
+        <input type="radio" name="active-layer" value="${def.id}" onchange="handleLayerSelect('${def.id}')" />
+        <span class="overlay-dot" style="${dotBg}"></span>
+        <span class="overlay-name">${def.name}</span>
+        <span class="overlay-spinner" id="ovl-spin-${def.id}" style="display:none">&#x21BB;</span>
+      </label>`;
+    }
+  }
+  body.innerHTML = html;
+}
+
+// ============================================================
 // INIT
 // ============================================================
 
+buildOverlayPanel();
 startGPS();
 updateLayerVisibility();
 loadSintraUrban();
