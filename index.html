@@ -795,7 +795,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);
 
 // Zoom control bottom-right above locate button
-L.control.zoom({ position: 'bottomright' }).addTo(map);
 
 // SVG renderer with extra padding so polygons don't get clipped at high zoom
 const renderer = L.svg({ padding: 1 });
