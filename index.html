@@ -746,14 +746,14 @@
 
 <!-- Status chips -->
 <div id="statusbar">
+  <div class="status-chip chip-loading" id="chip-gps">
+    <div class="dot"></div><span>GPS</span>
+  </div>
   <div class="status-chip chip-loading" id="chip-sintra">
     <div class="dot"></div><span>Sintra</span>
   </div>
-  <div class="status-chip chip-loading" id="chip-cascais">
+  <div class="status-chip chip-loading" id="chip-cascais" style="display:none">
     <div class="dot"></div><span>Cascais</span>
-  </div>
-  <div class="status-chip chip-loading" id="chip-gps">
-    <div class="dot"></div><span>GPS</span>
   </div>
   <div class="status-chip chip-loading" id="chip-overlay">
     <div class="dot"></div><span>Zoneamento…</span>
@@ -1362,8 +1362,10 @@ function updateSintraChip() {
   const chip = document.getElementById('chip-sintra');
   if (!chip) return;
 
-  if (activeMunicipality !== 'sintra') { setChip('chip-sintra', 'hidden', 'Sintra'); return; }
-  if (!on)     { setChip('chip-sintra', 'hidden', 'Sintra');      return; }
+  const sintraEl = document.getElementById('chip-sintra');
+  if (sintraEl) sintraEl.style.display = activeMunicipality === 'sintra' ? '' : 'none';
+  if (activeMunicipality !== 'sintra') return;
+  if (!on)     { setChip('chip-sintra', 'hidden', 'Sintra');       return; }
   if (!zoomed) { setChip('chip-sintra', 'warn',   'Sintra: zoom'); return; }
 
   const u = sintraStatus.urban;
@@ -1396,7 +1398,9 @@ function updateLayerVisibility() {
 
   const el = document.getElementById('chip-cascais');
   if (!el || el.classList.contains('chip-loading')) return;
-  if (activeMunicipality !== 'cascais') { setChip('chip-cascais', 'hidden', 'Cascais'); return; }
+  const cascaisEl = document.getElementById('chip-cascais');
+  if (cascaisEl) cascaisEl.style.display = activeMunicipality === 'cascais' ? '' : 'none';
+  if (activeMunicipality !== 'cascais') return;
   if (!on)          setChip('chip-cascais', 'hidden',  'Cascais');
   else if (!zoomed) setChip('chip-cascais', 'warn',    'Cascais: zoom');
   else if (chipLoadedState['chip-cascais']) {
