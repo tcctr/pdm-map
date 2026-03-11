@@ -1363,8 +1363,8 @@ function updateSintraChip() {
   const sintraEl = document.getElementById('chip-sintra');
   if (sintraEl) sintraEl.style.display = activeMunicipality === 'sintra' ? '' : 'none';
   if (activeMunicipality !== 'sintra') return;
-  if (!on)     { setChip('chip-sintra', 'hidden', 'Sintra');       return; }
-  if (!zoomed) { setChip('chip-sintra', 'warn',   'Sintra: zoom'); return; }
+  if (activeLayer !== 'zoning') return; // overlay active — leave chip as-is
+  if (!zoomed) { setChip('chip-sintra', 'warn', 'Sintra: zoom'); return; }
 
   const u = sintraStatus.urban;
   const r = sintraStatus.rural;
@@ -1394,13 +1394,13 @@ function updateLayerVisibility() {
   const on = activeLayer === 'zoning' && activeMunicipality === 'cascais';
   on && zoomed ? map.addLayer(cascaisLayer) : map.removeLayer(cascaisLayer);
 
-  const el = document.getElementById('chip-cascais');
-  if (!el || el.classList.contains('chip-loading')) return;
   const cascaisEl = document.getElementById('chip-cascais');
-  if (cascaisEl) cascaisEl.style.display = activeMunicipality === 'cascais' ? '' : 'none';
+  if (!cascaisEl) return;
+  cascaisEl.style.display = activeMunicipality === 'cascais' ? '' : 'none';
   if (activeMunicipality !== 'cascais') return;
-  if (!on)          setChip('chip-cascais', 'hidden',  'Cascais');
-  else if (!zoomed) setChip('chip-cascais', 'warn',    'Cascais: zoom');
+  if (activeLayer !== 'zoning') return; // overlay active — leave chip as-is
+  if (cascaisEl.classList.contains('chip-loading')) return;
+  if (!zoomed) setChip('chip-cascais', 'warn', 'Cascais: zoom');
   else if (chipLoadedState['chip-cascais']) {
     setChip('chip-cascais', chipLoadedState['chip-cascais'].state, chipLoadedState['chip-cascais'].text);
   }
