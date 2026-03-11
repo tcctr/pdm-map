@@ -548,6 +548,36 @@
       letter-spacing: 0.1px;
     }
 
+    /* ---- Municipality segmented control ---- */
+    #muni-selector {
+      display: flex;
+      margin: 6px 10px 4px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 3px;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .muni-btn {
+      flex: 1;
+      padding: 7px 0;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      color: rgba(255,255,255,0.45);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+    }
+    .muni-btn.active {
+      background: rgba(255,255,255,0.13);
+      color: rgba(255,255,255,0.95);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+
     #overlay-body {
       overflow-y: auto;
       padding: 4px 8px calc(24px + var(--safe-bottom));
@@ -708,6 +738,10 @@
 <div id="layers-sheet">
   <div id="layers-handle"></div>
   <div id="layers-title">Camadas</div>
+  <div id="muni-selector">
+    <button class="muni-btn active" data-muni="sintra" onclick="selectMunicipality('sintra')">Sintra</button>
+    <button class="muni-btn" data-muni="cascais" onclick="selectMunicipality('cascais')">Cascais</button>
+  </div>
   <div id="overlay-body"></div>
 </div>
 
@@ -831,23 +865,24 @@ const FIRE_COLORS = {
 };
 
 // Overlay layer definitions — loaded lazily when toggled on
+// muni: 'sintra' | 'cascais' | 'both'
 const OVERLAY_DEFS = [
   // ─── Reservas (REN/RAN) ─────────────────────────────────
-  { id: 'ran',       name: 'RAN \u2014 Reserva Agr\u00edcola',    group: 'Reservas (REN/RAN)',                server: REN_RAN_BASE,        layerId: 2,   color: '#b47832', hatch: 'hatch-ran', extra: [{ server: CASCAIS_BASE, layerId: 12 }] },
-  { id: 'ren-cascais', name: 'REN \u2014 Reserva Ecol\u00f3gica',   group: 'Reservas (REN/RAN)',                server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren' },
-  { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                server: REN_RAN_BASE,        layerId: 6,   color: '#4361ee', fillOpacity: 0.35 },
-  { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                server: REN_RAN_BASE,        layerId: 7,   color: '#e9c46a', fillOpacity: 0.5 },
+  { id: 'ran',       name: 'RAN \u2014 Reserva Agr\u00edcola',    group: 'Reservas (REN/RAN)',                muni: 'both',    server: REN_RAN_BASE,        layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: REN_RAN_BASE, layerId: 2 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 } },
+  { id: 'ren-cascais', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'cascais', server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren' },
+  { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_RAN_BASE,        layerId: 6,   color: '#4361ee', fillOpacity: 0.35 },
+  { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_RAN_BASE,        layerId: 7,   color: '#e9c46a', fillOpacity: 0.5 },
   // ─── Riscos Naturais ────────────────────────────────────
-  { id: 'vertentes', name: 'Instabilidade de Vertentes',            group: 'Riscos Naturais',                   server: REN_RAN_BASE,        layerId: 16,  color: '#dc3545', hatch: 'hatch-risk-red' },
-  { id: 'erosao',    name: 'Eros\u00e3o H\u00eddrica',              group: 'Riscos Naturais',                   server: REN_RAN_BASE,        layerId: 17,  color: '#e07800', hatch: 'hatch-risk-orange' },
-  { id: 'mar',       name: 'Amea\u00e7a Costeira (Mar)',            group: 'Riscos Naturais',                   server: REN_RAN_BASE,        layerId: 15,  color: '#3a86ff', fillOpacity: 0.4 },
-  { id: 'cheias',    name: 'Zonas de Cheias',                       group: 'Riscos Naturais',                   server: REN_RAN_BASE,        layerId: 14,  color: '#0077b6', fillOpacity: 0.4 },
+  { id: 'vertentes', name: 'Instabilidade de Vertentes',            group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 16,  color: '#dc3545', hatch: 'hatch-risk-red' },
+  { id: 'erosao',    name: 'Eros\u00e3o H\u00eddrica',              group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 17,  color: '#e07800', hatch: 'hatch-risk-orange' },
+  { id: 'mar',       name: 'Amea\u00e7a Costeira (Mar)',            group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 15,  color: '#3a86ff', fillOpacity: 0.4 },
+  { id: 'cheias',    name: 'Zonas de Cheias',                       group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 14,  color: '#0077b6', fillOpacity: 0.4 },
   // ─── Incêndio ───────────────────────────────────────────
-  { id: 'incendio',  name: 'Perigosidade de Inc\u00eandio',         group: 'Risco de Inc\u00eandio',            server: CONDICIONANTES_BASE, layerId: 371, color: '#fd8d3c', categorized: 'fire' },
+  { id: 'incendio',  name: 'Perigosidade de Inc\u00eandio',         group: 'Risco de Inc\u00eandio',            muni: 'sintra',  server: CONDICIONANTES_BASE, layerId: 371, color: '#fd8d3c', categorized: 'fire' },
   // ─── Património ─────────────────────────────────────────
-  { id: 'patrimonio',name: 'Bens Im\u00f3veis Classificados',       group: 'Patrim\u00f3nio e Infraestruturas', server: CONDICIONANTES_BASE, layerId: 299, color: '#9b5de5', fillOpacity: 0.35 },
-  { id: 'zep',       name: 'Zona Especial de Prote\u00e7\u00e3o',  group: 'Patrim\u00f3nio e Infraestruturas', server: CONDICIONANTES_BASE, layerId: 302, color: '#c77dff', fillOpacity: 0.25 },
-  { id: 'perigosos', name: 'Equipamentos Perigosos',                 group: 'Patrim\u00f3nio e Infraestruturas', server: CONDICIONANTES_BASE, layerId: 368, color: '#6c757d', fillOpacity: 0.4 },
+  { id: 'patrimonio',name: 'Bens Im\u00f3veis Classificados',       group: 'Patrim\u00f3nio e Infraestruturas', muni: 'sintra',  server: CONDICIONANTES_BASE, layerId: 299, color: '#9b5de5', fillOpacity: 0.35 },
+  { id: 'zep',       name: 'Zona Especial de Prote\u00e7\u00e3o',  group: 'Patrim\u00f3nio e Infraestruturas', muni: 'sintra',  server: CONDICIONANTES_BASE, layerId: 302, color: '#c77dff', fillOpacity: 0.25 },
+  { id: 'perigosos', name: 'Equipamentos Perigosos',                 group: 'Patrim\u00f3nio e Infraestruturas', muni: 'sintra',  server: CONDICIONANTES_BASE, layerId: 368, color: '#6c757d', fillOpacity: 0.4 },
 ];
 
 // ============================================================
@@ -1153,6 +1188,27 @@ function locateUser() {
 
 // ── Active layer selection ────────────────────────────────────
 let activeLayer = 'zoning';
+let activeMunicipality = 'sintra';
+
+function selectMunicipality(muni) {
+  activeMunicipality = muni;
+  // Update segmented control
+  document.querySelectorAll('.muni-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.muni === muni)
+  );
+  // Reset to zoning and clear all overlay cache
+  activeLayer = 'zoning';
+  for (const def of OVERLAY_DEFS) {
+    const st = ovlState[def.id];
+    if (st.leafletLayer) { map.removeLayer(st.leafletLayer); st.leafletLayer = null; }
+    st.loaded = false; st.loading = false; st.active = false;
+  }
+  // Rebuild layer list and restore map state
+  buildOverlayPanel();
+  updateLayerVisibility();
+  updateLayersBtnLabel('zoning');
+  updateZoningOverlayChip();
+}
 
 function setOverlayChip(state, text) {
   const el = document.getElementById('chip-overlay');
@@ -1163,16 +1219,18 @@ function setOverlayChip(state, text) {
 
 function updateZoningOverlayChip() {
   if (activeLayer !== 'zoning') return;
-  const u = sintraStatus.urban;
-  const r = sintraStatus.rural;
-  const cascaisState = chipLoadedState['chip-cascais']?.state;
-  const allLoading = u === 'loading' || r === 'loading' || !cascaisState;
-  const sintraOk = u === 'ok' && r === 'ok';
-  const cascaisOk = cascaisState === 'ok';
-  if (allLoading)             setOverlayChip('loading', 'Zoneamento\u2026');
-  else if (sintraOk && cascaisOk) setOverlayChip('ok', 'Zoneamento');
-  else if (u === 'error' && r === 'error' && !cascaisOk) setOverlayChip('error', 'Zoneamento: erro');
-  else                        setOverlayChip('warn', 'Zoneamento');
+  if (activeMunicipality === 'sintra') {
+    const u = sintraStatus.urban, r = sintraStatus.rural;
+    if (u === 'loading' || r === 'loading') setOverlayChip('loading', 'Zoneamento\u2026');
+    else if (u === 'ok' && r === 'ok')      setOverlayChip('ok', 'Sintra');
+    else if (u === 'error' && r === 'error')setOverlayChip('error', 'Sintra: erro');
+    else                                    setOverlayChip('warn', 'Sintra');
+  } else {
+    const cascaisState = chipLoadedState['chip-cascais']?.state;
+    if (!cascaisState)              setOverlayChip('loading', 'Zoneamento\u2026');
+    else if (cascaisState === 'ok') setOverlayChip('ok', 'Cascais');
+    else                            setOverlayChip('error', 'Cascais: erro');
+  }
 }
 
 function overlayShortName(def) {
@@ -1217,13 +1275,14 @@ const sintraStatus = { urban: 'loading', urbanText: '', rural: 'loading', ruralT
 
 function updateSintraChip() {
   const zoomed = map.getZoom() >= MIN_DATA_ZOOM;
-  const on = activeLayer === 'zoning';
+  const on = activeLayer === 'zoning' && activeMunicipality === 'sintra';
 
   [urbanLayer, ruralLayer].forEach(l => on && zoomed ? map.addLayer(l) : map.removeLayer(l));
 
   const chip = document.getElementById('chip-sintra');
   if (!chip) return;
 
+  if (activeMunicipality !== 'sintra') { setChip('chip-sintra', 'hidden', 'Sintra'); return; }
   if (!on)     { setChip('chip-sintra', 'hidden', 'Sintra');    return; }
   if (!zoomed) { setChip('chip-sintra', 'warn',   'Sintra: zoom'); return; }
 
@@ -1252,11 +1311,12 @@ function updateLayerVisibility() {
   updateSintraChip();
 
   const zoomed = map.getZoom() >= MIN_DATA_ZOOM;
-  const on = activeLayer === 'zoning';
+  const on = activeLayer === 'zoning' && activeMunicipality === 'cascais';
   on && zoomed ? map.addLayer(cascaisLayer) : map.removeLayer(cascaisLayer);
 
   const el = document.getElementById('chip-cascais');
   if (!el || el.classList.contains('chip-loading')) return;
+  if (activeMunicipality !== 'cascais') { setChip('chip-cascais', 'hidden', 'Cascais'); return; }
   if (!on)          setChip('chip-cascais', 'hidden', 'Cascais');
   else if (!zoomed) setChip('chip-cascais', 'warn',   'Cascais: zoom');
   else if (chipLoadedState['chip-cascais']) {
@@ -1419,7 +1479,13 @@ async function loadOverlay(id) {
     }
 
     // All other layers: GeoJSON with canvas renderer + server-side simplification
-    const sources = [{ server: def.server, layerId: def.layerId }, ...(def.extra || [])];
+    // For RAN (muni:'both'), load only the source for the active municipality
+    let sources;
+    if (def.sintraSource && def.cascaisSource) {
+      sources = activeMunicipality === 'cascais' ? [def.cascaisSource] : [def.sintraSource];
+    } else {
+      sources = [{ server: def.server, layerId: def.layerId }];
+    }
     const allFeatures = (await Promise.all(
       sources.map(s => fetchAllFeatures(`${s.server}/${s.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`))
     )).flat();
@@ -1501,7 +1567,8 @@ document.getElementById('layers-sheet').addEventListener('touchend', e => {
 
 function buildOverlayPanel() {
   const body = document.getElementById('overlay-body');
-  const groups = [...new Set(OVERLAY_DEFS.map(d => d.group))];
+  const visibleDefs = OVERLAY_DEFS.filter(d => d.muni === activeMunicipality || d.muni === 'both');
+  const groups = [...new Set(visibleDefs.map(d => d.group))];
   let html = `<label class="overlay-item">
     <input type="radio" name="active-layer" value="zoning" checked onchange="handleLayerSelect('zoning')" />
     <span class="overlay-dot" style="background:linear-gradient(135deg,#e63946 33%,#1a9850 33% 66%,#f4a261 66%)"></span>
@@ -1509,7 +1576,7 @@ function buildOverlayPanel() {
   </label>`;
   for (const grp of groups) {
     html += `<div class="overlay-group-title">${grp}</div>`;
-    for (const def of OVERLAY_DEFS.filter(d => d.group === grp)) {
+    for (const def of visibleDefs.filter(d => d.group === grp)) {
       const dotBg = def.hatch
         ? `background:repeating-linear-gradient(45deg,${def.color}66,${def.color}66 2px,transparent 2px,transparent 7px),${def.color}22`
         : `background:${def.color}`;
