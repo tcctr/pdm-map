@@ -1332,8 +1332,6 @@ function handleLayerSelect(value) {
   } else {
     // Hide zoning
     [urbanLayer, ruralLayer, cascaisLayer].forEach(l => map.removeLayer(l));
-    setChip('chip-sintra', 'hidden', 'Sintra');
-    setChip('chip-cascais', 'hidden', 'Cascais');
     // Show overlay chip as loading
     const def = OVERLAY_DEFS.find(d => d.id === value);
     setOverlayChip('loading', overlayShortName(def) + '\u2026');
