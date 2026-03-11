@@ -756,7 +756,7 @@
     <div class="dot"></div><span>Cascais</span>
   </div>
   <div class="status-chip chip-loading" id="chip-overlay">
-    <div class="dot"></div><span>Zoneamento…</span>
+    <div class="dot"></div><span>Solo…</span>
   </div>
 </div>
 
@@ -765,7 +765,7 @@
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
   </svg>
-  <span id="layers-btn-label">Zoneamento</span>
+  <span id="layers-btn-label">Solo</span>
 </button>
 
 <!-- Layers backdrop -->
@@ -1301,15 +1301,15 @@ function updateZoningOverlayChip() {
   if (activeLayer !== 'zoning') return;
   if (activeMunicipality === 'sintra') {
     const u = sintraStatus.urban, r = sintraStatus.rural;
-    if (u === 'loading' || r === 'loading') setOverlayChip('loading', 'Zoneamento\u2026');
-    else if (u === 'ok' && r === 'ok')       setOverlayChip('ok', 'Zoneamento');
-    else if (u === 'error' && r === 'error') setOverlayChip('error', 'Zoneamento: erro');
-    else                                     setOverlayChip('warn', 'Zoneamento');
+    if (u === 'loading' || r === 'loading') setOverlayChip('loading', 'Solo\u2026');
+    else if (u === 'ok' && r === 'ok')       setOverlayChip('ok', 'Solo');
+    else if (u === 'error' && r === 'error') setOverlayChip('error', 'Solo: erro');
+    else                                     setOverlayChip('warn', 'Solo');
   } else {
     const cascaisState = chipLoadedState['chip-cascais']?.state;
-    if (!cascaisState)              setOverlayChip('loading', 'Zoneamento\u2026');
-    else if (cascaisState === 'ok') setOverlayChip('ok', 'Zoneamento');
-    else                            setOverlayChip('error', 'Zoneamento: erro');
+    if (!cascaisState)              setOverlayChip('loading', 'Solo\u2026');
+    else if (cascaisState === 'ok') setOverlayChip('ok', 'Solo');
+    else                            setOverlayChip('error', 'Solo: erro');
   }
 }
 
@@ -1637,7 +1637,7 @@ function toggleLayersSheet() {
 
 function updateLayersBtnLabel(value) {
   const def = OVERLAY_DEFS.find(d => d.id === value);
-  document.getElementById('layers-btn-label').textContent = def ? def.name : 'Zoneamento';
+  document.getElementById('layers-btn-label').textContent = def ? def.name : 'Solo';
 }
 
 // Swipe down to close layers sheet
