@@ -1346,6 +1346,7 @@ function toggleOverlayPanel() {
   const panel = document.getElementById('overlay-panel');
   const expanded = panel.classList.toggle('expanded');
   document.getElementById('overlay-toggle').innerHTML = expanded ? '&#9650;' : '&#9660;';
+  if (!expanded) document.getElementById('overlay-body').scrollTop = 0;
 }
 
 function buildOverlayPanel() {
