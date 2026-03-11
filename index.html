@@ -441,59 +441,98 @@
       box-shadow: 0 10px 36px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.1);
     }
 
-    /* ---- Left panel column ---- */
-    #left-panels {
+    /* ---- Layers trigger button ---- */
+    #layers-btn {
       position: fixed;
-      left: 10px;
-      top: 120px;
+      bottom: 24px;
+      left: 14px;
       z-index: 1000;
-      width: 200px;
-    }
-
-    /* ---- Layer selector panel (liquid glass) ---- */
-    #overlay-panel {
-      background: rgba(10,10,20,0.62);
-      backdrop-filter: blur(28px) saturate(160%);
-      -webkit-backdrop-filter: blur(28px) saturate(160%);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 18px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      max-height: 46px;
-      transition: max-height 0.28s cubic-bezier(0.4,0,0.2,1);
-    }
-    #overlay-panel.expanded { max-height: 70vh; }
-
-    #overlay-header {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 12px 14px;
+      padding: 0 16px;
+      height: 46px;
+      background: var(--glass-bg);
+      border: var(--glass-border);
+      border-radius: 14px;
+      color: rgba(255,255,255,0.88);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
       cursor: pointer;
-      user-select: none;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: var(--glass-shadow);
+      transition: background 0.15s;
+      white-space: nowrap;
+      max-width: calc(50vw - 28px);
+    }
+    #layers-btn:hover { background: rgba(20,20,40,0.72); }
+    #layers-btn svg { flex-shrink: 0; opacity: 0.7; }
+    #layers-btn-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ---- Layers bottom sheet ---- */
+    #layers-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 1400;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    #layers-backdrop.open { opacity: 1; pointer-events: auto; }
+
+    #layers-sheet {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 1500;
+      background: rgba(8,8,20,0.82);
+      backdrop-filter: blur(32px) saturate(180%);
+      -webkit-backdrop-filter: blur(32px) saturate(180%);
+      border-top: var(--glass-border);
+      border-left: var(--glass-border);
+      border-right: var(--glass-border);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      max-height: 72vh;
+      display: flex;
+      flex-direction: column;
+    }
+    #layers-sheet.open { transform: translateY(0); }
+
+    #layers-handle {
+      width: 36px; height: 4px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 2px;
+      margin: 10px auto 0;
       flex-shrink: 0;
     }
-    #overlay-header > span {
+
+    #layers-title {
       font-size: 13px;
       font-weight: 600;
       color: rgba(255,255,255,0.95);
-      flex: 1;
+      padding: 10px 16px 6px;
+      flex-shrink: 0;
       letter-spacing: 0.1px;
     }
-    #overlay-toggle {
-      color: rgba(255,255,255,0.4);
-      font-size: 10px;
-      flex-shrink: 0;
-    }
+
     #overlay-body {
       overflow-y: auto;
-      padding: 4px 8px 10px;
+      padding: 4px 8px 24px;
       scrollbar-width: none;
+      flex: 1;
     }
     #overlay-body::-webkit-scrollbar { display: none; }
-    #overlay-panel:not(.expanded) #overlay-body { display: none; }
 
     .overlay-group-title {
       font-size: 9px;
@@ -628,16 +667,22 @@
   </div>
 </div>
 
-<!-- Left panel column -->
-<div id="left-panels">
-  <!-- Unified layer selector -->
-  <div id="overlay-panel" class="expanded">
-    <div id="overlay-header" onclick="toggleOverlayPanel()">
-      <span>Camadas</span>
-      <div id="overlay-toggle">&#9650;</div>
-    </div>
-    <div id="overlay-body"></div>
-  </div>
+<!-- Layers trigger button -->
+<button id="layers-btn" onclick="toggleLayersSheet()">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+  </svg>
+  <span id="layers-btn-label">Zoneamento</span>
+</button>
+
+<!-- Layers backdrop -->
+<div id="layers-backdrop" onclick="closeLayersSheet()"></div>
+
+<!-- Layers bottom sheet -->
+<div id="layers-sheet">
+  <div id="layers-handle"></div>
+  <div id="layers-title">Camadas</div>
+  <div id="overlay-body"></div>
 </div>
 
 
@@ -1074,6 +1119,8 @@ let activeLayer = 'zoning';
 
 function handleLayerSelect(value) {
   activeLayer = value;
+  updateLayersBtnLabel(value);
+  setTimeout(closeLayersSheet, 180);
   if (value === 'zoning') {
     // Deactivate all overlays
     for (const def of OVERLAY_DEFS) {
@@ -1349,12 +1396,35 @@ function showOverlayDetail(def, props) {
   showDetail(props, { fill, label: def.name }, code);
 }
 
-function toggleOverlayPanel() {
-  const panel = document.getElementById('overlay-panel');
-  const expanded = panel.classList.toggle('expanded');
-  document.getElementById('overlay-toggle').innerHTML = expanded ? '&#9650;' : '&#9660;';
-  if (!expanded) document.getElementById('overlay-body').scrollTop = 0;
+function openLayersSheet() {
+  document.getElementById('layers-sheet').classList.add('open');
+  document.getElementById('layers-backdrop').classList.add('open');
 }
+
+function closeLayersSheet() {
+  document.getElementById('layers-sheet').classList.remove('open');
+  document.getElementById('layers-backdrop').classList.remove('open');
+  document.getElementById('overlay-body').scrollTop = 0;
+}
+
+function toggleLayersSheet() {
+  const open = document.getElementById('layers-sheet').classList.contains('open');
+  open ? closeLayersSheet() : openLayersSheet();
+}
+
+function updateLayersBtnLabel(value) {
+  const def = OVERLAY_DEFS.find(d => d.id === value);
+  document.getElementById('layers-btn-label').textContent = def ? def.name : 'Zoneamento';
+}
+
+// Swipe down to close layers sheet
+let layersTouchStartY = 0;
+document.getElementById('layers-sheet').addEventListener('touchstart', e => {
+  layersTouchStartY = e.touches[0].clientY;
+}, { passive: true });
+document.getElementById('layers-sheet').addEventListener('touchend', e => {
+  if (e.changedTouches[0].clientY - layersTouchStartY > 60) closeLayersSheet();
+}, { passive: true });
 
 function buildOverlayPanel() {
   const body = document.getElementById('overlay-body');
