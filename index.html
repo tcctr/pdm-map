@@ -55,16 +55,69 @@
       box-shadow: var(--glass-shadow);
     }
 
-    #topbar h1 {
-      font-size: 15px;
+    /* ---- Municipality picker (replaces title) ---- */
+    #muni-picker {
+      position: relative;
+      flex-shrink: 0;
+    }
+    #muni-picker-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 10px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 11px;
+      color: rgba(255,255,255,0.9);
+      font-size: 13px;
       font-weight: 600;
-      color: rgba(255,255,255,0.95);
+      font-family: inherit;
+      cursor: pointer;
       white-space: nowrap;
-      letter-spacing: 0.1px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+      transition: background 0.15s;
     }
-    @media (max-width: 480px) {
-      #topbar h1 { display: none; }
+    #muni-picker-btn:hover { background: rgba(255,255,255,0.14); }
+    #muni-picker-chevron {
+      font-size: 9px;
+      color: rgba(255,255,255,0.4);
+      transition: transform 0.2s;
     }
+    #muni-picker-btn.open #muni-picker-chevron { transform: rotate(180deg); }
+
+    #muni-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      min-width: 100%;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-border);
+      border-radius: 14px;
+      box-shadow: var(--glass-shadow);
+      overflow: hidden;
+      z-index: 3000;
+      display: none;
+    }
+    #muni-dropdown.open { display: block; }
+    .muni-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 14px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.12s;
+      white-space: nowrap;
+    }
+    .muni-option:last-child { border-bottom: none; }
+    .muni-option:hover { background: rgba(255,255,255,0.07); }
+    .muni-option.selected { color: rgba(255,255,255,0.97); font-weight: 600; }
+    .muni-option-check { font-size: 11px; color: #4ade80; opacity: 0; }
+    .muni-option.selected .muni-option-check { opacity: 1; }
 
     /* ---- Search ---- */
     #search-wrap {
@@ -548,35 +601,6 @@
       letter-spacing: 0.1px;
     }
 
-    /* ---- Municipality segmented control ---- */
-    #muni-selector {
-      display: flex;
-      margin: 6px 10px 4px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 12px;
-      padding: 3px;
-      gap: 2px;
-      flex-shrink: 0;
-    }
-    .muni-btn {
-      flex: 1;
-      padding: 7px 0;
-      border: none;
-      border-radius: 9px;
-      background: transparent;
-      color: rgba(255,255,255,0.45);
-      font-size: 13px;
-      font-weight: 500;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, box-shadow 0.15s;
-    }
-    .muni-btn.active {
-      background: rgba(255,255,255,0.13);
-      color: rgba(255,255,255,0.95);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.1);
-    }
 
     #overlay-body {
       overflow-y: auto;
@@ -700,7 +724,20 @@
 
 <!-- Top bar -->
 <div id="topbar">
-  <h1>PDM Sintra-Cascais</h1>
+  <div id="muni-picker">
+    <button id="muni-picker-btn" onclick="toggleMuniDropdown()">
+      <span id="muni-picker-label">Sintra</span>
+      <span id="muni-picker-chevron">&#9660;</span>
+    </button>
+    <div id="muni-dropdown">
+      <div class="muni-option selected" data-muni="sintra" onclick="pickMunicipality('sintra')">
+        <span class="muni-option-check">&#10003;</span> Sintra
+      </div>
+      <div class="muni-option" data-muni="cascais" onclick="pickMunicipality('cascais')">
+        <span class="muni-option-check">&#10003;</span> Cascais
+      </div>
+    </div>
+  </div>
   <div id="search-wrap">
     <input id="search-input" type="text" placeholder="Pesquisar morada…" autocomplete="off" />
     <div id="search-results"></div>
@@ -718,8 +755,8 @@
   <div class="status-chip chip-loading" id="chip-gps">
     <div class="dot"></div><span>GPS</span>
   </div>
-  <div class="status-chip chip-loading" id="chip-overlay">
-    <div class="dot"></div><span>Zoneamento…</span>
+  <div class="status-chip chip-loading" id="chip-overlay" style="display:none">
+    <div class="dot"></div><span></span>
   </div>
 </div>
 
@@ -738,10 +775,6 @@
 <div id="layers-sheet">
   <div id="layers-handle"></div>
   <div id="layers-title">Camadas</div>
-  <div id="muni-selector">
-    <button class="muni-btn active" data-muni="sintra" onclick="selectMunicipality('sintra')">Sintra</button>
-    <button class="muni-btn" data-muni="cascais" onclick="selectMunicipality('cascais')">Cascais</button>
-  </div>
   <div id="overlay-body"></div>
 </div>
 
@@ -1139,9 +1172,26 @@ function onGpsSuccess(pos) {
   if (firstFix) {
     map.setView(latlng, 15);
     firstFix = false;
+    autoDetectMunicipality(lat, lng);
   }
 
   setChip('chip-gps', 'gps', `GPS \u00b1${Math.round(acc)}m`);
+}
+
+async function autoDetectMunicipality(lat, lng) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=pt`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const data = await res.json();
+    const addr = data.address || {};
+    const place = [addr.municipality, addr.city, addr.town, addr.village, addr.county]
+      .filter(Boolean).join(' ').toLowerCase();
+    if (place.includes('cascais')) selectMunicipality('cascais');
+    else if (place.includes('sintra')) selectMunicipality('sintra');
+    // else: leave default (sintra)
+  } catch {
+    // silently ignore — default stays
+  }
 }
 
 function onGpsError(err) {
@@ -1190,12 +1240,42 @@ function locateUser() {
 let activeLayer = 'zoning';
 let activeMunicipality = 'sintra';
 
+// ── Municipality picker ──────────────────────────────────────
+const MUNICIPALITIES = [
+  { id: 'sintra',  label: 'Sintra' },
+  { id: 'cascais', label: 'Cascais' },
+];
+
+function toggleMuniDropdown() {
+  const btn = document.getElementById('muni-picker-btn');
+  const dd  = document.getElementById('muni-dropdown');
+  const open = dd.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+function closeMuniDropdown() {
+  document.getElementById('muni-dropdown').classList.remove('open');
+  document.getElementById('muni-picker-btn').classList.remove('open');
+}
+
+function pickMunicipality(muni) {
+  closeMuniDropdown();
+  selectMunicipality(muni);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (!document.getElementById('muni-picker').contains(e.target)) closeMuniDropdown();
+});
+
 function selectMunicipality(muni) {
   activeMunicipality = muni;
-  // Update segmented control
-  document.querySelectorAll('.muni-btn').forEach(btn =>
-    btn.classList.toggle('active', btn.dataset.muni === muni)
-  );
+  // Update picker label and checkmarks
+  const cfg = MUNICIPALITIES.find(m => m.id === muni);
+  document.getElementById('muni-picker-label').textContent = cfg ? cfg.label : muni;
+  document.querySelectorAll('.muni-option').forEach(opt => {
+    opt.classList.toggle('selected', opt.dataset.muni === muni);
+  });
   // Reset to zoning and clear all overlay cache
   activeLayer = 'zoning';
   for (const def of OVERLAY_DEFS) {
@@ -1213,24 +1293,16 @@ function selectMunicipality(muni) {
 function setOverlayChip(state, text) {
   const el = document.getElementById('chip-overlay');
   if (!el) return;
+  el.style.display = '';
   el.className = 'status-chip chip-' + state;
   el.innerHTML = `<div class="dot"></div><span>${text}</span>`;
 }
 
 function updateZoningOverlayChip() {
   if (activeLayer !== 'zoning') return;
-  if (activeMunicipality === 'sintra') {
-    const u = sintraStatus.urban, r = sintraStatus.rural;
-    if (u === 'loading' || r === 'loading') setOverlayChip('loading', 'Zoneamento\u2026');
-    else if (u === 'ok' && r === 'ok')      setOverlayChip('ok', 'Sintra');
-    else if (u === 'error' && r === 'error')setOverlayChip('error', 'Sintra: erro');
-    else                                    setOverlayChip('warn', 'Sintra');
-  } else {
-    const cascaisState = chipLoadedState['chip-cascais']?.state;
-    if (!cascaisState)              setOverlayChip('loading', 'Zoneamento\u2026');
-    else if (cascaisState === 'ok') setOverlayChip('ok', 'Cascais');
-    else                            setOverlayChip('error', 'Cascais: erro');
-  }
+  // Overlay chip is hidden during zoning — Sintra/Cascais chips carry that info
+  const el = document.getElementById('chip-overlay');
+  if (el) el.style.display = 'none';
 }
 
 function overlayShortName(def) {
