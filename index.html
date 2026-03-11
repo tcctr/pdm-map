@@ -598,6 +598,10 @@
       <rect width="10" height="10" fill="rgba(180,120,50,0.22)"/>
       <line x1="0" y1="0" x2="0" y2="10" stroke="#b47832" stroke-width="3" stroke-opacity="0.7"/>
     </pattern>
+    <pattern id="hatch-ren" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+      <rect width="10" height="10" fill="rgba(30,120,60,0.1)"/>
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#1a9850" stroke-width="2" stroke-opacity="0.55"/>
+    </pattern>
     <pattern id="hatch-risk-red" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
       <rect width="10" height="10" fill="rgba(220,53,69,0.1)"/>
       <line x1="0" y1="0" x2="0" y2="10" stroke="#dc3545" stroke-width="2" stroke-opacity="0.55"/>
@@ -686,7 +690,8 @@ const FIRE_COLORS = {
 // Overlay layer definitions — loaded lazily when toggled on
 const OVERLAY_DEFS = [
   // ─── Reservas (REN/RAN) ─────────────────────────────────
-  { id: 'ran',       name: 'RAN \u2014 Reserva Agr\u00edcola',    group: 'Reservas (REN/RAN)',                server: REN_RAN_BASE,        layerId: 2,   color: '#b47832', hatch: 'hatch-ran' },
+  { id: 'ran',       name: 'RAN \u2014 Reserva Agr\u00edcola',    group: 'Reservas (REN/RAN)',                server: REN_RAN_BASE,        layerId: 2,   color: '#b47832', hatch: 'hatch-ran', extra: [{ server: CASCAIS_BASE, layerId: 12 }] },
+  { id: 'ren-cascais', name: 'REN (Cascais)',                       group: 'Reservas (REN/RAN)',                server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                server: REN_RAN_BASE,        layerId: 6,   color: '#4361ee', fillOpacity: 0.35 },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                server: REN_RAN_BASE,        layerId: 7,   color: '#e9c46a', fillOpacity: 0.5 },
   // ─── Riscos Naturais ────────────────────────────────────
@@ -1274,9 +1279,11 @@ async function loadOverlay(id) {
     }
 
     // All other layers: GeoJSON with canvas renderer + server-side simplification
-    const url = `${def.server}/${def.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`;
-    const features = await fetchAllFeatures(url);
-    L.geoJSON({ type: 'FeatureCollection', features }, {
+    const sources = [{ server: def.server, layerId: def.layerId }, ...(def.extra || [])];
+    const allFeatures = (await Promise.all(
+      sources.map(s => fetchAllFeatures(`${s.server}/${s.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`))
+    )).flat();
+    L.geoJSON({ type: 'FeatureCollection', features: allFeatures }, {
       renderer: def.hatch ? renderer : overlayRenderer,
       style: () => makeOverlayStyle(def),
       filter: f => !!f.geometry,
