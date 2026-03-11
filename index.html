@@ -178,17 +178,27 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
     }
     .status-chip .dot {
-      width: 7px; height: 7px;
+      width: 8px; height: 8px;
       border-radius: 50%;
+      flex-shrink: 0;
     }
     .chip-loading { background: rgba(255,193,7,0.12); color: #ffc107; }
-    .chip-loading .dot { background: #ffc107; animation: pulse 1s infinite; }
+    .chip-loading .dot {
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,193,7,0.25);
+      border-top-color: #ffc107;
+      background: transparent;
+      animation: spin 0.75s linear infinite;
+    }
     .chip-ok { background: rgba(40,167,69,0.12); color: #4ade80; }
     .chip-ok .dot { background: #4ade80; }
     .chip-warn { background: rgba(255,193,7,0.12); color: #ffc107; }
     .chip-warn .dot { background: #ffc107; }
     .chip-error { background: rgba(220,53,69,0.12); color: #f87171; }
     .chip-error .dot { background: #f87171; }
+    .chip-hidden { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.28); }
+    .chip-hidden .dot { background: rgba(255,255,255,0.18); }
     .chip-gps { background: rgba(66,153,225,0.12); color: #60a5fa; }
     .chip-gps .dot { background: #60a5fa; animation: pulse 1.5s infinite; }
 
@@ -678,6 +688,9 @@
   <div class="status-chip chip-loading" id="chip-gps">
     <div class="dot"></div><span>GPS</span>
   </div>
+  <div class="status-chip chip-hidden" id="chip-overlay" style="display:none">
+    <div class="dot"></div><span></span>
+  </div>
 </div>
 
 <!-- Layers trigger button -->
@@ -1141,11 +1154,24 @@ function locateUser() {
 // ── Active layer selection ────────────────────────────────────
 let activeLayer = 'zoning';
 
+function setOverlayChip(state, text) {
+  const el = document.getElementById('chip-overlay');
+  if (!el) return;
+  el.style.display = state === 'hidden' ? 'none' : '';
+  el.className = 'status-chip chip-' + state;
+  el.innerHTML = `<div class="dot"></div><span>${text}</span>`;
+}
+
+function overlayShortName(def) {
+  return def.name.includes('\u2014') ? def.name.split('\u2014')[0].trim() : def.name;
+}
+
 function handleLayerSelect(value) {
   activeLayer = value;
   updateLayersBtnLabel(value);
   setTimeout(closeLayersSheet, 180);
   if (value === 'zoning') {
+    setOverlayChip('hidden', '');
     // Deactivate all overlays
     for (const def of OVERLAY_DEFS) {
       ovlState[def.id].active = false;
@@ -1155,8 +1181,11 @@ function handleLayerSelect(value) {
   } else {
     // Hide zoning
     [urbanLayer, ruralLayer, cascaisLayer].forEach(l => map.removeLayer(l));
-    setChip('chip-sintra', 'error', 'Oculto');
-    setChip('chip-cascais', 'error', 'Oculto');
+    setChip('chip-sintra', 'hidden', 'Sintra');
+    setChip('chip-cascais', 'hidden', 'Cascais');
+    // Show overlay chip as loading
+    const def = OVERLAY_DEFS.find(d => d.id === value);
+    setOverlayChip('loading', overlayShortName(def) + '\u2026');
     // Deactivate all other overlays, activate this one
     for (const def of OVERLAY_DEFS) {
       if (def.id === value) {
@@ -1182,8 +1211,8 @@ function updateSintraChip() {
   const chip = document.getElementById('chip-sintra');
   if (!chip) return;
 
-  if (!on)     { setChip('chip-sintra', 'error', 'Oculto');   return; }
-  if (!zoomed) { setChip('chip-sintra', 'error', 'Aproxime'); return; }
+  if (!on)     { setChip('chip-sintra', 'hidden', 'Sintra');    return; }
+  if (!zoomed) { setChip('chip-sintra', 'warn',   'Sintra: zoom'); return; }
 
   const u = sintraStatus.urban;
   const r = sintraStatus.rural;
@@ -1214,8 +1243,8 @@ function updateLayerVisibility() {
 
   const el = document.getElementById('chip-cascais');
   if (!el || el.classList.contains('chip-loading')) return;
-  if (!on)      setChip('chip-cascais', 'error', 'Oculto');
-  else if (!zoomed) setChip('chip-cascais', 'error', 'Aproxime');
+  if (!on)          setChip('chip-cascais', 'hidden', 'Cascais');
+  else if (!zoomed) setChip('chip-cascais', 'warn',   'Cascais: zoom');
   else if (chipLoadedState['chip-cascais']) {
     setChip('chip-cascais', chipLoadedState['chip-cascais'].state, chipLoadedState['chip-cascais'].text);
   }
@@ -1366,8 +1395,12 @@ async function loadOverlay(id) {
       dynLayer.once('load', () => {
         st.loaded = true; st.loading = false;
         if (spin) spin.style.display = 'none';
+        if (activeLayer === id) setOverlayChip('ok', overlayShortName(def));
       });
-      dynLayer.on('loaderror', () => { st.loading = false; if (spin) spin.style.display = 'none'; });
+      dynLayer.on('loaderror', () => {
+        st.loading = false; if (spin) spin.style.display = 'none';
+        if (activeLayer === id) setOverlayChip('error', overlayShortName(def) + ': erro');
+      });
       return; // rest handled via events
     }
 
@@ -1392,10 +1425,12 @@ async function loadOverlay(id) {
     st.loading = false;
     if (spin) spin.style.display = 'none';
     if (st.active) leafletLayer.addTo(map);
+    if (activeLayer === id) setOverlayChip('ok', overlayShortName(def) + ' (' + allFeatures.length + ')');
   } catch (e) {
     console.error('Overlay error [' + id + ']:', e);
     st.loading = false;
     if (spin) spin.style.display = 'none';
+    if (activeLayer === id) setOverlayChip('error', overlayShortName(def) + ': erro');
   }
 }
 
