@@ -803,55 +803,6 @@ const urbanLayer   = L.layerGroup().addTo(map);
 const ruralLayer   = L.layerGroup().addTo(map);
 const cascaisLayer = L.layerGroup().addTo(map);
 
-// ============================================================
-// LEGEND BUILDER
-// ============================================================
-
-function buildLegend() {
-  const urbanEl = document.getElementById('legend-urban');
-  const ruralEl = document.getElementById('legend-rural');
-  const cascaisEl = document.getElementById('legend-cascais');
-
-  for (const [code, cfg] of Object.entries(URBAN_COLORS)) {
-    urbanEl.innerHTML += `<div class="legend-item">
-      <div class="legend-swatch" style="background:${cfg.fill}88;border-color:${cfg.fill}"></div>
-      <div class="legend-label"><strong>${code}</strong> ${cfg.label}</div>
-    </div>`;
-  }
-
-  for (const [code, cfg] of Object.entries(RURAL_COLORS)) {
-    ruralEl.innerHTML += `<div class="legend-item">
-      <div class="legend-swatch" style="background:${cfg.fill}88;border-color:${cfg.fill}"></div>
-      <div class="legend-label"><strong>${code}</strong> ${cfg.label}</div>
-    </div>`;
-  }
-
-  for (const [cat, cfg] of Object.entries(CASCAIS_COLORS)) {
-    cascaisEl.innerHTML += `<div class="legend-item">
-      <div class="legend-swatch" style="background:${cfg.fill}88;border-color:${cfg.fill}"></div>
-      <div class="legend-label">${cfg.label}</div>
-    </div>`;
-  }
-}
-
-buildLegend();
-
-// ============================================================
-// LEGEND TOGGLE
-// ============================================================
-
-function toggleLegend() {
-  const el = document.getElementById('legend');
-  const arrow = document.getElementById('legend-toggle');
-  const collapsed = el.classList.toggle('collapsed');
-  arrow.innerHTML = collapsed ? '&#9660;' : '&#9650;';
-}
-
-// Start collapsed on small screens
-if (window.innerWidth < 480) {
-  document.getElementById('legend').classList.add('collapsed');
-  document.getElementById('legend-toggle').innerHTML = '&#9660;';
-}
 
 // ============================================================
 // ARCGIS QUERY HELPERS
