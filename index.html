@@ -426,7 +426,7 @@
       backdrop-filter: var(--glass-blur);
       -webkit-backdrop-filter: var(--glass-blur);
       box-shadow: var(--glass-shadow);
-      transition: background 0.15s;
+      transition: background 0.15s, bottom 0.3s cubic-bezier(0.32, 0.72, 0, 1);
       white-space: nowrap;
       max-width: calc(50vw - 28px);
     }
@@ -896,13 +896,13 @@ function showDetail(props, colorCfg, codeLabel) {
   // ].filter(d => d.url);
 
   rowsEl.innerHTML = html;
-  document.getElementById('layers-btn').style.display = 'none';
   panel.classList.add('open');
+  document.getElementById('layers-btn').style.bottom = (panel.offsetHeight + 12) + 'px';
 }
 
 function closeDetail() {
   document.getElementById('detail-panel').classList.remove('open');
-  document.getElementById('layers-btn').style.display = '';
+  document.getElementById('layers-btn').style.bottom = '';
 }
 
 // Swipe down to close
