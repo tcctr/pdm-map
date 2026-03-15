@@ -896,11 +896,13 @@ function showDetail(props, colorCfg, codeLabel) {
   // ].filter(d => d.url);
 
   rowsEl.innerHTML = html;
+  document.getElementById('layers-btn').style.display = 'none';
   panel.classList.add('open');
 }
 
 function closeDetail() {
   document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('layers-btn').style.display = '';
 }
 
 // Swipe down to close
