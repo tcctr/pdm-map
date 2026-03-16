@@ -8,7 +8,7 @@ A single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data 
 
 ## Architecture
 
-The entire app lives in `index.html` — no build step, no bundler, no dependencies to install.
+The entire app lives in `index.html` — no build step, no bundler, no dependencies to install (~1530 lines).
 
 **External dependencies (CDN):**
 - Leaflet 1.9.4 — map rendering and GeoJSON layer management
@@ -38,15 +38,17 @@ python3 -m http.server 8080
 - `REN_RAN_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer`
 - `CONDICIONANTES_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer`
 
+> **Known outage:** `WMS_SRUP_REN_RAN` is frequently down on Sintra's server (HTTP 500 "Service not started"). All RAN/REN/risk layers sourced from it will fail until Sintra's GIS team restarts it.
+
 ---
 
 ## Layer System
 
 ### Base zoning (always on by default)
-`urbanLayer`, `ruralLayer`, `cascaisLayer` — three `L.layerGroup()` instances. Only visible at zoom ≥ `MIN_DATA_ZOOM` (12). Sintra layers load on init; Cascais is a dynamic tile layer.
+`urbanLayer`, `ruralLayer`, `cascaisLayer` — three `L.layerGroup()` instances. Only visible at zoom ≥ `MIN_DATA_ZOOM` (1). Sintra layers load on init; Cascais is a dynamic tile layer.
 
 ### Overlay layers (`OVERLAY_DEFS` array)
-Radio-button selection — only one layer active at a time. Selecting any overlay hides the zoning. Selecting "Qualificação do Solo" restores it. Layers are **lazy-loaded** on first selection and cached.
+Radio-button selection — only one layer active at a time. Selecting any overlay hides the zoning. Selecting "Qualificação do Solo" restores it. Layers are **lazy-loaded** on first selection and cached in `ovlState`.
 
 `activeLayer` variable tracks what's selected (`'zoning'` or a def id).
 
@@ -73,9 +75,18 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 | `zep` | Zona Especial de Proteção | CONDICIONANTES_BASE | 302 | violet fill |
 | `perigosos` | Equipamentos Perigosos | CONDICIONANTES_BASE | 368 | gray fill |
 
-**RAN loads from two servers in parallel** (`def.extra` array): Sintra layer 2 + Cascais layer 12.
+**RAN loads from two servers** via `def.sintraSource` / `def.cascaisSource`: Sintra layer 2 + Cascais layer 12. Only the active municipality's source is loaded.
 
 **SVG hatch patterns** are defined in a hidden `<svg>` element in the HTML body: `hatch-ran`, `hatch-ren`, `hatch-risk-red`, `hatch-risk-orange`.
+
+---
+
+## Auto-Retry
+
+Failed layer loads retry automatically via `RETRY_DELAYS = [15000, 30000, 60000]` (15s, 30s, 1min):
+- Sintra urban/rural: `attempt` counter passed recursively into `loadSintraUrban(attempt)` / `loadSintraRural(attempt)`
+- Cascais: same pattern; layer group cleared before each retry; uses `.once('loaderror')` not `.on()`
+- Overlays: retry count stored in `ovlState[id].retries`; timer guard checks `activeLayer === id && !st.loaded` before retrying. Resets to 0 on municipality switch.
 
 ---
 
@@ -85,27 +96,31 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 |----------|-------------|
 | `fetchAllFeatures(url)` | Paginates ArcGIS GeoJSON queries (1000/page, follows `exceededTransferLimit`) |
 | `handleLayerSelect(value)` | Switches active layer — hides zoning or overlays accordingly |
-| `loadOverlay(id)` | Lazy-loads an overlay layer; handles `def.extra` for multi-source layers; fire layer uses dynamicMapLayer |
+| `loadOverlay(id)` | Lazy-loads an overlay layer; uses `sintraSource`/`cascaisSource` for RAN; fire layer uses dynamicMapLayer |
 | `updateLayerVisibility()` | Shows/hides zoning layers based on `activeLayer` and zoom level |
 | `updateSintraChip()` | Updates Sintra status chip based on load state + zoom |
-| `showDetail(props, colorCfg, codeLabel)` | Opens bottom sheet detail panel |
+| `showDetail(props, colorCfg, codeLabel)` | Opens detail panel; shifts layers button up to stay visible |
+| `closeDetail()` | Closes detail panel; restores layers button position |
 | `showOverlayDetail(def, props)` | Adapts overlay properties for `showDetail` |
-| `buildOverlayPanel()` | Generates the "Camadas" radio panel HTML from `OVERLAY_DEFS` |
-| `toggleOverlayPanel()` | Expand/collapse the Camadas panel |
+| `buildOverlayPanel()` | Generates the layers radio list HTML from `OVERLAY_DEFS` |
+| `openLayersSheet()` | Positions popup above button's current screen location (accounts for button shift) |
 | `setChipLoaded(id, state, text)` | Saves chip state to `chipLoadedState` so it restores after zoom-out |
+| `selectMunicipality(muni)` | Switches municipality, flies map to center, resets overlay cache |
 
 ---
 
 ## UI Structure
 
-- **Top bar**: title, address search (Nominatim), info button
-- **Status chips** (below top bar): Sintra chip, Cascais chip, GPS chip
-- **Left panel** (`#left-panels`): single "Camadas" collapsible panel with radio buttons — starts expanded
-- **Right panel** (`#legend`): zoning legend, collapsible
-- **Bottom sheet** (`#detail-panel`): slides up on polygon tap, swipe-down to close
-- **Locate button**: bottom-right, re-centers on GPS
+- **Top bar** (`#topbar`): municipality picker pill + address search (Nominatim)
+- **Status bar** (`#statusbar`): GPS chip → municipality chip (Sintra OR Cascais) → Solo overlay chip
+- **Layers button** (`#layers-btn`): bottom-left floating pill; slides up when detail panel is open; opens layers popup
+- **Layers popup** (`#layers-sheet`): compact popup anchored above the layers button (positioned dynamically via `getBoundingClientRect`); contains overlay radio list
+- **Detail panel** (`#detail-panel`): full-width bottom sheet, slides up on polygon tap, swipe-down to close; liquid glass style
+- **Locate button** (`#locate-btn`): bottom-right, re-centers on GPS
 
-**Camadas panel** uses Apple liquid glass dark-mode aesthetic: `rgba(10,10,20,0.62)` background, `blur(28px) saturate(160%)`, rounded 18px, subtle border. Selected item gets frosted glass highlight + white ring on color dot. Native radio inputs hidden; whole row is tap target styled via `:has(input:checked)`.
+**CSS design system:** `--glass-bg`, `--glass-blur`, `--glass-border`, `--glass-shadow` CSS variables. Apple liquid glass dark mode: `rgba(10,10,20,0.62)` background, `blur(28px) saturate(160%)`. All panels use these tokens.
+
+**Municipality picker:** dropdown in topbar. Selecting a municipality flies the map to its center (`map.flyTo(cfg.center, cfg.zoom)`). Centers defined in `MUNICIPALITIES` array.
 
 ---
 
@@ -115,3 +130,4 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 - Cascais condicionantes risk layers (fire, floods, erosion) not yet integrated — available at `sig.aml.pt/.../PMAAC_Riscos_Actuais` (layers 60–65) but need testing
 - Sintra overlay layers only cover Sintra territory (except RAN which also loads Cascais layer 12)
 - Cascais dynamicMapLayer returns blank tiles above zoom 17 — capped with `maxZoom: 17`
+- `WMS_SRUP_REN_RAN` server on Sintra's infrastructure is unreliable (frequently "not started")
