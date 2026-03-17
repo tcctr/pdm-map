@@ -769,15 +769,15 @@ const FIRE_COLORS = {
 // muni: 'sintra' | 'cascais' | 'both'
 const OVERLAY_DEFS = [
   // ─── Reservas (REN/RAN) ─────────────────────────────────
-  { id: 'ran',       name: 'RAN \u2014 Reserva Agr\u00edcola',    group: 'Reservas (REN/RAN)',                muni: 'both',    server: REN_RAN_BASE,        layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: REN_RAN_BASE, layerId: 2 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 }, cascaisCachedFile: 'ran-cascais.geojson' },
+  { id: 'ran',       name: 'RAN \u2014 Reserva Agr\u00edcola',    group: 'Reservas (REN/RAN)',                muni: 'both',    server: REN_RAN_BASE,        layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: REN_RAN_BASE, layerId: 2 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 }, sintraCachedFile: 'ran-sintra.geojson', cascaisCachedFile: 'ran-cascais.geojson' },
   { id: 'ren-cascais', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'cascais', server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_RAN_BASE,        layerId: 6,   color: '#4361ee', fillOpacity: 0.35 },
-  { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_RAN_BASE,        layerId: 7,   color: '#e9c46a', fillOpacity: 0.5 },
+  { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_RAN_BASE,        layerId: 6,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
+  { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_RAN_BASE,        layerId: 7,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
   // ─── Riscos Naturais ────────────────────────────────────
-  { id: 'vertentes', name: 'Instabilidade de Vertentes',            group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 16,  color: '#dc3545', hatch: 'hatch-risk-red' },
-  { id: 'erosao',    name: 'Eros\u00e3o H\u00eddrica',              group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 17,  color: '#e07800', hatch: 'hatch-risk-orange' },
-  { id: 'mar',       name: 'Amea\u00e7a Costeira (Mar)',            group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 15,  color: '#3a86ff', fillOpacity: 0.4 },
-  { id: 'cheias',    name: 'Zonas de Cheias',                       group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 14,  color: '#0077b6', fillOpacity: 0.4 },
+  { id: 'vertentes', name: 'Instabilidade de Vertentes',            group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 16,  color: '#dc3545', hatch: 'hatch-risk-red',    cachedFile: 'vertentes.geojson' },
+  { id: 'erosao',    name: 'Eros\u00e3o H\u00eddrica',              group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 17,  color: '#e07800', hatch: 'hatch-risk-orange', cachedFile: 'erosao.geojson' },
+  { id: 'mar',       name: 'Amea\u00e7a Costeira (Mar)',            group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 15,  color: '#3a86ff', fillOpacity: 0.4,  cachedFile: 'mar.geojson' },
+  { id: 'cheias',    name: 'Zonas de Cheias',                       group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 14,  color: '#0077b6', fillOpacity: 0.4,  cachedFile: 'cheias.geojson' },
   // ─── Incêndio ───────────────────────────────────────────
   { id: 'incendio',  name: 'Perigosidade de Inc\u00eandio',         group: 'Risco de Inc\u00eandio',            muni: 'sintra',  server: CONDICIONANTES_BASE, layerId: 371, color: '#fd8d3c', categorized: 'fire' },
   // ─── Património ─────────────────────────────────────────
@@ -819,14 +819,18 @@ const cascaisLayer = L.layerGroup().addTo(map);
 
 
 // ============================================================
-// DATA HELPERS — local cache + live ArcGIS fallback
+// DATA HELPERS — cache-first with live ArcGIS fallback
 // ============================================================
 
-async function fetchLocalGeoJSON(filename) {
-  const res = await fetch(`/data/${filename}`, { signal: AbortSignal.timeout(15000) });
-  if (!res.ok) throw new Error(`HTTP ${res.status} loading /data/${filename}`);
-  const data = await res.json();
-  return data.features || [];
+let cacheMetaDate = null;   // formatted date string from sync-metadata.json
+let liveFallbackCount = 0;  // incremented each time a layer falls back to live
+
+function updateCacheDateIndicator() {
+  const el = document.getElementById('cache-date');
+  if (!el || !cacheMetaDate) return;
+  el.textContent = liveFallbackCount > 0
+    ? `Dados: ${cacheMetaDate} (alguns em direto)`
+    : `Dados: ${cacheMetaDate}`;
 }
 
 async function loadCacheMetadata() {
@@ -836,16 +840,15 @@ async function loadCacheMetadata() {
     const meta = await res.json();
     if (meta.lastRun) {
       const d = new Date(meta.lastRun);
-      const str = d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
-      const el = document.getElementById('cache-date');
-      if (el) el.textContent = `Dados: ${str}`;
+      cacheMetaDate = d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      updateCacheDateIndicator();
     }
   } catch {
-    // silently ignore — indicator just stays hidden
+    // silently ignore — indicator stays hidden
   }
 }
 
-// ── Live ArcGIS query helpers (used for uncached layers only) ─
+// ── Live ArcGIS query helpers ─────────────────────────────────
 
 async function fetchGeoJSONPage(url, offset, count = 1000) {
   const sep = url.includes('?') ? '&' : '?';
@@ -868,6 +871,46 @@ async function fetchAllFeatures(baseQueryUrl) {
     offset += batch.length;
   }
   return features;
+}
+
+// ── Unified loader: cache first, live ArcGIS fallback ─────────
+// Returns { features: [...], fromCache: bool } or null if both fail.
+
+async function loadLayerData(cachedFile, fallbackUrl) {
+  // 1. Try local cache
+  if (cachedFile) {
+    try {
+      const res = await fetch(`/data/${cachedFile}`, { signal: AbortSignal.timeout(15000) });
+      if (res.ok) {
+        const data = await res.json();
+        const features = data.features || [];
+        if (features.length > 0) return { features, fromCache: true };
+        console.warn(`[cache] ${cachedFile} returned 0 features — falling back to live`);
+      } else {
+        console.warn(`[cache] ${cachedFile} → HTTP ${res.status} — falling back to live`);
+      }
+    } catch (e) {
+      console.warn(`[cache] ${cachedFile} failed (${e.message}) — falling back to live`);
+    }
+  }
+
+  // 2. Try live ArcGIS endpoint
+  if (fallbackUrl) {
+    try {
+      const features = await fetchAllFeatures(fallbackUrl);
+      if (features.length > 0) {
+        liveFallbackCount++;
+        updateCacheDateIndicator();
+        return { features, fromCache: false };
+      }
+      console.error(`[live] ${fallbackUrl} returned 0 features`);
+    } catch (e) {
+      console.error(`[live] ${fallbackUrl} failed:`, e.message);
+    }
+  }
+
+  // 3. Both failed
+  return null;
 }
 
 // ============================================================
@@ -964,54 +1007,54 @@ function setChip(id, state, text) {
 
 async function loadSintraUrban() {
   sintraStatus.urban = 'loading'; updateSintraChip();
-  try {
-    const features = await fetchLocalGeoJSON('sintra-urban.geojson');
-    L.geoJSON({ type: 'FeatureCollection', features }, {
-      renderer,
-      style: f => getUrbanStyle(f.properties),
-      onEachFeature(feature, layer) {
-        layer.on('click', e => {
-          L.DomEvent.stopPropagation(e);
-          const p = feature.properties;
-          const cat = p.CAT || '';
-          const cfg = URBAN_COLORS[cat] || { fill: '#888', label: cat };
-          showDetail(p, cfg, cat + (cfg.label ? ' — ' + cfg.label : ''));
-        });
-      }
-    }).addTo(urbanLayer);
-    sintraStatus.urban = 'ok'; sintraStatus.urbanText = `Urbano (${features.length})`;
-    updateSintraChip();
-  } catch (e) {
-    console.warn('Sintra urban cache error:', e);
+  const fallbackUrl = `${SINTRA_BASE}/55/query?where=1%3D1&outFields=CAT%2CDescricao%2CRegulamento%2CPag_Regulamento%2CGuiao%2CPag_Guiao%2CRelatorio%2CPag_relatorio%2Carea_ha&outSR=4326`;
+  const result = await loadLayerData('sintra-urban.geojson', fallbackUrl);
+  if (!result) {
     sintraStatus.urban = 'error'; sintraStatus.urbanText = 'erro';
     updateSintraChip();
+    return;
   }
+  L.geoJSON({ type: 'FeatureCollection', features: result.features }, {
+    renderer,
+    style: f => getUrbanStyle(f.properties),
+    onEachFeature(feature, layer) {
+      layer.on('click', e => {
+        L.DomEvent.stopPropagation(e);
+        const p = feature.properties;
+        const cat = p.CAT || '';
+        const cfg = URBAN_COLORS[cat] || { fill: '#888', label: cat };
+        showDetail(p, cfg, cat + (cfg.label ? ' — ' + cfg.label : ''));
+      });
+    }
+  }).addTo(urbanLayer);
+  sintraStatus.urban = 'ok'; sintraStatus.urbanText = `Urbano (${result.features.length})`;
+  updateSintraChip();
 }
 
 async function loadSintraRural() {
   sintraStatus.rural = 'loading'; updateSintraChip();
-  try {
-    const features = await fetchLocalGeoJSON('sintra-rural.geojson');
-    L.geoJSON({ type: 'FeatureCollection', features }, {
-      renderer,
-      style: f => getRuralStyle(f.properties),
-      onEachFeature(feature, layer) {
-        layer.on('click', e => {
-          L.DomEvent.stopPropagation(e);
-          const p = feature.properties;
-          const cat = p.Ord_Categ || '';
-          const cfg = RURAL_COLORS[cat] || { fill: '#888', label: cat };
-          showDetail(p, cfg, cat + (cfg.label ? ' — ' + cfg.label : ''));
-        });
-      }
-    }).addTo(ruralLayer);
-    sintraStatus.rural = 'ok'; sintraStatus.ruralText = `Rústico (${features.length})`;
-    updateSintraChip();
-  } catch (e) {
-    console.warn('Sintra rural cache error:', e);
+  const fallbackUrl = `${SINTRA_BASE}/54/query?where=1%3D1&outFields=Ord_Categ%2CDescricao%2CRegulamento%2CPag_Regulamento%2CGuiao%2CPag_Guiao%2CRelatorio%2CPag_relatorio%2CArea_Ha&outSR=4326`;
+  const result = await loadLayerData('sintra-rural.geojson', fallbackUrl);
+  if (!result) {
     sintraStatus.rural = 'error'; sintraStatus.ruralText = 'erro';
     updateSintraChip();
+    return;
   }
+  L.geoJSON({ type: 'FeatureCollection', features: result.features }, {
+    renderer,
+    style: f => getRuralStyle(f.properties),
+    onEachFeature(feature, layer) {
+      layer.on('click', e => {
+        L.DomEvent.stopPropagation(e);
+        const p = feature.properties;
+        const cat = p.Ord_Categ || '';
+        const cfg = RURAL_COLORS[cat] || { fill: '#888', label: cat };
+        showDetail(p, cfg, cat + (cfg.label ? ' — ' + cfg.label : ''));
+      });
+    }
+  }).addTo(ruralLayer);
+  sintraStatus.rural = 'ok'; sintraStatus.ruralText = `Rústico (${result.features.length})`;
+  updateSintraChip();
 }
 
 // Cascais: AML server blocks geometry export — use dynamic map tiles + identify on click
@@ -1455,24 +1498,21 @@ async function loadOverlay(id) {
       return; // rest handled via events
     }
 
-    // All other layers: GeoJSON rendered client-side.
-    // Load from local cache if available, otherwise fall back to live ArcGIS query.
-    let allFeatures;
+    // All other layers: GeoJSON rendered client-side (cache-first, live fallback).
+    let cachedFile, fallbackUrl;
     if (def.sintraSource && def.cascaisSource) {
-      // RAN: per-municipality source; Cascais is cached, Sintra is still live
-      if (activeMunicipality === 'cascais' && def.cascaisCachedFile) {
-        allFeatures = await fetchLocalGeoJSON(def.cascaisCachedFile);
-      } else if (activeMunicipality === 'sintra' && def.sintraCachedFile) {
-        allFeatures = await fetchLocalGeoJSON(def.sintraCachedFile);
-      } else {
-        const src = activeMunicipality === 'cascais' ? def.cascaisSource : def.sintraSource;
-        allFeatures = await fetchAllFeatures(`${src.server}/${src.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`);
-      }
-    } else if (def.cachedFile) {
-      allFeatures = await fetchLocalGeoJSON(def.cachedFile);
+      // RAN: per-municipality source
+      const isCascais = activeMunicipality === 'cascais';
+      cachedFile  = isCascais ? def.cascaisCachedFile : def.sintraCachedFile;
+      const src   = isCascais ? def.cascaisSource     : def.sintraSource;
+      fallbackUrl = `${src.server}/${src.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`;
     } else {
-      allFeatures = await fetchAllFeatures(`${def.server}/${def.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`);
+      cachedFile  = def.cachedFile;
+      fallbackUrl = `${def.server}/${def.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`;
     }
+    const result = await loadLayerData(cachedFile, fallbackUrl);
+    if (!result) throw new Error('Both cache and live failed');
+    const allFeatures = result.features;
     L.geoJSON({ type: 'FeatureCollection', features: allFeatures }, {
       renderer: def.hatch ? renderer : overlayRenderer,
       style: () => makeOverlayStyle(def),
