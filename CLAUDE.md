@@ -131,3 +131,11 @@ Failed layer loads retry automatically via `RETRY_DELAYS = [15000, 30000, 60000]
 - Sintra overlay layers only cover Sintra territory (except RAN which also loads Cascais layer 12)
 - Cascais dynamicMapLayer returns blank tiles above zoom 17 — capped with `maxZoom: 17`
 - `WMS_SRUP_REN_RAN` server on Sintra's infrastructure is unreliable (frequently "not started")
+
+---
+
+## Migration Plan: Live API → Cached Data
+
+We are migrating from live ArcGIS REST API calls to cached GeoJSON files.
+Phases: audit → sync script → refactor frontend → GitHub Action → fallback logic.
+Current status: Phase 1
