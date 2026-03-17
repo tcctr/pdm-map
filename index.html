@@ -769,7 +769,9 @@ const FIRE_COLORS = {
 // muni: 'sintra' | 'cascais' | 'both'
 const OVERLAY_DEFS = [
   // ─── Reservas (REN/RAN) ─────────────────────────────────
-  { id: 'ran',       name: 'RAN \u2014 Reserva Agr\u00edcola',    group: 'Reservas (REN/RAN)',                muni: 'both',    server: REN_RAN_BASE,        layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: REN_RAN_BASE, layerId: 2 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 }, sintraCachedFile: 'ran-sintra.geojson', cascaisCachedFile: 'ran-cascais.geojson' },
+  { id: 'ran',        name: 'RAN \u2014 Reserva Agr\u00edcola',    group: 'Reservas (REN/RAN)',                muni: 'both',    server: REN_RAN_BASE,        layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: REN_RAN_BASE, layerId: 2 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 }, sintraCachedFile: 'ran-sintra.geojson', cascaisCachedFile: 'ran-cascais.geojson' },
+  // TODO: confirm layerId 1 for Sintra REN when WMS_SRUP_REN_RAN server comes back online
+  { id: 'ren-sintra', name: 'REN \u2014 Reserva Ecol\u00f3gica',  group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_RAN_BASE,        layerId: 1,   color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-sintra.geojson' },
   { id: 'ren-cascais', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'cascais', server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_RAN_BASE,        layerId: 6,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_RAN_BASE,        layerId: 7,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
