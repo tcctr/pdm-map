@@ -39,6 +39,12 @@ const LAYERS = [
     baseUrl: `${REN_RAN_BASE}/2/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
   },
+  // TODO: confirm layerId 1 for Sintra REN when WMS_SRUP_REN_RAN server comes back online
+  {
+    filename: 'ren-sintra.geojson',
+    baseUrl: `${REN_RAN_BASE}/1/query`,
+    params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
+  },
   {
     filename: 'ran-cascais.geojson',
     baseUrl: `${CASCAIS_BASE}/12/query`,
