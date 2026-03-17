@@ -8,7 +8,9 @@ A single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data 
 
 ## Architecture
 
-The entire app lives in `index.html` — no build step, no bundler, no dependencies to install (~1530 lines).
+The entire app lives in `index.html` — no build step, no bundler (~1600 lines).
+
+**`package.json`** exists with `"type": "module"` — required for the sync script's ES module imports. No external runtime dependencies.
 
 **External dependencies (CDN):**
 - Leaflet 1.9.4 — map rendering and GeoJSON layer management
@@ -24,12 +26,12 @@ python3 -m http.server 8080
 
 ## Data Sources
 
-**Sintra zoning (GeoJSON, paginated):**
-- Urban: `SINTRA_BASE/55/query` — field `CAT` → `URBAN_COLORS`
-- Rural: `SINTRA_BASE/54/query` — field `Ord_Categ` → `RURAL_COLORS`
+**Sintra zoning (served from local cache, live fallback):**
+- Urban: `data/sintra-urban.geojson` → fallback `SINTRA_BASE/55/query` — field `CAT` → `URBAN_COLORS`
+- Rural: `data/sintra-rural.geojson` → fallback `SINTRA_BASE/54/query` — field `Ord_Categ` → `RURAL_COLORS`
 - `SINTRA_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer`
 
-**Cascais zoning (tile layer — geometry blocked by AML server):**
+**Cascais zoning (tile layer — geometry blocked by AML server, always live):**
 - `CASCAIS_BASE/2` via `L.esri.dynamicMapLayer` with `maxZoom: 17`
 - Click info via `identifyFeatures` — field `Categoria` → `CASCAIS_COLORS`
 - `CASCAIS_BASE` = `https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer`
@@ -60,20 +62,21 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 
 **Current overlay layers:**
 
-| id | Name | Server | Layer ID | Style |
-|----|------|--------|----------|-------|
-| `ran` | RAN — Reserva Agrícola | REN_RAN_BASE + CASCAIS_BASE/12 | 2 + 12 | brown hatch (`hatch-ran`) |
-| `ren-cascais` | REN — Reserva Ecológica | CASCAIS_BASE | 11 | green hatch (`hatch-ren`) |
-| `faixa` | Faixa Costeira | REN_RAN_BASE | 6 | blue fill |
-| `praias` | Praias | REN_RAN_BASE | 7 | yellow fill |
-| `vertentes` | Instabilidade de Vertentes | REN_RAN_BASE | 16 | red hatch (`hatch-risk-red`) |
-| `erosao` | Erosão Hídrica | REN_RAN_BASE | 17 | orange hatch (`hatch-risk-orange`) |
-| `mar` | Ameaça Costeira (Mar) | REN_RAN_BASE | 15 | blue fill |
-| `cheias` | Zonas de Cheias | REN_RAN_BASE | 14 | dark blue fill |
-| `incendio` | Perigosidade de Incêndio | CONDICIONANTES_BASE | 371 | dynamicMapLayer; CLASSE field → `FIRE_COLORS` |
-| `patrimonio` | Bens Imóveis Classificados | CONDICIONANTES_BASE | 299 | purple fill |
-| `zep` | Zona Especial de Proteção | CONDICIONANTES_BASE | 302 | violet fill |
-| `perigosos` | Equipamentos Perigosos | CONDICIONANTES_BASE | 368 | gray fill |
+| id | Name | Server | Layer ID | Cached file | Style |
+|----|------|--------|----------|-------------|-------|
+| `ran` | RAN — Reserva Agrícola | REN_RAN_BASE (Sintra) + CASCAIS_BASE/12 (Cascais) | 2 + 12 | `ran-sintra.geojson`, `ran-cascais.geojson` | brown hatch (`hatch-ran`) |
+| `ren-sintra` | REN — Reserva Ecológica | REN_RAN_BASE | **1 (unconfirmed)** | `ren-sintra.geojson` | green hatch (`hatch-ren`) |
+| `ren-cascais` | REN — Reserva Ecológica | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
+| `faixa` | Faixa Costeira | REN_RAN_BASE | 6 | `faixa.geojson` | blue fill |
+| `praias` | Praias | REN_RAN_BASE | 7 | `praias.geojson` | yellow fill |
+| `vertentes` | Instabilidade de Vertentes | REN_RAN_BASE | 16 | `vertentes.geojson` | red hatch (`hatch-risk-red`) |
+| `erosao` | Erosão Hídrica | REN_RAN_BASE | 17 | `erosao.geojson` | orange hatch (`hatch-risk-orange`) |
+| `mar` | Ameaça Costeira (Mar) | REN_RAN_BASE | 15 | `mar.geojson` | blue fill |
+| `cheias` | Zonas de Cheias | REN_RAN_BASE | 14 | `cheias.geojson` | dark blue fill |
+| `incendio` | Perigosidade de Incêndio | CONDICIONANTES_BASE | 371 | — (always live tiles) | dynamicMapLayer; CLASSE field → `FIRE_COLORS` |
+| `patrimonio` | Bens Imóveis Classificados | CONDICIONANTES_BASE | 299 | `patrimonio.geojson` | purple fill |
+| `zep` | Zona Especial de Proteção | CONDICIONANTES_BASE | 302 | `zep.geojson` | violet fill |
+| `perigosos` | Equipamentos Perigosos | CONDICIONANTES_BASE | 368 | `perigosos.geojson` | gray fill |
 
 **RAN loads from two servers** via `def.sintraSource` / `def.cascaisSource`: Sintra layer 2 + Cascais layer 12. Only the active municipality's source is loaded.
 
@@ -81,12 +84,63 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 
 ---
 
+## Data Loading — Cache-First with Live Fallback
+
+All 14 GeoJSON-paginated layers use `loadLayerData(cachedFile, fallbackUrl)`:
+1. Fetch `/data/{cachedFile}` — if 404, empty, or error → `console.warn` and continue
+2. Fetch live via `fetchAllFeatures(fallbackUrl)` — if this also fails → `console.error`, return `null`
+3. `null` = both failed → layer shows error chip state
+
+**What stays live-only (never cached):**
+- Cascais zoning tiles (`L.esri.dynamicMapLayer`)
+- Fire risk tiles (`L.esri.dynamicMapLayer`)
+- Cascais click identify (`L.esri.identifyFeatures`)
+- Fire risk click identify (`L.esri.identifyFeatures`)
+- Nominatim address search + reverse geocode
+
+**Fallback tracking:** `liveFallbackCount` increments each time a layer falls back to live. The `#cache-date` indicator shows `"Dados: DD/MM/YYYY (alguns em direto)"` if any fallback occurred.
+
+**Cached files** live in `data/` at the repo root (served at `/data/` by Vercel). Currently cached: `sintra-urban`, `sintra-rural`, `ran-cascais`, `ren-cascais`, `patrimonio`, `zep`, `perigosos`. Not yet cached (REN_RAN_BASE offline): `ran-sintra`, `ren-sintra`, `faixa`, `praias`, `vertentes`, `erosao`, `mar`, `cheias`.
+
+---
+
+## Sync Script — `scripts/sync-data.js`
+
+Downloads all 15 GeoJSON-paginated layers to `data/`. Run with:
+```bash
+node scripts/sync-data.js
+```
+
+- Paginates ArcGIS responses (follows `exceededTransferLimit`, 1 s delay between pages)
+- Tries `f=geojson` first; falls back to `f=json` + Esri→GeoJSON conversion if server returns HTML
+- Never overwrites a cached file with 0-feature data
+- Writes `data/sync-metadata.json` with per-layer status and `lastRun` timestamp
+- Exits code 1 on any failure (for CI)
+- Large layers (`sintra-urban`, `sintra-rural`): `pageSize=500`, `timeout=60s`
+
+---
+
+## GitHub Actions — `.github/workflows/sync-data.yml`
+
+Runs every Monday at 06:00 UTC (+ manual `workflow_dispatch`). Steps:
+1. Checkout repo
+2. Set up Node.js 22
+3. `npm ci`
+4. `node scripts/sync-data.js` (`continue-on-error: true` — partial failures still commit)
+5. `git add data/` → check `git diff --staged`
+6. If changed: commit `"chore: sync PDM data [automated]"` + push → triggers Vercel deploy
+7. If no changes: log and skip
+
+Pushes with `github-actions[bot]` identity. Push failures are warnings, not fatal.
+
+---
+
 ## Auto-Retry
 
-Failed layer loads retry automatically via `RETRY_DELAYS = [15000, 30000, 60000]` (15s, 30s, 1min):
-- Sintra urban/rural: `attempt` counter passed recursively into `loadSintraUrban(attempt)` / `loadSintraRural(attempt)`
-- Cascais: same pattern; layer group cleared before each retry; uses `.once('loaderror')` not `.on()`
-- Overlays: retry count stored in `ovlState[id].retries`; timer guard checks `activeLayer === id && !st.loaded` before retrying. Resets to 0 on municipality switch.
+Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 60000]` (15s, 30s, 1min):
+- Cascais tile layer: clears layer group before each retry, uses `.once('loaderror')`
+- Overlays: retry count in `ovlState[id].retries`; timer guard checks `activeLayer === id && !st.loaded`. Resets on municipality switch.
+- Sintra urban/rural: no retry — served from local cache, failures are near-instant
 
 ---
 
@@ -94,9 +148,11 @@ Failed layer loads retry automatically via `RETRY_DELAYS = [15000, 30000, 60000]
 
 | Function | What it does |
 |----------|-------------|
+| `loadLayerData(cachedFile, fallbackUrl)` | Cache-first loader: tries local file, falls back to live ArcGIS, returns `{ features, fromCache }` or `null` |
 | `fetchAllFeatures(url)` | Paginates ArcGIS GeoJSON queries (1000/page, follows `exceededTransferLimit`) |
+| `updateCacheDateIndicator()` | Updates `#cache-date` badge; appends "(alguns em direto)" if any fallback occurred |
 | `handleLayerSelect(value)` | Switches active layer — hides zoning or overlays accordingly |
-| `loadOverlay(id)` | Lazy-loads an overlay layer; uses `sintraSource`/`cascaisSource` for RAN; fire layer uses dynamicMapLayer |
+| `loadOverlay(id)` | Lazy-loads an overlay layer via `loadLayerData`; fire layer uses dynamicMapLayer |
 | `updateLayerVisibility()` | Shows/hides zoning layers based on `activeLayer` and zoom level |
 | `updateSintraChip()` | Updates Sintra status chip based on load state + zoom |
 | `showDetail(props, colorCfg, codeLabel)` | Opens detail panel; shifts layers button up to stay visible |
@@ -117,6 +173,7 @@ Failed layer loads retry automatically via `RETRY_DELAYS = [15000, 30000, 60000]
 - **Layers popup** (`#layers-sheet`): compact popup anchored above the layers button (positioned dynamically via `getBoundingClientRect`); contains overlay radio list
 - **Detail panel** (`#detail-panel`): full-width bottom sheet, slides up on polygon tap, swipe-down to close; liquid glass style
 - **Locate button** (`#locate-btn`): bottom-right, re-centers on GPS
+- **Cache date** (`#cache-date`): subtle fixed label centered at bottom of map; shows sync date from `sync-metadata.json`
 
 **CSS design system:** `--glass-bg`, `--glass-blur`, `--glass-border`, `--glass-shadow` CSS variables. Apple liquid glass dark mode: `rgba(10,10,20,0.62)` background, `blur(28px) saturate(160%)`. All panels use these tokens.
 
@@ -130,14 +187,33 @@ Failed layer loads retry automatically via `RETRY_DELAYS = [15000, 30000, 60000]
 - Cascais condicionantes risk layers (fire, floods, erosion) not yet integrated — available at `sig.aml.pt/.../PMAAC_Riscos_Actuais` (layers 60–65) but need testing
 - Sintra overlay layers only cover Sintra territory (except RAN which also loads Cascais layer 12)
 - Cascais dynamicMapLayer returns blank tiles above zoom 17 — capped with `maxZoom: 17`
-- `WMS_SRUP_REN_RAN` server on Sintra's infrastructure is unreliable (frequently "not started")
+- `WMS_SRUP_REN_RAN` server on Sintra's infrastructure is unreliable (frequently "not started") — 8 layers depend on it
+
+---
+
+## ⚠️ Pending: Confirm Sintra REN Layer ID
+
+The `ren-sintra` layer uses **`layerId: 1`** on `REN_RAN_BASE` — this is an educated guess (layer 2 is RAN, so REN is likely layer 1), but it has **not been verified** because the server was offline when the layer was added.
+
+**When `WMS_SRUP_REN_RAN` comes back online**, run:
+```bash
+curl "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer?f=json"
+```
+Find the layer named REN / Reserva Ecológica Nacional and update `layerId` in both:
+- `OVERLAY_DEFS` in `index.html` (the `ren-sintra` entry)
+- `LAYERS` array in `scripts/sync-data.js` (the `ren-sintra.geojson` entry)
 
 ---
 
 ## Migration Plan: Live API → Cached Data
 
-We are migrating GeoJSON-paginated layers from live ArcGIS REST API calls to cached GeoJSON files.
-Tile-rendered layers (Cascais zoning, fire risk) and identify-on-click calls stay live.
-Nominatim calls stay live.
-Phases: sync script → refactor frontend → GitHub Action → fallback logic.
-Current status: Phase 2
+Migrating GeoJSON-paginated layers from live ArcGIS REST API calls to cached GeoJSON files.
+Tile-rendered layers (Cascais zoning, fire risk) and identify-on-click calls stay live. Nominatim stays live.
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1 | Audit all live API calls | ✅ Done |
+| 2 | Sync script (`scripts/sync-data.js`) | ✅ Done |
+| 3 | Refactor frontend to load from cache | ✅ Done |
+| 4 | GitHub Action for weekly auto-sync | ✅ Done |
+| 5 | Fallback logic (cache → live on failure) | ✅ Done |
