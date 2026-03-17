@@ -1,0 +1,53 @@
+name: Sync PDM Data
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 06:00 UTC
+  workflow_dispatch:       # Allow manual trigger from GitHub UI
+
+permissions:
+  contents: write  # Needed to push the data commit back to the repo
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run sync script
+        # continue-on-error so partial failures (e.g. one server down) don't abort the job.
+        # The script already refuses to overwrite a good cached file with empty/corrupt data,
+        # so it is safe to commit whatever did succeed.
+        run: node scripts/sync-data.js
+        continue-on-error: true
+
+      - name: Stage data files
+        run: git add data/
+
+      - name: Check for changes
+        id: diff
+        run: |
+          git diff --staged --quiet && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push updated data
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: sync PDM data [automated]"
+          git push || echo "::warning::Push failed — another job may have pushed concurrently. Skipping."
+
+      - name: No changes detected
+        if: steps.diff.outputs.changed == 'false'
+        run: echo "No data changes detected — skipping commit."
