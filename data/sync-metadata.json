@@ -1,0 +1,105 @@
+{
+  "layers": {
+    "sintra-urban.geojson": {
+      "filename": "sintra-urban.geojson",
+      "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer/55/query?where=1%3D1&outFields=CAT%2CDescricao%2CRegulamento%2CPag_Regulamento%2CGuiao%2CPag_Guiao%2CRelatorio%2CPag_relatorio%2Carea_ha&outSR=4326",
+      "featureCount": 985,
+      "status": "success",
+      "lastSuccessfulSync": "2026-03-17T16:55:51.456Z"
+    },
+    "sintra-rural.geojson": {
+      "filename": "sintra-rural.geojson",
+      "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer/54/query?where=1%3D1&outFields=Ord_Categ%2CDescricao%2CRegulamento%2CPag_Regulamento%2CGuiao%2CPag_Guiao%2CRelatorio%2CPag_relatorio%2CArea_Ha&outSR=4326",
+      "featureCount": 1316,
+      "status": "success",
+      "lastSuccessfulSync": "2026-03-17T16:56:00.105Z"
+    },
+    "ran-sintra.geojson": {
+      "filename": "ran-sintra.geojson",
+      "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer/2/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
+      "featureCount": null,
+      "status": "failure",
+      "lastSuccessfulSync": null
+    },
+    "ran-cascais.geojson": {
+      "filename": "ran-cascais.geojson",
+      "sourceUrl": "https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer/12/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
+      "featureCount": 414,
+      "status": "success",
+      "lastSuccessfulSync": "2026-03-17T16:56:04.679Z"
+    },
+    "ren-cascais.geojson": {
+      "filename": "ren-cascais.geojson",
+      "sourceUrl": "https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer/11/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
+      "featureCount": 857,
+      "status": "success",
+      "lastSuccessfulSync": "2026-03-17T16:56:13.755Z"
+    },
+    "faixa.geojson": {
+      "filename": "faixa.geojson",
+      "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer/6/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
+      "featureCount": null,
+      "status": "failure",
+      "lastSuccessfulSync": null
+    },
+    "praias.geojson": {
+      "filename": "praias.geojson",
+      "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer/7/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
+      "featureCount": null,
+      "status": "failure",
+      "lastSuccessfulSync": null
+    },
+    "vertentes.geojson": {
+      "filename": "vertentes.geojson",
+      "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer/16/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
+      "featureCount": null,
+      "status": "failure",
+      "lastSuccessfulSync": null
+    },
+    "erosao.geojson": {
+      "filename": "erosao.geojson",
+      "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer/17/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
+      "featureCount": null,
+      "status": "failure",
+      "lastSuccessfulSync": null
+    },
+    "mar.geojson": {
+      "filename": "mar.geojson",
+      "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer/15/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
+      "featureCount": null,
+      "status": "failure",
+      "lastSuccessfulSync": null
+    },
+    "cheias.geojson": {
+      "filename": "cheias.geojson",
+      "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer/14/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
+      "featureCount": null,
+      "status": "failure",
+      "lastSuccessfulSync": null
+    },
+    "patrimonio.geojson": {
+      "filename": "patrimonio.geojson",
+      "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer/299/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
+      "featureCount": 79,
+      "status": "success",
+      "lastSuccessfulSync": "2026-03-17T16:56:21.763Z"
+    },
+    "zep.geojson": {
+      "filename": "zep.geojson",
+      "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer/302/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
+      "featureCount": 13,
+      "status": "success",
+      "lastSuccessfulSync": "2026-03-17T16:56:22.862Z"
+    },
+    "perigosos.geojson": {
+      "filename": "perigosos.geojson",
+      "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer/368/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
+      "featureCount": 2,
+      "status": "success",
+      "lastSuccessfulSync": "2026-03-17T16:56:24.026Z"
+    }
+  },
+  "lastRun": "2026-03-17T16:55:48.063Z",
+  "lastRunSucceeded": 7,
+  "lastRunFailed": 7
+}

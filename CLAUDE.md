@@ -136,6 +136,8 @@ Failed layer loads retry automatically via `RETRY_DELAYS = [15000, 30000, 60000]
 
 ## Migration Plan: Live API → Cached Data
 
-We are migrating from live ArcGIS REST API calls to cached GeoJSON files.
-Phases: audit → sync script → refactor frontend → GitHub Action → fallback logic.
-Current status: Phase 1
+We are migrating GeoJSON-paginated layers from live ArcGIS REST API calls to cached GeoJSON files.
+Tile-rendered layers (Cascais zoning, fire risk) and identify-on-click calls stay live.
+Nominatim calls stay live.
+Phases: sync script → refactor frontend → GitHub Action → fallback logic.
+Current status: Phase 2
