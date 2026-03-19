@@ -91,6 +91,8 @@ All 14 GeoJSON-paginated layers use `loadLayerData(cachedFile, fallbackUrl)`:
 2. Fetch live via `fetchAllFeatures(fallbackUrl)` — if this also fails → `console.error`, return `null`
 3. `null` = both failed → layer shows error chip state
 
+**Tested and verified (2026-03-19):** Removing `sintra-rural.geojson` locally produced a 404, the cache warn fired, and the layer loaded successfully from the live ArcGIS endpoint. `#cache-date` badge updated to show "(alguns em direto)". If both cache and live fail (e.g. Sintra server down during test), the layer simply doesn't appear — expected behaviour.
+
 **What stays live-only (never cached):**
 - Cascais zoning tiles (`L.esri.dynamicMapLayer`)
 - Fire risk tiles (`L.esri.dynamicMapLayer`)
