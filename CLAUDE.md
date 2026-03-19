@@ -8,7 +8,17 @@ A single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data 
 
 ## Architecture
 
-The entire app lives in `index.html` — no build step, no bundler (~1600 lines).
+No build step, no bundler. Pure ES modules loaded directly by the browser.
+
+**File structure:**
+- `js/config.js` — all constants, color maps, `OVERLAY_DEFS`, `MUNICIPALITIES`, base URLs
+- `js/map.js` — Leaflet map init, base layers, municipality switching, layer visibility, map event handlers
+- `js/layers.js` — `loadLayerData`, `fetchAllFeatures`, overlay lazy-loading, retry logic
+- `js/ui.js` — detail panel, chips, layers sheet, cache date indicator, swipe gestures
+- `js/search.js` — Nominatim address search and reverse geocode
+- `js/main.js` — entry point, wires all modules together, GPS tracking, event listeners
+- `css/style.css` — all styles
+- `index.html` — HTML skeleton only, CDN imports, `<script type="module" src="js/main.js">`
 
 **`package.json`** exists with `"type": "module"` — required for the sync script's ES module imports. No external runtime dependencies.
 
