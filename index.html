@@ -124,38 +124,17 @@
 <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
 
 <script type="module">
-import { CASCAIS_COLORS, MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM, CASCAIS_BASE, CONDICIONANTES_BASE } from './js/config.js';
+import { OVERLAY_DEFS } from './js/config.js';
 import { initSearch, reverseGeocode } from './js/search.js';
 import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, urbanLayer, ruralLayer, cascaisLayer } from './js/layers.js';
 import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel } from './js/ui.js';
-
-// ============================================================
-// CONSTANTS & CONFIG
-// ============================================================
-
-const DEFAULT_CENTER = [38.75, -9.42];
-const DEFAULT_ZOOM = 13;
+import { initMap, initMapHandlers, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './js/map.js';
 
 // ============================================================
 // MAP SETUP
 // ============================================================
 
-const map = L.map('map', {
-  center: DEFAULT_CENTER,
-  zoom: DEFAULT_ZOOM,
-  zoomControl: false,
-  attributionControl: false,
-});
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '&copy; OpenStreetMap contributors',
-}).addTo(map);
-
-// Attribution bottom-left, small
-L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);
-
-// Zoom control bottom-right above locate button
+const map = initMap('map');
 
 
 // ============================================================
@@ -247,10 +226,6 @@ function locateUser() {
 // LAYER TOGGLES + ZOOM VISIBILITY
 // ============================================================
 
-// ── Active layer selection ────────────────────────────────────
-let activeLayer = 'zoning';
-let activeMunicipality = 'sintra';
-
 // ── Municipality picker ──────────────────────────────────────
 
 function toggleMuniDropdown() {
@@ -275,29 +250,6 @@ document.addEventListener('click', e => {
   if (!document.getElementById('muni-picker').contains(e.target)) closeMuniDropdown();
 });
 
-function selectMunicipality(muni) {
-  activeMunicipality = muni;
-  // Update picker label and checkmarks
-  const cfg = MUNICIPALITIES.find(m => m.id === muni);
-  document.getElementById('muni-picker-label').textContent = cfg ? cfg.label : muni;
-  if (cfg) map.flyTo(cfg.center, cfg.zoom, { duration: 1.2 });
-  document.querySelectorAll('.muni-option').forEach(opt => {
-    opt.classList.toggle('selected', opt.dataset.muni === muni);
-  });
-  // Reset to zoning and clear all overlay cache
-  activeLayer = 'zoning';
-  for (const def of OVERLAY_DEFS) {
-    const st = ovlState[def.id];
-    if (st.leafletLayer) { map.removeLayer(st.leafletLayer); st.leafletLayer = null; }
-    st.loaded = false; st.loading = false; st.active = false; st.retries = 0;
-  }
-  // Rebuild layer list and restore map state
-  buildOverlayPanel();
-  updateLayerVisibility();
-  updateLayersBtnLabel('zoning');
-  updateZoningOverlayChip();
-}
-
 function setOverlayChip(state, text) {
   const el = document.getElementById('chip-overlay');
   if (!el) return;
@@ -306,8 +258,8 @@ function setOverlayChip(state, text) {
 }
 
 function updateZoningOverlayChip() {
-  if (activeLayer !== 'zoning') return;
-  if (activeMunicipality === 'sintra') {
+  if (getActiveLayer() !== 'zoning') return;
+  if (getActiveMunicipality() === 'sintra') {
     const u = sintraStatus.urban, r = sintraStatus.rural;
     if (u === 'loading' || r === 'loading') setOverlayChip('loading', 'Solo\u2026');
     else if (u === 'ok' && r === 'ok')       setOverlayChip('ok', 'Solo');
@@ -321,90 +273,8 @@ function updateZoningOverlayChip() {
   }
 }
 
-function handleLayerSelect(value) {
-  activeLayer = value;
-  updateLayersBtnLabel(value);
-  setTimeout(closeLayersSheet, 180);
-  if (value === 'zoning') {
-    updateZoningOverlayChip();
-    // Deactivate all overlays
-    for (const def of OVERLAY_DEFS) {
-      ovlState[def.id].active = false;
-      if (ovlState[def.id].leafletLayer) map.removeLayer(ovlState[def.id].leafletLayer);
-    }
-    updateLayerVisibility();
-  } else {
-    // Hide zoning
-    [urbanLayer, ruralLayer, cascaisLayer].forEach(l => map.removeLayer(l));
-    // Show overlay chip as loading
-    const def = OVERLAY_DEFS.find(d => d.id === value);
-    setOverlayChip('loading', overlayShortName(def) + '\u2026');
-    // Deactivate all other overlays, activate this one
-    for (const def of OVERLAY_DEFS) {
-      if (def.id === value) {
-        ovlState[def.id].active = true;
-        loadOverlay(def.id, activeMunicipality);
-      } else {
-        ovlState[def.id].active = false;
-        if (ovlState[def.id].leafletLayer) map.removeLayer(ovlState[def.id].leafletLayer);
-      }
-    }
-  }
-}
-
-// ── Sintra combined chip logic ──────────────────────────────
+// ── Sintra load status ────────────────────────────────────────
 const sintraStatus = { urban: 'loading', urbanText: '', rural: 'loading', ruralText: '' };
-
-// ── Layer visibility ─────────────────────────────────────────
-
-function updateLayerVisibility() {
-  updateSintraChip();
-
-  const zoomed = map.getZoom() >= MIN_DATA_ZOOM;
-  const on = activeLayer === 'zoning' && activeMunicipality === 'cascais';
-  on && zoomed ? map.addLayer(cascaisLayer) : map.removeLayer(cascaisLayer);
-
-  const cascaisEl = document.getElementById('chip-cascais');
-  if (!cascaisEl) return;
-  cascaisEl.style.display = activeMunicipality === 'cascais' ? '' : 'none';
-  if (activeMunicipality !== 'cascais') return;
-  if (activeLayer !== 'zoning') return; // overlay active — leave chip as-is
-  if (cascaisEl.classList.contains('chip-loading')) return;
-  if (!zoomed) setChip('chip-cascais', 'warn', 'Cascais: zoom');
-  else if (getChipLoadedState('chip-cascais')) {
-    const s = getChipLoadedState('chip-cascais');
-    setChip('chip-cascais', s.state, s.text);
-  }
-}
-
-map.on('zoomend', updateLayerVisibility);
-
-// ============================================================
-// MAP CLICK — close panel, or identify Cascais zone
-// ============================================================
-
-map.on('click', e => {
-  closeDetail();
-  if (activeLayer === 'zoning' && getCascaisReady() && map.hasLayer(cascaisLayer)) {
-    L.esri.identifyFeatures({ url: CASCAIS_BASE })
-      .on(map).at(e.latlng).layers('visible:2').tolerance(2)
-      .run((err, fc) => {
-        if (err || !fc || !fc.features.length) return;
-        const p = fc.features[0].properties;
-        const cat = p.Categoria || '';
-        const cfg = CASCAIS_COLORS[cat] || { fill: '#888888', label: cat };
-        showDetail(p, cfg, cat);
-      });
-  } else if (activeLayer === 'incendio') {
-    const def = OVERLAY_DEFS.find(d => d.id === 'incendio');
-    L.esri.identifyFeatures({ url: CONDICIONANTES_BASE })
-      .on(map).at(e.latlng).layers('visible:371').tolerance(3)
-      .run((err, fc) => {
-        if (err || !fc || !fc.features.length) return;
-        showOverlayDetail(def, fc.features[0].properties);
-      });
-  }
-});
 
 function closeLayersSheet() {
   document.getElementById('layers-sheet').classList.remove('open');
@@ -443,7 +313,7 @@ initLayers(map, {
   onSintraStatus:        update => { Object.assign(sintraStatus, update); updateSintraChip(); },
   onCascaisStatus:       (state, text) => setChip('chip-cascais', state, text),
   onCascaisLoaded:       (state, text) => { setChipLoaded('chip-cascais', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
-  onOverlayStatus:       (id, state, text) => { if (activeLayer === id) setOverlayChip(state, text); },
+  onOverlayStatus:       (id, state, text) => { if (getActiveLayer() === id) setOverlayChip(state, text); },
   onFeatureClick:        (props, cfg, label) => showDetail(props, cfg, label),
   onOverlayFeatureClick: (def, props) => showOverlayDetail(def, props),
 });
@@ -452,10 +322,26 @@ initUI({
   urbanLayer,
   ruralLayer,
   getLiveFallbackCount,
-  getSintraStatus:          () => sintraStatus,
-  getActiveLayer:           () => activeLayer,
-  getActiveMunicipality:    () => activeMunicipality,
+  getSintraStatus:           () => sintraStatus,
+  getActiveLayer,
+  getActiveMunicipality,
   onZoningOverlayChipUpdate: updateZoningOverlayChip,
+});
+initMapHandlers({
+  ovlState,
+  urbanLayer, ruralLayer, cascaisLayer,
+  overlayShortName, loadOverlay, getCascaisReady,
+  onUpdateSintraChip:         updateSintraChip,
+  onSetChip:                  setChip,
+  onGetChipLoadedState:       getChipLoadedState,
+  onSetOverlayChip:           setOverlayChip,
+  onCloseDetail:              closeDetail,
+  onShowDetail:               showDetail,
+  onShowOverlayDetail:        showOverlayDetail,
+  onBuildOverlayPanel:        buildOverlayPanel,
+  onUpdateLayersBtnLabel:     updateLayersBtnLabel,
+  onCloseLayersSheet:         closeLayersSheet,
+  onUpdateZoningOverlayChip:  updateZoningOverlayChip,
 });
 buildOverlayPanel();
 updateLayerVisibility();
