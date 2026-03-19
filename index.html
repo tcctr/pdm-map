@@ -125,6 +125,7 @@
 
 <script type="module">
 import { URBAN_COLORS, RURAL_COLORS, CASCAIS_COLORS, FIRE_COLORS, MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM, RETRY_DELAYS, SINTRA_BASE, CASCAIS_BASE, REN_RAN_BASE, CONDICIONANTES_BASE } from './js/config.js';
+import { initSearch, reverseGeocode } from './js/search.js';
 
 // ============================================================
 // CONSTANTS & CONFIG
@@ -458,26 +459,10 @@ function onGpsSuccess(pos) {
   if (firstFix) {
     map.setView(latlng, 15);
     firstFix = false;
-    autoDetectMunicipality(lat, lng);
+    reverseGeocode(lat, lng).then(muni => { if (muni) selectMunicipality(muni); });
   }
 
   setChip('chip-gps', 'gps', `GPS \u00b1${Math.round(acc)}m`);
-}
-
-async function autoDetectMunicipality(lat, lng) {
-  try {
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=pt`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    const data = await res.json();
-    const addr = data.address || {};
-    const place = [addr.municipality, addr.city, addr.town, addr.village, addr.county]
-      .filter(Boolean).join(' ').toLowerCase();
-    if (place.includes('cascais')) selectMunicipality('cascais');
-    else if (place.includes('sintra')) selectMunicipality('sintra');
-    // else: leave default (sintra)
-  } catch {
-    // silently ignore — default stays
-  }
 }
 
 function onGpsError(err) {
@@ -494,17 +479,6 @@ function startGPS() {
     enableHighAccuracy: true,
     maximumAge: 5000,
     timeout: 15000,
-  });
-}
-
-// ── Keyboard / visual viewport handling ─────────────────────
-// When the iOS keyboard opens, shift the search results into the
-// visible area by tracking the visual viewport height.
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', () => {
-    const keyboardHeight = window.innerHeight - window.visualViewport.height;
-    document.getElementById('search-results').style.maxHeight =
-      keyboardHeight > 100 ? `${window.visualViewport.height - 120}px` : '';
   });
 }
 
@@ -717,85 +691,6 @@ map.on('click', e => {
 });
 
 // ============================================================
-// ADDRESS SEARCH (Nominatim)
-// ============================================================
-
-const searchInput = document.getElementById('search-input');
-const searchResults = document.getElementById('search-results');
-let searchDebounce = null;
-let searchMarker = null;
-
-searchInput.addEventListener('input', () => {
-  clearTimeout(searchDebounce);
-  const q = searchInput.value.trim();
-  if (q.length < 3) { closeSearch(); return; }
-  searchDebounce = setTimeout(() => runSearch(q), 350);
-});
-
-searchInput.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeSearch(); searchInput.blur(); }
-});
-
-// Close dropdown when clicking outside
-document.addEventListener('click', e => {
-  if (!document.getElementById('search-wrap').contains(e.target)) closeSearch();
-});
-
-async function runSearch(q) {
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=pt&viewbox=-9.55,38.65,-9.30,38.85&bounded=0`;
-    const res = await fetch(url, { headers: { 'Accept-Language': 'pt' } });
-    const data = await res.json();
-    renderResults(data);
-  } catch {
-    renderResults([]);
-  }
-}
-
-function renderResults(items) {
-  if (items.length === 0) {
-    searchResults.innerHTML = '<div class="search-result-item no-results">Sem resultados</div>';
-  } else {
-    searchResults.innerHTML = items.map(item =>
-      `<div class="search-result-item">${item.display_name}</div>`
-    ).join('');
-    searchResults.querySelectorAll('.search-result-item').forEach((el, i) => {
-      el.addEventListener('click', () => selectResult(items[i]));
-    });
-  }
-  searchResults.classList.add('open');
-}
-
-function selectResult(item) {
-  closeSearch();
-  searchInput.value = item.display_name.split(',')[0];
-
-  const lat = parseFloat(item.lat);
-  const lng = parseFloat(item.lon);
-
-  if (searchMarker) searchMarker.remove();
-  searchMarker = L.circleMarker([lat, lng], {
-    radius: 7,
-    color: '#fff',
-    weight: 2,
-    fillColor: '#f4845f',
-    fillOpacity: 1,
-  }).addTo(map);
-
-  if (item.boundingbox) {
-    const bb = item.boundingbox.map(Number);
-    map.fitBounds([[bb[0], bb[2]], [bb[1], bb[3]]], { maxZoom: 17 });
-  } else {
-    map.setView([lat, lng], 16);
-  }
-}
-
-function closeSearch() {
-  searchResults.classList.remove('open');
-  searchResults.innerHTML = '';
-}
-
-// ============================================================
 // OVERLAY / CONDICIONANTES LAYERS
 // ============================================================
 
@@ -961,6 +856,7 @@ function buildOverlayPanel() {
 // ============================================================
 
 buildOverlayPanel();
+initSearch(map);
 startGPS();
 updateLayerVisibility();
 loadSintraUrban();
