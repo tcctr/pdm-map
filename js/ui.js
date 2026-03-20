@@ -117,12 +117,15 @@ export function showDetail(props, colorCfg, codeLabel) {
 
   rowsEl.innerHTML = html;
   panel.classList.add('open');
-  document.getElementById('layers-btn').style.bottom = (panel.offsetHeight + 12) + 'px';
+  const offset = (panel.offsetHeight + 12) + 'px';
+  document.getElementById('layers-btn').style.bottom = offset;
+  document.getElementById('locate-btn').style.bottom = offset;
 }
 
 export function closeDetail() {
   document.getElementById('detail-panel').classList.remove('open');
   document.getElementById('layers-btn').style.bottom = '';
+  document.getElementById('locate-btn').style.bottom = '';
 }
 
 export function showOverlayDetail(def, props) {
