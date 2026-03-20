@@ -126,9 +126,26 @@ html, body {
   z-index: 1;
 }
 
+#search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.35);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  display: none;
+}
+#search-clear:hover { color: rgba(255,255,255,0.7); }
+#search-clear.visible { display: block; }
+
 #search-input {
   width: 100%;
-  padding: 7px 12px 7px 30px;
+  padding: 7px 28px 7px 30px;
   background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 11px;

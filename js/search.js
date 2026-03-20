@@ -5,12 +5,21 @@
 export function initSearch(map) {
   const searchInput   = document.getElementById('search-input');
   const searchResults = document.getElementById('search-results');
+  const searchClear   = document.getElementById('search-clear');
   let searchDebounce = null;
   let searchMarker   = null;
 
   function closeSearch() {
     searchResults.classList.remove('open');
     searchResults.innerHTML = '';
+  }
+
+  function clearSearch() {
+    searchInput.value = '';
+    searchClear.classList.remove('visible');
+    closeSearch();
+    if (searchMarker) { searchMarker.remove(); searchMarker = null; }
+    searchInput.focus();
   }
 
   function renderResults(items) {
@@ -65,13 +74,16 @@ export function initSearch(map) {
   searchInput.addEventListener('input', () => {
     clearTimeout(searchDebounce);
     const q = searchInput.value.trim();
+    searchClear.classList.toggle('visible', q.length > 0);
     if (q.length < 3) { closeSearch(); return; }
     searchDebounce = setTimeout(() => runSearch(q), 350);
   });
 
   searchInput.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeSearch(); searchInput.blur(); }
+    if (e.key === 'Escape') { clearSearch(); searchInput.blur(); }
   });
+
+  searchClear.addEventListener('click', clearSearch);
 
   // Close dropdown when clicking outside
   document.addEventListener('click', e => {
