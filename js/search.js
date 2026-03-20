@@ -49,6 +49,7 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
 
     const muni = detectMunicipality(item.display_name);
     if (muni) onMunicipalityDetected?.(muni);
+    const zoom = muni === 'cascais' ? 15 : 17;
 
     const lat = parseFloat(item.lat);
     const lng = parseFloat(item.lon);
@@ -62,7 +63,7 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
       fillOpacity: 1,
     }).addTo(map);
 
-    map.setView([lat, lng], 17);
+    map.setView([lat, lng], zoom);
   }
 
   async function runSearch(q) {
