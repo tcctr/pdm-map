@@ -2,7 +2,7 @@
 // MAIN — app entry point
 // ============================================================
 
-import { OVERLAY_DEFS } from './config.js';
+import { OVERLAY_DEFS, MUNICIPALITIES } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
 import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, urbanLayer, ruralLayer, cascaisLayer } from './layers.js';
 import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel } from './ui.js';
@@ -110,6 +110,8 @@ function closeMuniDropdown() {
 function pickMunicipality(muni) {
   closeMuniDropdown();
   selectMunicipality(muni);
+  const cfg = MUNICIPALITIES.find(m => m.id === muni);
+  if (cfg) map.panTo(cfg.center);
 }
 
 // ============================================================
