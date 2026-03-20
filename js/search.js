@@ -2,7 +2,7 @@
 // ADDRESS SEARCH + REVERSE GEOCODE (Nominatim)
 // ============================================================
 
-export function initSearch(map) {
+export function initSearch(map, { onMunicipalityDetected } = {}) {
   const searchInput   = document.getElementById('search-input');
   const searchResults = document.getElementById('search-results');
   const searchClear   = document.getElementById('search-clear');
@@ -36,9 +36,19 @@ export function initSearch(map) {
     searchResults.classList.add('open');
   }
 
+  function detectMunicipality(displayName) {
+    const name = displayName.toLowerCase();
+    if (name.includes('cascais')) return 'cascais';
+    if (name.includes('sintra'))  return 'sintra';
+    return null;
+  }
+
   function selectResult(item) {
     closeSearch();
     searchInput.value = item.display_name.split(',')[0];
+
+    const muni = detectMunicipality(item.display_name);
+    if (muni) onMunicipalityDetected?.(muni);
 
     const lat = parseFloat(item.lat);
     const lng = parseFloat(item.lon);

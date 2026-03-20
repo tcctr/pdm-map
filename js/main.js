@@ -168,7 +168,7 @@ function updateLayersBtnLabel(value) {
 
 const map = initMap('map');
 
-initSearch(map);
+initSearch(map, { onMunicipalityDetected: muni => selectMunicipality(muni) });
 startGPS();
 
 initLayers(map, {
