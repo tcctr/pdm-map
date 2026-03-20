@@ -416,7 +416,7 @@ html, body {
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: var(--glass-shadow);
-  transition: background 0.15s, box-shadow 0.15s;
+  transition: background 0.15s, box-shadow 0.15s, bottom 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
 #locate-btn:hover {
   background: rgba(20,20,40,0.72);
