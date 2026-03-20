@@ -53,12 +53,14 @@ export function updateLayerVisibility() {
   _callbacks.onUpdateSintraChip?.();
 
   const zoomed = _map.getZoom() >= MIN_DATA_ZOOM;
-  const zoningOn = _activeLayer === 'zoning';
-  zoningOn && zoomed ? _map.addLayer(_cascaisLayer) : _map.removeLayer(_cascaisLayer);
+  const on = _activeLayer === 'zoning' && _activeMunicipality === 'cascais';
+  on && zoomed ? _map.addLayer(_cascaisLayer) : _map.removeLayer(_cascaisLayer);
 
   const cascaisEl = document.getElementById('chip-cascais');
   if (!cascaisEl) return;
-  if (_activeLayer !== 'zoning') return;
+  cascaisEl.style.display = _activeMunicipality === 'cascais' ? '' : 'none';
+  if (_activeMunicipality !== 'cascais') return;
+  if (_activeLayer !== 'zoning') return; // overlay active — leave chip as-is
   if (cascaisEl.classList.contains('chip-loading')) return;
   if (!zoomed) {
     _callbacks.onSetChip?.('chip-cascais', 'warn', 'Cascais: zoom');

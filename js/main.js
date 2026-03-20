@@ -125,12 +125,18 @@ function setOverlayChip(state, text) {
 
 function updateZoningOverlayChip() {
   if (getActiveLayer() !== 'zoning') return;
-  const u = sintraStatus.urban, r = sintraStatus.rural;
-  const cascaisState = getChipLoadedState('chip-cascais')?.state;
-  if (u === 'loading' || r === 'loading' || !cascaisState) setOverlayChip('loading', 'Solo\u2026');
-  else if (u === 'ok' && r === 'ok' && cascaisState === 'ok') setOverlayChip('ok', 'Solo');
-  else if (u === 'error' && r === 'error' && cascaisState === 'error') setOverlayChip('error', 'Solo: erro');
-  else setOverlayChip('warn', 'Solo');
+  if (getActiveMunicipality() === 'sintra') {
+    const u = sintraStatus.urban, r = sintraStatus.rural;
+    if (u === 'loading' || r === 'loading') setOverlayChip('loading', 'Solo\u2026');
+    else if (u === 'ok' && r === 'ok')       setOverlayChip('ok', 'Solo');
+    else if (u === 'error' && r === 'error') setOverlayChip('error', 'Solo: erro');
+    else                                     setOverlayChip('warn', 'Solo');
+  } else {
+    const cascaisState = getChipLoadedState('chip-cascais')?.state;
+    if (!cascaisState)              setOverlayChip('loading', 'Solo\u2026');
+    else if (cascaisState === 'ok') setOverlayChip('ok', 'Solo');
+    else                            setOverlayChip('error', 'Solo: erro');
+  }
 }
 
 const sintraStatus = { urban: 'loading', urbanText: '', rural: 'loading', ruralText: '' };

@@ -53,15 +53,18 @@ export function updateCacheDateIndicator() {
 
 export function updateSintraChip() {
   if (!_map) return; // called before initUI — initLayers fires this synchronously on startup
-  const zoomed       = _map.getZoom() >= MIN_DATA_ZOOM;
-  const sintraStatus = _getSintraStatus();
-  const activeLayer  = _getActiveLayer();
-  const on = activeLayer === 'zoning';
+  const zoomed            = _map.getZoom() >= MIN_DATA_ZOOM;
+  const sintraStatus      = _getSintraStatus();
+  const activeLayer       = _getActiveLayer();
+  const activeMunicipality = _getActiveMunicipality();
+  const on = activeLayer === 'zoning' && activeMunicipality === 'sintra';
 
   [_urbanLayer, _ruralLayer].forEach(l => on && zoomed ? _map.addLayer(l) : _map.removeLayer(l));
 
   const sintraEl = document.getElementById('chip-sintra');
   if (!sintraEl) return;
+  sintraEl.style.display = activeMunicipality === 'sintra' ? '' : 'none';
+  if (activeMunicipality !== 'sintra') return;
   if (activeLayer !== 'zoning') return; // overlay active — leave chip as-is
   if (!zoomed) { setChip('chip-sintra', 'warn', 'Sintra: zoom'); return; }
 
