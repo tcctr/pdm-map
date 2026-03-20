@@ -62,12 +62,7 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
       fillOpacity: 1,
     }).addTo(map);
 
-    if (item.boundingbox) {
-      const bb = item.boundingbox.map(Number);
-      map.fitBounds([[bb[0], bb[2]], [bb[1], bb[3]]], { maxZoom: 17 });
-    } else {
-      map.setView([lat, lng], 16);
-    }
+    map.setView([lat, lng], 17);
   }
 
   async function runSearch(q) {
