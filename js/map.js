@@ -77,7 +77,6 @@ export function selectMunicipality(muni) {
 
   const cfg = MUNICIPALITIES.find(m => m.id === muni);
   document.getElementById('muni-picker-label').textContent = cfg ? cfg.label : muni;
-  if (cfg) _map.flyTo(cfg.center, cfg.zoom, { duration: 1.2 });
   document.querySelectorAll('.muni-option').forEach(opt => {
     opt.classList.toggle('selected', opt.dataset.muni === muni);
   });
