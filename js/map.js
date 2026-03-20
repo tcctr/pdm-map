@@ -64,6 +64,8 @@ export function updateLayerVisibility() {
   if (cascaisEl.classList.contains('chip-loading')) return;
   if (!zoomed) {
     _callbacks.onSetChip?.('chip-cascais', 'warn', 'Cascais: zoom');
+  } else if (_map.getZoom() > 15) {
+    _callbacks.onSetChip?.('chip-cascais', 'warn', 'Cascais: recuar zoom');
   } else {
     const s = _callbacks.onGetChipLoadedState?.('chip-cascais');
     if (s) _callbacks.onSetChip?.('chip-cascais', s.state, s.text);
