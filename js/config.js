@@ -43,7 +43,7 @@ export const RURAL_COLORS = {
 export const CASCAIS_COLORS = {
   'Espa\u00e7o Canal':                        { fill: '#555555', label: 'Canal' },
   'Espa\u00e7o Central':                      { fill: '#c1121f', label: 'Central' },
-  'Espa\u00e7o Natural':                      { fill: '#1a5c30', label: 'Natural' },
+  'Espa\u00e7o Natural':                      { fill: '#2d6a4f', label: 'Natural' },
   'Espa\u00e7o Residencial':                  { fill: '#f4845f', label: 'Residencial' },
   'Espa\u00e7o Verde':                        { fill: '#52b788', label: 'Verde' },
   'Espa\u00e7o de Aglomerados Rurais':        { fill: '#9e9e9e', label: 'Aglomerados Rurais' },
