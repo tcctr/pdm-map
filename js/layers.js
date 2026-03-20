@@ -3,7 +3,7 @@
 // ============================================================
 
 import {
-  SINTRA_BASE, CASCAIS_BASE, REN_RAN_BASE, CONDICIONANTES_BASE,
+  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE,
   OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
