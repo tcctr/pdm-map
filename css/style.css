@@ -114,9 +114,21 @@ html, body {
   flex: 1;
 }
 
+#search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: rgba(255,255,255,0.35);
+  pointer-events: none;
+  z-index: 1;
+}
+
 #search-input {
   width: 100%;
-  padding: 7px 12px;
+  padding: 7px 12px 7px 30px;
   background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 11px;
