@@ -13,7 +13,8 @@ const OUT_DIR = join(__dirname, '..', 'data');
 // ── Base URL constants (mirrors index.html) ──────────────────
 const SINTRA_BASE         = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer';
 const CASCAIS_BASE        = 'https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer';
-const REN_RAN_BASE        = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer';
+const RAN_BASE            = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer';
+const REN_BASE            = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer';
 const CONDICIONANTES_BASE = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer';
 
 // ── Layer definitions ─────────────────────────────────────────
@@ -36,13 +37,12 @@ const LAYERS = [
   // Overlay layers (outFields=* + maxAllowableOffset)
   {
     filename: 'ran-sintra.geojson',
-    baseUrl: `${REN_RAN_BASE}/2/query`,
+    baseUrl: `${RAN_BASE}/2/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
   },
-  // TODO: confirm layerId 1 for Sintra REN when WMS_SRUP_REN_RAN server comes back online
   {
     filename: 'ren-sintra.geojson',
-    baseUrl: `${REN_RAN_BASE}/1/query`,
+    baseUrl: `${REN_BASE}/1/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
   },
   {
@@ -57,32 +57,32 @@ const LAYERS = [
   },
   {
     filename: 'faixa.geojson',
-    baseUrl: `${REN_RAN_BASE}/6/query`,
+    baseUrl: `${REN_BASE}/2/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
   },
   {
     filename: 'praias.geojson',
-    baseUrl: `${REN_RAN_BASE}/7/query`,
+    baseUrl: `${REN_BASE}/3/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
   },
   {
     filename: 'vertentes.geojson',
-    baseUrl: `${REN_RAN_BASE}/16/query`,
+    baseUrl: `${REN_BASE}/12/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
   },
   {
     filename: 'erosao.geojson',
-    baseUrl: `${REN_RAN_BASE}/17/query`,
+    baseUrl: `${REN_BASE}/13/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
   },
   {
     filename: 'mar.geojson',
-    baseUrl: `${REN_RAN_BASE}/15/query`,
+    baseUrl: `${REN_BASE}/11/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
   },
   {
     filename: 'cheias.geojson',
-    baseUrl: `${REN_RAN_BASE}/14/query`,
+    baseUrl: `${REN_BASE}/10/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
   },
   {

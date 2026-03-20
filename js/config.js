@@ -4,7 +4,8 @@
 
 export const SINTRA_BASE         = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer';
 export const CASCAIS_BASE        = 'https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer';
-export const REN_RAN_BASE        = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer';
+export const RAN_BASE            = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer';
+export const REN_BASE            = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer';
 export const CONDICIONANTES_BASE = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer';
 
 export const MIN_DATA_ZOOM = 1;
@@ -74,17 +75,16 @@ export const MUNICIPALITIES = [
 // muni: 'sintra' | 'cascais' | 'both'
 export const OVERLAY_DEFS = [
   // ─── Reservas (REN/RAN) ─────────────────────────────────
-  { id: 'ran',        name: 'RAN \u2014 Reserva Agr\u00edcola',    group: 'Reservas (REN/RAN)',                muni: 'both',    server: REN_RAN_BASE,        layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: REN_RAN_BASE, layerId: 2 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 }, sintraCachedFile: 'ran-sintra.geojson', cascaisCachedFile: 'ran-cascais.geojson' },
-  // TODO: confirm layerId 1 for Sintra REN when WMS_SRUP_REN_RAN server comes back online
-  { id: 'ren-sintra', name: 'REN \u2014 Reserva Ecol\u00f3gica',  group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_RAN_BASE,        layerId: 1,   color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-sintra.geojson' },
+  { id: 'ran',        name: 'RAN \u2014 Reserva Agr\u00edcola',    group: 'Reservas (REN/RAN)',                muni: 'both',    server: RAN_BASE,            layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: RAN_BASE, layerId: 2 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 }, sintraCachedFile: 'ran-sintra.geojson', cascaisCachedFile: 'ran-cascais.geojson' },
+  { id: 'ren-sintra', name: 'REN \u2014 Reserva Ecol\u00f3gica',  group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 1,   color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-sintra.geojson' },
   { id: 'ren-cascais', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'cascais', server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_RAN_BASE,        layerId: 6,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
-  { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_RAN_BASE,        layerId: 7,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
+  { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
+  { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
   // ─── Riscos Naturais ────────────────────────────────────
-  { id: 'vertentes', name: 'Instabilidade de Vertentes',            group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 16,  color: '#dc3545', hatch: 'hatch-risk-red',    cachedFile: 'vertentes.geojson' },
-  { id: 'erosao',    name: 'Eros\u00e3o H\u00eddrica',              group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 17,  color: '#e07800', hatch: 'hatch-risk-orange', cachedFile: 'erosao.geojson' },
-  { id: 'mar',       name: 'Amea\u00e7a Costeira (Mar)',            group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 15,  color: '#3a86ff', fillOpacity: 0.4,  cachedFile: 'mar.geojson' },
-  { id: 'cheias',    name: 'Zonas de Cheias',                       group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_RAN_BASE,        layerId: 14,  color: '#0077b6', fillOpacity: 0.4,  cachedFile: 'cheias.geojson' },
+  { id: 'vertentes', name: 'Instabilidade de Vertentes',            group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_BASE,             layerId: 12,  color: '#dc3545', hatch: 'hatch-risk-red',    cachedFile: 'vertentes.geojson' },
+  { id: 'erosao',    name: 'Eros\u00e3o H\u00eddrica',              group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_BASE,             layerId: 13,  color: '#e07800', hatch: 'hatch-risk-orange', cachedFile: 'erosao.geojson' },
+  { id: 'mar',       name: 'Amea\u00e7a Costeira (Mar)',            group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_BASE,             layerId: 11,  color: '#3a86ff', fillOpacity: 0.4,  cachedFile: 'mar.geojson' },
+  { id: 'cheias',    name: 'Zonas de Cheias',                       group: 'Riscos Naturais',                   muni: 'sintra',  server: REN_BASE,             layerId: 10,  color: '#0077b6', fillOpacity: 0.4,  cachedFile: 'cheias.geojson' },
   // ─── Incêndio ───────────────────────────────────────────
   { id: 'incendio',  name: 'Perigosidade de Inc\u00eandio',         group: 'Risco de Inc\u00eandio',            muni: 'sintra',  server: CONDICIONANTES_BASE, layerId: 371, color: '#fd8d3c', categorized: 'fire' },
   // ─── Património ─────────────────────────────────────────

@@ -46,11 +46,12 @@ python3 -m http.server 8080
 - Click info via `identifyFeatures` — field `Categoria` → `CASCAIS_COLORS`
 - `CASCAIS_BASE` = `https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer`
 
-**Overlay / Condicionantes layers — two servers:**
-- `REN_RAN_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer`
+**Overlay / Condicionantes layers — three servers:**
+- `RAN_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer` (Sintra RAN only — frequently offline)
+- `REN_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer` (Sintra REN + risk layers — confirmed working)
 - `CONDICIONANTES_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer`
 
-> **Known outage:** `WMS_SRUP_REN_RAN` is frequently down on Sintra's server (HTTP 500 "Service not started"). All RAN/REN/risk layers sourced from it will fail until Sintra's GIS team restarts it.
+> **Known outage:** `WMS_SRUP_REN_RAN` (`RAN_BASE`) is frequently down on Sintra's server — only `ran-sintra` layer depends on it now.
 
 ---
 
@@ -74,15 +75,15 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 
 | id | Name | Server | Layer ID | Cached file | Style |
 |----|------|--------|----------|-------------|-------|
-| `ran` | RAN — Reserva Agrícola | REN_RAN_BASE (Sintra) + CASCAIS_BASE/12 (Cascais) | 2 + 12 | `ran-sintra.geojson`, `ran-cascais.geojson` | brown hatch (`hatch-ran`) |
-| `ren-sintra` | REN — Reserva Ecológica | REN_RAN_BASE | **1 (unconfirmed)** | `ren-sintra.geojson` | green hatch (`hatch-ren`) |
+| `ran` | RAN — Reserva Agrícola | RAN_BASE (Sintra) + CASCAIS_BASE/12 (Cascais) | 2 + 12 | `ran-sintra.geojson`, `ran-cascais.geojson` | brown hatch (`hatch-ran`) |
+| `ren-sintra` | REN — Reserva Ecológica | REN_BASE | 1 (APL group — needs field testing) | `ren-sintra.geojson` | green hatch (`hatch-ren`) |
 | `ren-cascais` | REN — Reserva Ecológica | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `faixa` | Faixa Costeira | REN_RAN_BASE | 6 | `faixa.geojson` | blue fill |
-| `praias` | Praias | REN_RAN_BASE | 7 | `praias.geojson` | yellow fill |
-| `vertentes` | Instabilidade de Vertentes | REN_RAN_BASE | 16 | `vertentes.geojson` | red hatch (`hatch-risk-red`) |
-| `erosao` | Erosão Hídrica | REN_RAN_BASE | 17 | `erosao.geojson` | orange hatch (`hatch-risk-orange`) |
-| `mar` | Ameaça Costeira (Mar) | REN_RAN_BASE | 15 | `mar.geojson` | blue fill |
-| `cheias` | Zonas de Cheias | REN_RAN_BASE | 14 | `cheias.geojson` | dark blue fill |
+| `faixa` | Faixa Costeira | REN_BASE | 2 | `faixa.geojson` | blue fill |
+| `praias` | Praias | REN_BASE | 3 | `praias.geojson` | yellow fill |
+| `vertentes` | Instabilidade de Vertentes | REN_BASE | 12 | `vertentes.geojson` | red hatch (`hatch-risk-red`) |
+| `erosao` | Erosão Hídrica | REN_BASE | 13 | `erosao.geojson` | orange hatch (`hatch-risk-orange`) |
+| `mar` | Ameaça Costeira (Mar) | REN_BASE | 11 | `mar.geojson` | blue fill |
+| `cheias` | Zonas de Cheias | REN_BASE | 10 | `cheias.geojson` | dark blue fill |
 | `incendio` | Perigosidade de Incêndio | CONDICIONANTES_BASE | 371 | — (always live tiles) | dynamicMapLayer; CLASSE field → `FIRE_COLORS` |
 | `patrimonio` | Bens Imóveis Classificados | CONDICIONANTES_BASE | 299 | `patrimonio.geojson` | purple fill |
 | `zep` | Zona Especial de Proteção | CONDICIONANTES_BASE | 302 | `zep.geojson` | violet fill |
@@ -112,7 +113,7 @@ All 14 GeoJSON-paginated layers use `loadLayerData(cachedFile, fallbackUrl)`:
 
 **Fallback tracking:** `liveFallbackCount` increments each time a layer falls back to live. The `#cache-date` indicator shows `"Dados: DD/MM/YYYY (alguns em direto)"` if any fallback occurred.
 
-**Cached files** live in `data/` at the repo root (served at `/data/` by Vercel). Currently cached: `sintra-urban`, `sintra-rural`, `ran-cascais`, `ren-cascais`, `patrimonio`, `zep`, `perigosos`. Not yet cached (REN_RAN_BASE offline): `ran-sintra`, `ren-sintra`, `faixa`, `praias`, `vertentes`, `erosao`, `mar`, `cheias`.
+**Cached files** live in `data/` at the repo root (served at `/data/` by Vercel). Currently cached: `sintra-urban`, `sintra-rural`, `ran-cascais`, `ren-cascais`, `patrimonio`, `zep`, `perigosos`. Not yet cached: `ran-sintra` (RAN_BASE unreliable), `ren-sintra`, `faixa`, `praias`, `vertentes`, `erosao`, `mar`, `cheias` (now on working REN_BASE — run sync to cache).
 
 ---
 
@@ -201,21 +202,8 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - Cascais condicionantes risk layers (fire, floods, erosion) not yet integrated — available at `sig.aml.pt/.../PMAAC_Riscos_Actuais` (layers 60–65) but need testing
 - Sintra overlay layers only cover Sintra territory (except RAN which also loads Cascais layer 12)
 - Cascais dynamicMapLayer returns blank tiles above zoom 17 — capped with `maxZoom: 17`
-- `WMS_SRUP_REN_RAN` server on Sintra's infrastructure is unreliable (frequently "not started") — 8 layers depend on it
-
----
-
-## ⚠️ Pending: Confirm Sintra REN Layer ID
-
-The `ren-sintra` layer uses **`layerId: 1`** on `REN_RAN_BASE` — this is an educated guess (layer 2 is RAN, so REN is likely layer 1), but it has **not been verified** because the server was offline when the layer was added.
-
-**When `WMS_SRUP_REN_RAN` comes back online**, run:
-```bash
-curl "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer?f=json"
-```
-Find the layer named REN / Reserva Ecológica Nacional and update `layerId` in both:
-- `OVERLAY_DEFS` in `js/config.js` (the `ren-sintra` entry)
-- `LAYERS` array in `scripts/sync-data.js` (the `ren-sintra.geojson` entry)
+- `WMS_SRUP_REN_RAN` (`RAN_BASE`) server on Sintra's infrastructure is unreliable — only `ran-sintra` now depends on it
+- `ren-sintra` layerId 1 is the APL group layer on `REN_BASE` — needs field testing to confirm features are returned
 
 ---
 
