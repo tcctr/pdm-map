@@ -180,7 +180,13 @@ export function initMapHandlers({
     onGetCascaisReady:  getCascaisReady,
   };
 
-  _map.on('zoomend', updateLayerVisibility);
+  _map.on('zoomend', () => {
+    if (_activeMunicipality === 'cascais' && _map.getZoom() > 15) {
+      _map.setZoom(15);
+      return;
+    }
+    updateLayerVisibility();
+  });
 
   _map.on('click', e => {
     _callbacks.onCloseDetail?.();
