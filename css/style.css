@@ -133,14 +133,15 @@ html, body {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: rgba(255,255,255,0.35);
-  font-size: 18px;
+  color: rgba(255,255,255,0.9);
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 0;
   line-height: 1;
+  width: 18px;
+  height: 18px;
   display: none;
 }
-#search-clear:hover { color: rgba(255,255,255,0.7); }
+#search-clear:hover { color: white; }
 #search-clear.visible { display: block; }
 
 #search-input {

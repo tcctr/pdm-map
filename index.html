@@ -36,7 +36,13 @@
       <line x1="12.5" y1="12.5" x2="17" y2="17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
     </svg>
     <input id="search-input" type="text" placeholder="Pesquisar morada…" autocomplete="off" />
-    <button id="search-clear" aria-label="Limpar pesquisa">&#x2715;</button>
+    <button id="search-clear" aria-label="Limpar pesquisa">
+      <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="10" r="9" fill="currentColor" opacity="0.35"/>
+        <line x1="6.5" y1="6.5" x2="13.5" y2="13.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="13.5" y1="6.5" x2="6.5" y2="13.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </button>
     <div id="search-results"></div>
   </div>
 </div>
