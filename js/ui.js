@@ -52,6 +52,7 @@ export function updateCacheDateIndicator() {
 // ── Sintra combined chip ──────────────────────────────────────
 
 export function updateSintraChip() {
+  if (!_map) return; // called before initUI — initLayers fires this synchronously on startup
   const zoomed            = _map.getZoom() >= MIN_DATA_ZOOM;
   const sintraStatus      = _getSintraStatus();
   const activeLayer       = _getActiveLayer();
