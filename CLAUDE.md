@@ -158,22 +158,24 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 
 ## Key Functions
 
-| Function | What it does |
-|----------|-------------|
-| `loadLayerData(cachedFile, fallbackUrl)` | Cache-first loader: tries local file, falls back to live ArcGIS, returns `{ features, fromCache }` or `null` |
-| `fetchAllFeatures(url)` | Paginates ArcGIS GeoJSON queries (1000/page, follows `exceededTransferLimit`) |
-| `updateCacheDateIndicator()` | Updates `#cache-date` badge; appends "(alguns em direto)" if any fallback occurred |
-| `handleLayerSelect(value)` | Switches active layer — hides zoning or overlays accordingly |
-| `loadOverlay(id)` | Lazy-loads an overlay layer via `loadLayerData`; fire layer uses dynamicMapLayer |
-| `updateLayerVisibility()` | Shows/hides zoning layers based on `activeLayer` and zoom level |
-| `updateSintraChip()` | Updates Sintra status chip based on load state + zoom |
-| `showDetail(props, colorCfg, codeLabel)` | Opens detail panel; shifts layers button up to stay visible |
-| `closeDetail()` | Closes detail panel; restores layers button position |
-| `showOverlayDetail(def, props)` | Adapts overlay properties for `showDetail` |
-| `buildOverlayPanel()` | Generates the layers radio list HTML from `OVERLAY_DEFS` |
-| `openLayersSheet()` | Positions popup above button's current screen location (accounts for button shift) |
-| `setChipLoaded(id, state, text)` | Saves chip state to `chipLoadedState` so it restores after zoom-out |
-| `selectMunicipality(muni)` | Switches municipality, flies map to center, resets overlay cache |
+| Function | File | What it does |
+|----------|------|-------------|
+| `loadLayerData(cachedFile, fallbackUrl)` | `layers.js` | Cache-first loader: tries local file, falls back to live ArcGIS, returns `{ features, fromCache }` or `null` |
+| `fetchAllFeatures(url)` | `layers.js` | Paginates ArcGIS GeoJSON queries (1000/page, follows `exceededTransferLimit`) |
+| `loadOverlay(id, muni)` | `layers.js` | Lazy-loads an overlay layer via `loadLayerData`; fire layer uses dynamicMapLayer |
+| `initMap(containerId)` | `map.js` | Creates Leaflet map, tile layer, attribution; returns map instance |
+| `initMapHandlers(options)` | `map.js` | Wires zoom and click handlers after layers/UI are ready |
+| `updateLayerVisibility()` | `map.js` | Shows/hides zoning layers based on `activeLayer` and zoom level |
+| `handleLayerSelect(value)` | `map.js` | Switches active layer — hides zoning or overlays accordingly |
+| `selectMunicipality(muni)` | `map.js` | Switches municipality, flies map to center, resets overlay cache |
+| `updateCacheDateIndicator()` | `ui.js` | Updates `#cache-date` badge; appends "(alguns em direto)" if any fallback occurred |
+| `updateSintraChip()` | `ui.js` | Updates Sintra status chip based on load state + zoom |
+| `showDetail(props, colorCfg, codeLabel)` | `ui.js` | Opens detail panel; shifts layers button up to stay visible |
+| `closeDetail()` | `ui.js` | Closes detail panel; restores layers button position |
+| `showOverlayDetail(def, props)` | `ui.js` | Adapts overlay properties for `showDetail` |
+| `buildOverlayPanel()` | `ui.js` | Generates the layers radio list HTML from `OVERLAY_DEFS` |
+| `openLayersSheet()` | `ui.js` | Positions popup above button's current screen location (accounts for button shift) |
+| `setChipLoaded(id, state, text)` | `ui.js` | Saves chip state to `chipLoadedState` so it restores after zoom-out |
 
 ---
 
@@ -212,7 +214,7 @@ The `ren-sintra` layer uses **`layerId: 1`** on `REN_RAN_BASE` — this is an ed
 curl "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer?f=json"
 ```
 Find the layer named REN / Reserva Ecológica Nacional and update `layerId` in both:
-- `OVERLAY_DEFS` in `index.html` (the `ren-sintra` entry)
+- `OVERLAY_DEFS` in `js/config.js` (the `ren-sintra` entry)
 - `LAYERS` array in `scripts/sync-data.js` (the `ren-sintra.geojson` entry)
 
 ---
