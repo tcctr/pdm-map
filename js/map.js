@@ -74,6 +74,8 @@ export function updateLayerVisibility() {
 
 export function selectMunicipality(muni) {
   _activeMunicipality = muni;
+  _map.setMaxZoom(muni === 'cascais' ? 15 : 19);
+  if (_map.getZoom() > _map.getMaxZoom()) _map.setZoom(_map.getMaxZoom());
 
   const cfg = MUNICIPALITIES.find(m => m.id === muni);
   document.getElementById('muni-picker-label').textContent = cfg ? cfg.label : muni;
@@ -180,13 +182,7 @@ export function initMapHandlers({
     onGetCascaisReady:  getCascaisReady,
   };
 
-  _map.on('zoomend', () => {
-    if (_activeMunicipality === 'cascais' && _map.getZoom() > 15) {
-      _map.setZoom(15);
-      return;
-    }
-    updateLayerVisibility();
-  });
+  _map.on('zoomend', updateLayerVisibility);
 
   _map.on('click', e => {
     _callbacks.onCloseDetail?.();
