@@ -179,7 +179,7 @@ function loadCascais(attempt = 0) {
   cascaisLayer.clearLayers();
   _callbacks.onCascaisStatus?.('loading', 'Cascais…');
   try {
-    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [2], opacity: 0.55 });
+    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [2], opacity: 0.55, maxZoom: 17 });
     layer.addTo(cascaisLayer);
     layer.once('load', () => {
       _cascaisReady = true;
