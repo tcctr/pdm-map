@@ -42,7 +42,7 @@ python3 -m http.server 8080
 - `SINTRA_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer`
 
 **Cascais zoning (tile layer — geometry blocked by AML server, always live):**
-- `CASCAIS_BASE/2` via `L.esri.dynamicMapLayer` with `maxZoom: 17`
+- `CASCAIS_BASE/2` via `L.esri.dynamicMapLayer` with `maxZoom: 15` (tiles go blank above zoom 15)
 - Click info via `identifyFeatures` — field `Categoria` → `CASCAIS_COLORS`
 - `CASCAIS_BASE` = `https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer`
 
@@ -168,11 +168,11 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | `initMapHandlers(options)` | `map.js` | Wires zoom and click handlers after layers/UI are ready |
 | `updateLayerVisibility()` | `map.js` | Shows/hides zoning layers based on `activeLayer` and zoom level |
 | `handleLayerSelect(value)` | `map.js` | Switches active layer — hides zoning or overlays accordingly |
-| `selectMunicipality(muni)` | `map.js` | Switches municipality, flies map to center, resets overlay cache |
+| `selectMunicipality(muni)` | `map.js` | Switches municipality, resets overlay cache, rebuilds overlay panel — does NOT pan |
 | `updateCacheDateIndicator()` | `ui.js` | Updates `#cache-date` badge; appends "(alguns em direto)" if any fallback occurred |
 | `updateSintraChip()` | `ui.js` | Updates Sintra status chip based on load state + zoom |
-| `showDetail(props, colorCfg, codeLabel)` | `ui.js` | Opens detail panel; shifts layers button up to stay visible |
-| `closeDetail()` | `ui.js` | Closes detail panel; restores layers button position |
+| `showDetail(props, colorCfg, codeLabel)` | `ui.js` | Opens detail panel; shifts layers button AND locate button up to stay visible |
+| `closeDetail()` | `ui.js` | Closes detail panel; restores layers button and locate button position |
 | `showOverlayDetail(def, props)` | `ui.js` | Adapts overlay properties for `showDetail` |
 | `buildOverlayPanel()` | `ui.js` | Generates the layers radio list HTML from `OVERLAY_DEFS` |
 | `openLayersSheet()` | `ui.js` | Positions popup above button's current screen location (accounts for button shift) |
@@ -187,12 +187,15 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - **Layers button** (`#layers-btn`): bottom-left floating pill; slides up when detail panel is open; opens layers popup
 - **Layers popup** (`#layers-sheet`): compact popup anchored above the layers button (positioned dynamically via `getBoundingClientRect`); contains overlay radio list
 - **Detail panel** (`#detail-panel`): full-width bottom sheet, slides up on polygon tap, swipe-down to close; liquid glass style
-- **Locate button** (`#locate-btn`): bottom-right, re-centers on GPS
+- **Locate button** (`#locate-btn`): bottom-right, re-centers on GPS; slides up with layers button when detail panel opens (same smooth transition)
 - **Cache date** (`#cache-date`): subtle fixed label centered at bottom of map; shows sync date from `sync-metadata.json`
+- **Search bar** (`#search-input`): magnifying glass icon on left; circle-X clear button on right (visible only when input has text)
 
 **CSS design system:** `--glass-bg`, `--glass-blur`, `--glass-border`, `--glass-shadow` CSS variables. Apple liquid glass dark mode: `rgba(10,10,20,0.62)` background, `blur(28px) saturate(160%)`. All panels use these tokens.
 
-**Municipality picker:** dropdown in topbar. Selecting a municipality flies the map to its center (`map.flyTo(cfg.center, cfg.zoom)`). Centers defined in `MUNICIPALITIES` array.
+**Municipality picker:** dropdown in topbar. Selecting a municipality pans (no zoom change) to its center and resets overlays. GPS auto-detection calls `selectMunicipality()` without panning. Centers defined in `MUNICIPALITIES` array.
+
+**Address search:** zooms to 17 for Sintra results, 15 for Cascais results. Auto-switches municipality based on `display_name` from Nominatim.
 
 ---
 
@@ -201,7 +204,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - Cascais zoning geometry is blocked by AML server — only tile rendering possible
 - Cascais condicionantes risk layers (fire, floods, erosion) not yet integrated — available at `sig.aml.pt/.../PMAAC_Riscos_Actuais` (layers 60–65) but need testing
 - Sintra overlay layers only cover Sintra territory (except RAN which also loads Cascais layer 12)
-- Cascais dynamicMapLayer returns blank tiles above zoom 17 — capped with `maxZoom: 17`
+- Cascais dynamicMapLayer returns blank tiles above zoom 15 — capped with `maxZoom: 15`; chip shows "Cascais: recuar zoom" warning when zoomed in past 15
 - `WMS_SRUP_REN_RAN` (`RAN_BASE`) server on Sintra's infrastructure is unreliable — only `ran-sintra` now depends on it
 - `ren-sintra` layerId 1 is the APL group layer on `REN_BASE` — needs field testing to confirm features are returned
 
