@@ -254,7 +254,10 @@ document.getElementById('overlay-body').addEventListener('change', e => {
 document.getElementById('detail-close').addEventListener('click', closeDetail);
 
 // Layers clear button
-document.getElementById('layers-clear').addEventListener('click', () => handleLayerSelect('none'));
+document.getElementById('layers-clear').addEventListener('click', () => {
+  handleLayerSelect('none');
+  document.querySelectorAll('#overlay-body input[type=radio]').forEach(r => r.checked = false);
+});
 
 // Locate button
 document.getElementById('locate-btn').addEventListener('click', locateUser);
