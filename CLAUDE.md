@@ -63,7 +63,7 @@ python3 -m http.server 8080
 ### Overlay layers (`OVERLAY_DEFS` array)
 Radio-button selection — only one layer active at a time. Selecting any overlay hides the zoning. Selecting "Qualificação do Solo" restores it. Layers are **lazy-loaded** on first selection and cached in `ovlState`.
 
-`activeLayer` variable tracks what's selected (`'zoning'` or a def id).
+`activeLayer` variable tracks what's selected: `'zoning'`, a def id, or `'none'` (all layers hidden — basemap only).
 
 **Renderers:**
 - Sintra zoning: `renderer = L.svg({ padding: 1 })`
@@ -164,15 +164,16 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | `loadLayerData(cachedFile, fallbackUrl)` | `layers.js` | Cache-first loader: tries local file, falls back to live ArcGIS, returns `{ features, fromCache }` or `null` |
 | `fetchAllFeatures(url)` | `layers.js` | Paginates ArcGIS GeoJSON queries (1000/page, follows `exceededTransferLimit`) |
 | `loadOverlay(id, muni)` | `layers.js` | Lazy-loads an overlay layer via `loadLayerData`; fire layer uses dynamicMapLayer |
-| `initMap(containerId)` | `map.js` | Creates Leaflet map, tile layer, attribution; returns map instance |
+| `initMap(containerId)` | `map.js` | Creates Leaflet map, tile layer (OSM street, stored in `_baseLayer`), attribution; returns map instance |
+| `initBasemapToggle(map)` | `map.js` | Wires `#basemap-btn` to swap street ↔ satellite basemap; satellite is default on load |
 | `initMapHandlers(options)` | `map.js` | Wires zoom and click handlers after layers/UI are ready |
 | `updateLayerVisibility()` | `map.js` | Shows/hides zoning layers based on `activeLayer` and zoom level |
-| `handleLayerSelect(value)` | `map.js` | Switches active layer — hides zoning or overlays accordingly |
+| `handleLayerSelect(value)` | `map.js` | Switches active layer — handles `'zoning'`, `'none'`, and overlay def ids |
 | `selectMunicipality(muni)` | `map.js` | Switches municipality, resets overlay cache, rebuilds overlay panel — does NOT pan |
 | `updateCacheDateIndicator()` | `ui.js` | Updates `#cache-date` badge; appends "(alguns em direto)" if any fallback occurred |
 | `updateSintraChip()` | `ui.js` | Updates Sintra status chip based on load state + zoom |
-| `showDetail(props, colorCfg, codeLabel)` | `ui.js` | Opens detail panel; shifts layers button AND locate button up to stay visible |
-| `closeDetail()` | `ui.js` | Closes detail panel; restores layers button and locate button position |
+| `showDetail(props, colorCfg, codeLabel)` | `ui.js` | Opens detail panel; shifts layers button, locate button, AND basemap button up to stay visible |
+| `closeDetail()` | `ui.js` | Closes detail panel; restores layers button, locate button, and basemap button position |
 | `showOverlayDetail(def, props)` | `ui.js` | Adapts overlay properties for `showDetail` |
 | `buildOverlayPanel()` | `ui.js` | Generates the layers radio list HTML from `OVERLAY_DEFS` |
 | `openLayersSheet()` | `ui.js` | Positions popup above button's current screen location (accounts for button shift) |
@@ -185,9 +186,11 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - **Top bar** (`#topbar`): municipality picker pill + address search (Nominatim)
 - **Status bar** (`#statusbar`): GPS chip → municipality chip (Sintra OR Cascais) → Solo overlay chip
 - **Layers button** (`#layers-btn`): bottom-left floating pill; slides up when detail panel is open; opens layers popup
-- **Layers popup** (`#layers-sheet`): compact popup anchored above the layers button (positioned dynamically via `getBoundingClientRect`); contains overlay radio list
+- **Layers popup** (`#layers-sheet`): compact popup anchored above the layers button (positioned dynamically via `getBoundingClientRect`); header row has "Camadas" title (left) + "Limpar" text button (right); contains overlay radio list below
+- **Limpar button** (`#layers-clear`): top-right of layers popup; sets `activeLayer = 'none'`, removes all layers, deselects all radios — shows just the basemap
 - **Detail panel** (`#detail-panel`): full-width bottom sheet, slides up on polygon tap, swipe-down to close; liquid glass style
 - **Locate button** (`#locate-btn`): bottom-right, re-centers on GPS; slides up with layers button when detail panel opens (same smooth transition)
+- **Basemap toggle** (`#basemap-btn`): bottom-right, stacked 54px above locate button; square glass pill icon button; swaps street ↔ satellite basemap; satellite is default; shows map-fold icon when on satellite, globe icon when on street; slides up with locate button when detail panel opens
 - **Cache date** (`#cache-date`): subtle fixed label centered at bottom of map; shows sync date from `sync-metadata.json`
 - **Search bar** (`#search-input`): magnifying glass icon on left; circle-X clear button on right (visible only when input has text)
 
