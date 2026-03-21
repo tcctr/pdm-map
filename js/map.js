@@ -9,6 +9,7 @@ import {
 
 // ── Module-level state ───────────────────────────────────────
 let _map            = null;
+let _baseLayer      = null;
 let _ovlState       = null;
 let _urbanLayer     = null;
 let _ruralLayer     = null;
@@ -36,7 +37,7 @@ export function initMap(containerId) {
     attributionControl: false,
   });
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  _baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(map);
@@ -125,6 +126,32 @@ export function handleLayerSelect(value) {
       }
     }
   }
+}
+
+// ── Basemap toggle ────────────────────────────────────────────
+
+export function initBasemapToggle(map) {
+  const satelliteLayer = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { maxZoom: 19, attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics' },
+  );
+
+  let isSatellite = false;
+  const btn = document.getElementById('basemap-btn');
+
+  btn.addEventListener('click', () => {
+    if (isSatellite) {
+      map.removeLayer(satelliteLayer);
+      _baseLayer.addTo(map);
+      isSatellite = false;
+      btn.textContent = '🛰 Satélite';
+    } else {
+      map.removeLayer(_baseLayer);
+      satelliteLayer.addTo(map);
+      isSatellite = true;
+      btn.textContent = '🗺 Mapa';
+    }
+  });
 }
 
 // ── initMapHandlers ───────────────────────────────────────────

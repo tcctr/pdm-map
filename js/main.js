@@ -6,7 +6,7 @@ import { OVERLAY_DEFS, MUNICIPALITIES } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
 import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, urbanLayer, ruralLayer, cascaisLayer } from './layers.js';
 import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel } from './ui.js';
-import { initMap, initMapHandlers, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './map.js';
+import { initMap, initMapHandlers, initBasemapToggle, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './map.js';
 
 // ============================================================
 // CACHE METADATA
@@ -169,6 +169,7 @@ function updateLayersBtnLabel(value) {
 // ============================================================
 
 const map = initMap('map');
+initBasemapToggle(map);
 
 initSearch(map, { onMunicipalityDetected: muni => selectMunicipality(muni) });
 startGPS();

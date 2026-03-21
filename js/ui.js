@@ -120,12 +120,14 @@ export function showDetail(props, colorCfg, codeLabel) {
   const offset = (panel.offsetHeight + 12) + 'px';
   document.getElementById('layers-btn').style.bottom = offset;
   document.getElementById('locate-btn').style.bottom = offset;
+  document.getElementById('basemap-btn').style.bottom = (panel.offsetHeight + 12 + 54) + 'px';
 }
 
 export function closeDetail() {
   document.getElementById('detail-panel').classList.remove('open');
   document.getElementById('layers-btn').style.bottom = '';
   document.getElementById('locate-btn').style.bottom = '';
+  document.getElementById('basemap-btn').style.bottom = '';
 }
 
 export function showOverlayDetail(def, props) {
