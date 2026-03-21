@@ -136,20 +136,40 @@ export function initBasemapToggle(map) {
     { maxZoom: 19, attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics' },
   );
 
-  let isSatellite = false;
+  // SVG icon shown when on satellite (click → switch to street map)
+  const iconMap = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+    <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+  </svg>`;
+
+  // SVG icon shown when on street (click → switch to satellite)
+  const iconSatellite = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <line x1="12" y1="2" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="22"/>
+    <line x1="2" y1="12" x2="8" y2="12"/><line x1="16" y1="12" x2="22" y2="12"/>
+    <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
+    <line x1="19.07" y1="4.93" x2="16.24" y2="7.76"/><line x1="7.76" y1="16.24" x2="4.93" y2="19.07"/>
+  </svg>`;
+
+  // Start on satellite by default
+  map.removeLayer(_baseLayer);
+  satelliteLayer.addTo(map);
+  let isSatellite = true;
+
   const btn = document.getElementById('basemap-btn');
+  btn.innerHTML = iconMap;
 
   btn.addEventListener('click', () => {
     if (isSatellite) {
       map.removeLayer(satelliteLayer);
       _baseLayer.addTo(map);
       isSatellite = false;
-      btn.textContent = '🛰 Satélite';
+      btn.innerHTML = iconSatellite;
     } else {
       map.removeLayer(_baseLayer);
       satelliteLayer.addTo(map);
       isSatellite = true;
-      btn.textContent = '🗺 Mapa';
+      btn.innerHTML = iconMap;
     }
   });
 }
