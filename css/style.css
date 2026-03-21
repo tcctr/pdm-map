@@ -172,7 +172,9 @@ html, body {
   border: var(--glass-border);
   border-radius: 14px;
   box-shadow: var(--glass-shadow);
-  overflow: hidden;
+  overflow-y: auto;
+  max-height: 60vh;
+  -webkit-overflow-scrolling: touch;
   z-index: 2000;
   display: none;
 }
