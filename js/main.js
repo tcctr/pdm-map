@@ -173,7 +173,10 @@ function updateLayersBtnLabel(value) {
 const map = initMap('map');
 initBasemapToggle(map);
 
-initSearch(map, { onMunicipalityDetected: muni => selectMunicipality(muni) });
+initSearch(map, {
+  onMunicipalityDetected: muni => selectMunicipality(muni),
+  getGpsLocation: () => gpsMarker ? gpsMarker.getLatLng() : null,
+});
 startGPS();
 
 initLayers(map, {

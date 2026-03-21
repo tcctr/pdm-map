@@ -2,7 +2,7 @@
 // ADDRESS SEARCH + REVERSE GEOCODE (Nominatim)
 // ============================================================
 
-export function initSearch(map, { onMunicipalityDetected } = {}) {
+export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {}) {
   const searchInput   = document.getElementById('search-input');
   const searchResults = document.getElementById('search-results');
   const searchClear   = document.getElementById('search-clear');
@@ -94,7 +94,11 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
 
   async function runSearch(q) {
     try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=7&countrycodes=pt`;
+      const gps = getGpsLocation?.();
+      const viewboxParam = gps
+        ? `&viewbox=${gps.lng - 0.15},${gps.lat + 0.10},${gps.lng + 0.15},${gps.lat - 0.10}&bounded=0`
+        : '&viewbox=-9.55,38.90,-9.10,38.60&bounded=0';
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=7&countrycodes=pt${viewboxParam}`;
       const res = await fetch(url, { headers: { 'Accept-Language': 'pt' } });
       const data = await res.json();
       renderResults(data);
