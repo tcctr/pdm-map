@@ -94,9 +94,7 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
 
   async function runSearch(q) {
     try {
-      const b = map.getBounds();
-      const viewbox = `${b.getWest()},${b.getNorth()},${b.getEast()},${b.getSouth()}`;
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=7&countrycodes=pt&viewbox=${viewbox}&bounded=0`;
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=7&countrycodes=pt`;
       const res = await fetch(url, { headers: { 'Accept-Language': 'pt' } });
       const data = await res.json();
       renderResults(data);
