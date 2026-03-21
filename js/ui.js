@@ -178,6 +178,11 @@ export function buildOverlayPanel() {
       </label>`;
     }
   }
+  html += `<label class="overlay-item overlay-item-none">
+    <input type="radio" name="active-layer" value="none" />
+    <span class="overlay-dot" style="background:transparent"></span>
+    <span class="overlay-name">Mapa base</span>
+  </label>`;
   body.innerHTML = html;
 }
 

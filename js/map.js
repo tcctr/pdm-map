@@ -112,6 +112,13 @@ export function handleLayerSelect(value) {
       if (_ovlState[def.id].leafletLayer) _map.removeLayer(_ovlState[def.id].leafletLayer);
     }
     updateLayerVisibility();
+  } else if (value === 'none') {
+    [_urbanLayer, _ruralLayer, _cascaisLayer].forEach(l => _map.removeLayer(l));
+    for (const def of OVERLAY_DEFS) {
+      _ovlState[def.id].active = false;
+      if (_ovlState[def.id].leafletLayer) _map.removeLayer(_ovlState[def.id].leafletLayer);
+    }
+    _callbacks.onUpdateZoningOverlayChip?.();
   } else {
     [_urbanLayer, _ruralLayer, _cascaisLayer].forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);

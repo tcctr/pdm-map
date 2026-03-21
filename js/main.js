@@ -126,6 +126,7 @@ function setOverlayChip(state, text) {
 }
 
 function updateZoningOverlayChip() {
+  if (getActiveLayer() === 'none') { setOverlayChip('hidden', 'Solo'); return; }
   if (getActiveLayer() !== 'zoning') return;
   if (getActiveMunicipality() === 'sintra') {
     const u = sintraStatus.urban, r = sintraStatus.rural;
@@ -160,6 +161,7 @@ function toggleLayersSheet() {
 }
 
 function updateLayersBtnLabel(value) {
+  if (value === 'none') { document.getElementById('layers-btn-label').textContent = 'Mapa base'; return; }
   const def = OVERLAY_DEFS.find(d => d.id === value);
   document.getElementById('layers-btn-label').textContent = def ? def.name : 'Zoneamento';
 }
