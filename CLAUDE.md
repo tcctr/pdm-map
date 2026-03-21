@@ -198,7 +198,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 
 **Municipality picker:** dropdown in topbar. Selecting a municipality pans (no zoom change) to its center and resets overlays. GPS auto-detection calls `selectMunicipality()` without panning. Centers defined in `MUNICIPALITIES` array.
 
-**Address search:** Nominatim query uses current map bounds as `viewbox` (biases results toward visible area, `bounded=0`), `limit=7`, `countrycodes=pt`. Zooms to 17 for Sintra results, 15 for Cascais results, 17 for everything else. Auto-switches municipality only for Sintra/Cascais results. Results outside those two municipalities are still selectable but show a red **"⚠ Sem dados PDM disponíveis"** subtitle. Keyboard navigation: Up/Down arrows move through results, Enter selects highlighted item (or first if none), Escape clears. Dropdown fades out (150ms) on selection. `mouseenter` syncs the keyboard-active index so mouse and keyboard stay in sync.
+**Address search:** Nominatim query uses `limit=7`, `countrycodes=pt` (no viewbox — avoids biasing results toward the current map view when searching cross-municipality). Zooms to 17 for Sintra results, 15 for Cascais results, 17 for everything else. Auto-switches municipality only for Sintra/Cascais results. Results outside those two municipalities are still selectable but show a red **"⚠ Sem dados PDM disponíveis"** subtitle. Keyboard navigation: Up/Down arrows move through results, Enter selects highlighted item (or first if none), Escape clears. Dropdown fades out (150ms) on selection. `mouseenter` syncs the keyboard-active index so mouse and keyboard stay in sync.
 
 ---
 
