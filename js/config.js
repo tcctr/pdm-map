@@ -71,6 +71,19 @@ export const MUNICIPALITIES = [
   { id: 'cascais', label: 'Cascais', center: [38.697, -9.422], zoom: 12 },
 ];
 
+// Municipalities recognised but not yet supported — shown as "em breve" in search results
+export const COMING_SOON_MUNICIPALITIES = [
+  { id: 'lisboa',   label: 'Lisboa' },
+  { id: 'oeiras',   label: 'Oeiras' },
+  { id: 'amadora',  label: 'Amadora' },
+  { id: 'loures',   label: 'Loures' },
+  { id: 'mafra',    label: 'Mafra' },
+  { id: 'odivelas', label: 'Odivelas' },
+  { id: 'almada',   label: 'Almada' },
+  { id: 'sesimbra', label: 'Sesimbra' },
+  { id: 'setubal',  label: 'Setúbal' },
+];
+
 // Overlay layer definitions — loaded lazily when toggled on
 // muni: 'sintra' | 'cascais' | 'both'
 export const OVERLAY_DEFS = [

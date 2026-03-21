@@ -196,6 +196,19 @@ html, body {
   cursor: default;
   font-style: italic;
 }
+.search-result-item.coming-soon {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+.search-result-item.coming-soon::after {
+  content: attr(data-coming-soon) ' em breve';
+  display: block;
+  font-size: 10px;
+  color: rgba(255,255,255,0.45);
+  margin-top: 2px;
+  font-style: italic;
+}
 
 /* ---- Status bar ---- */
 #statusbar {
