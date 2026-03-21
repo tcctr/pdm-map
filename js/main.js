@@ -253,5 +253,8 @@ document.getElementById('overlay-body').addEventListener('change', e => {
 // Detail panel close button
 document.getElementById('detail-close').addEventListener('click', closeDetail);
 
+// Layers clear button
+document.getElementById('layers-clear').addEventListener('click', () => handleLayerSelect('none'));
+
 // Locate button
 document.getElementById('locate-btn').addEventListener('click', locateUser);

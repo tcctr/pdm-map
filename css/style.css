@@ -516,14 +516,29 @@ html, body {
 
 #layers-handle { display: none; }
 
+#layers-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 6px;
+  flex-shrink: 0;
+}
 #layers-title {
   font-size: 13px;
   font-weight: 600;
   color: rgba(255,255,255,0.95);
-  padding: 10px 16px 6px;
-  flex-shrink: 0;
   letter-spacing: 0.1px;
 }
+#layers-clear {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-family: inherit;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  padding: 0;
+}
+#layers-clear:hover { color: rgba(255,255,255,0.75); }
 
 
 #overlay-body {
