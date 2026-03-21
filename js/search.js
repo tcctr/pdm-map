@@ -8,10 +8,14 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
   const searchClear   = document.getElementById('search-clear');
   let searchDebounce = null;
   let searchMarker   = null;
+  let currentItems   = [];
+  let selectedIndex  = -1;
 
   function closeSearch() {
     searchResults.classList.remove('open');
     searchResults.innerHTML = '';
+    currentItems  = [];
+    selectedIndex = -1;
   }
 
   function clearSearch() {
@@ -22,7 +26,19 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
     searchInput.focus();
   }
 
+  function setSelectedIndex(idx) {
+    const items = searchResults.querySelectorAll('.search-result-item:not(.no-results)');
+    items.forEach(el => el.classList.remove('active'));
+    selectedIndex = idx;
+    if (idx >= 0 && idx < items.length) {
+      items[idx].classList.add('active');
+      items[idx].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
   function renderResults(items) {
+    currentItems  = items;
+    selectedIndex = -1;
     if (items.length === 0) {
       searchResults.innerHTML = '<div class="search-result-item no-results">Sem resultados</div>';
     } else {
@@ -30,6 +46,7 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
         `<div class="search-result-item">${item.display_name}</div>`
       ).join('');
       searchResults.querySelectorAll('.search-result-item').forEach((el, i) => {
+        el.addEventListener('mouseenter', () => setSelectedIndex(i));
         el.addEventListener('click', () => selectResult(items[i]));
       });
     }
@@ -44,8 +61,14 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
   }
 
   function selectResult(item) {
-    closeSearch();
+    searchResults.classList.add('closing');
+    setTimeout(() => {
+      searchResults.classList.remove('closing');
+      closeSearch();
+    }, 150);
+
     searchInput.value = item.display_name.split(',')[0];
+    searchInput.blur();
 
     const muni = detectMunicipality(item.display_name);
     if (muni) onMunicipalityDetected?.(muni);
@@ -68,7 +91,9 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
 
   async function runSearch(q) {
     try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=pt&viewbox=-9.55,38.65,-9.30,38.85&bounded=0`;
+      const b = map.getBounds();
+      const viewbox = `${b.getWest()},${b.getNorth()},${b.getEast()},${b.getSouth()}`;
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=7&countrycodes=pt&viewbox=${viewbox}&bounded=0`;
       const res = await fetch(url, { headers: { 'Accept-Language': 'pt' } });
       const data = await res.json();
       renderResults(data);
@@ -86,7 +111,19 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
   });
 
   searchInput.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { clearSearch(); searchInput.blur(); }
+    if (e.key === 'Escape') { clearSearch(); searchInput.blur(); return; }
+    if (!searchResults.classList.contains('open') || currentItems.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(Math.min(selectedIndex + 1, currentItems.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(Math.max(selectedIndex - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const idx = selectedIndex >= 0 ? selectedIndex : 0;
+      selectResult(currentItems[idx]);
+    }
   });
 
   searchClear.addEventListener('click', clearSearch);

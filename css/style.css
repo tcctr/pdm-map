@@ -187,7 +187,10 @@ html, body {
   line-height: 1.4;
 }
 .search-result-item:last-child { border-bottom: none; }
-.search-result-item:hover { background: rgba(255,255,255,0.07); }
+.search-result-item:hover,
+.search-result-item.active { background: rgba(255,255,255,0.10); }
+#search-results { transition: opacity 0.15s ease; }
+#search-results.closing { opacity: 0; }
 .search-result-item.no-results {
   color: rgba(255,255,255,0.35);
   cursor: default;
