@@ -142,14 +142,11 @@ export function initBasemapToggle(map) {
     <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
   </svg>`;
 
-  // SVG icon shown when on street (click → switch to satellite): tilted satellite
+  // SVG icon shown when on street (click → switch to satellite): globe
   const iconSatellite = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <g transform="rotate(-45 12 12)">
-      <rect x="9" y="9" width="6" height="6" rx="1"/>
-      <rect x="2" y="11" width="7" height="3"/>
-      <rect x="15" y="11" width="7" height="3"/>
-      <line x1="12" y1="2" x2="12" y2="9"/>
-    </g>
+    <circle cx="12" cy="12" r="10"/>
+    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+    <path d="M2 12h20"/>
   </svg>`;
 
   // Start on satellite by default
