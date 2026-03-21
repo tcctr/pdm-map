@@ -2,8 +2,6 @@
 // ADDRESS SEARCH + REVERSE GEOCODE (Nominatim)
 // ============================================================
 
-import { COMING_SOON_MUNICIPALITIES } from './config.js';
-
 export function initSearch(map, { onMunicipalityDetected } = {}) {
   const searchInput   = document.getElementById('search-input');
   const searchResults = document.getElementById('search-results');
@@ -39,25 +37,19 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
   }
 
   function renderResults(items) {
-    currentItems  = [];
+    currentItems  = items;
     selectedIndex = -1;
     if (items.length === 0) {
       searchResults.innerHTML = '<div class="search-result-item no-results">Sem resultados</div>';
     } else {
       searchResults.innerHTML = items.map(item => {
-        const cs = detectComingSoon(item.display_name);
-        if (cs) {
-          return `<div class="search-result-item coming-soon" data-coming-soon="${cs.label}">${item.display_name}</div>`;
-        }
-        return `<div class="search-result-item">${item.display_name}</div>`;
+        const muni = detectMunicipality(item.display_name);
+        const warning = muni ? '' : '<span class="result-warning">⚠ Sem dados PDM disponíveis</span>';
+        const cls = muni ? '' : ' outside-area';
+        return `<div class="search-result-item${cls}">${item.display_name}${warning}</div>`;
       }).join('');
-
-      let navIndex = 0;
       searchResults.querySelectorAll('.search-result-item').forEach((el, i) => {
-        if (el.classList.contains('coming-soon')) return;
-        const capturedIndex = navIndex++;
-        currentItems.push(items[i]);
-        el.addEventListener('mouseenter', () => setSelectedIndex(capturedIndex));
+        el.addEventListener('mouseenter', () => setSelectedIndex(i));
         el.addEventListener('click', () => selectResult(items[i]));
       });
     }
@@ -69,11 +61,6 @@ export function initSearch(map, { onMunicipalityDetected } = {}) {
     if (name.includes('cascais')) return 'cascais';
     if (name.includes('sintra'))  return 'sintra';
     return null;
-  }
-
-  function detectComingSoon(displayName) {
-    const name = displayName.toLowerCase();
-    return COMING_SOON_MUNICIPALITIES.find(m => name.includes(m.id)) || null;
   }
 
   function selectResult(item) {
