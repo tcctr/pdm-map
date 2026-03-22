@@ -37,14 +37,12 @@ const LAYERS = [
   // Overlay layers (outFields=* + maxAllowableOffset)
   {
     filename: 'ran-sintra.geojson',
-    baseUrl: `${RAN_BASE}/2/query`,
+    baseUrl: `${CONDICIONANTES_BASE}/264/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
   },
-  {
-    filename: 'ren-sintra.geojson',
-    baseUrl: `${REN_BASE}/1/query`,
-    params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
-  },
+  // ren-sintra: no unified queryable REN boundary layer exists on sig.cm-sintra.pt.
+  // WMS_SRUP_REN_RAN removed from server; WMS_SRUP_REN_CMS layer 1 is a group layer (returns 400).
+  // ren-sintra overlay uses ren-cascais.geojson (AML-wide REN, covers Sintra territory).
   {
     filename: 'ran-cascais.geojson',
     baseUrl: `${CASCAIS_BASE}/12/query`,
