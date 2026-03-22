@@ -234,7 +234,7 @@ export function initBasemapToggle(map) {
 //   ruralLayer                 — L.layerGroup for Sintra rural
 //   cascaisLayer               — L.layerGroup for Cascais tiles
 //   overlayShortName(def)      — returns short display name (from layers.js)
-//   loadOverlay(id)            — lazy-loads an overlay (from layers.js)
+//   loadOverlay(id, muni)      — lazy-loads an overlay (from layers.js)
 //   getCascaisReady()          — returns bool (from layers.js)
 //   onUpdateSintraChip()       — updates Sintra chip + layer visibility
 //   onSetChip(id, state, text) — sets a status chip
