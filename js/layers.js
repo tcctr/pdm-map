@@ -255,7 +255,7 @@ function loadLoures(attempt = 0) {
 
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
-export async function loadOverlay(id, activeMunicipality) {
+export async function loadOverlay(id) {
   const def = OVERLAY_DEFS.find(d => d.id === id);
   const st  = ovlState[id];
   if (st.loaded)  { if (st.active) st.leafletLayer.addTo(_map); return; }
@@ -286,17 +286,8 @@ export async function loadOverlay(id, activeMunicipality) {
     }
 
     // All other layers: GeoJSON rendered client-side (cache-first, live fallback).
-    let cachedFile, fallbackUrl;
-    if (def.sintraSource && def.cascaisSource) {
-      // RAN: per-municipality source; Oeiras uses the same AML source as Cascais (layer 12)
-      const isSintra = activeMunicipality === 'sintra';
-      cachedFile  = isSintra ? def.sintraCachedFile : def.cascaisCachedFile;
-      const src   = isSintra ? def.sintraSource     : def.cascaisSource;
-      fallbackUrl = `${src.server}/${src.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`;
-    } else {
-      cachedFile  = def.cachedFile;
-      fallbackUrl = `${def.server}/${def.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`;
-    }
+    const cachedFile  = def.cachedFile;
+    const fallbackUrl = `${def.server}/${def.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`;
     const result = await loadLayerData(cachedFile, fallbackUrl);
     if (!result) throw new Error('Both cache and live failed');
     const allFeatures = result.features;
@@ -325,7 +316,7 @@ export async function loadOverlay(id, activeMunicipality) {
     if (st.retries < RETRY_DELAYS.length) {
       const delay = RETRY_DELAYS[st.retries++];
       // Guard with st.active instead of activeLayer (activeLayer lives in index.html)
-      setTimeout(() => { if (st.active && !st.loaded) loadOverlay(id, activeMunicipality); }, delay);
+      setTimeout(() => { if (st.active && !st.loaded) loadOverlay(id); }, delay);
     }
   }
 }
