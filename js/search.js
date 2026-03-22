@@ -61,6 +61,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
     if (name.includes('cascais')) return 'cascais';
     if (name.includes('sintra'))  return 'sintra';
     if (name.includes('oeiras'))  return 'oeiras';
+    if (name.includes('loures'))  return 'loures';
     return null;
   }
 
@@ -76,7 +77,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
 
     const muni = detectMunicipality(item.display_name);
     if (muni) onMunicipalityDetected?.(muni);
-    const zoom = muni === 'cascais' || muni === 'oeiras' ? 15 : 17;
+    const zoom = muni === 'cascais' || muni === 'oeiras' || muni === 'loures' ? 15 : 17;
 
     const lat = parseFloat(item.lat);
     const lng = parseFloat(item.lon);
@@ -163,6 +164,7 @@ export async function reverseGeocode(lat, lng) {
     if (place.includes('cascais')) return 'cascais';
     if (place.includes('sintra'))  return 'sintra';
     if (place.includes('oeiras'))  return 'oeiras';
+    if (place.includes('loures'))  return 'loures';
     return null;
   } catch {
     return null;

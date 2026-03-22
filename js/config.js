@@ -77,6 +77,21 @@ export const OEIRAS_COLORS = {
   'PMOT em vigor':                                      { fill: '#cccccc', label: 'PMOT em vigor' },
 };
 
+// Color palette for Loures zones (Categoria field, layer 6 — same AML server as Cascais/Oeiras)
+export const LOURES_COLORS = {
+  'Rio Tejo':                                                  { fill: '#0070ff', label: 'Rio Tejo' },
+  'Aglomerados Rurais':                                        { fill: '#003f7d', label: 'Aglomerados Rurais' },
+  'Espa\u00e7o destinado a Equipamentos e Outras Estruturas':  { fill: '#4895ef', label: 'Equipamentos e Estruturas' },
+  'Espa\u00e7os Afectos a Actividades Industriais':            { fill: '#884aaa', label: 'Actividades Industriais' },
+  'Espa\u00e7os Afectos \u00e0 Explora\u00e7\u00e3o de Recursos Geol\u00f3gicos': { fill: '#6c757d', label: 'Recursos Geol\u00f3gicos' },
+  'Espa\u00e7os Agr\u00edcolas e Florestais':                  { fill: '#1a9850', label: 'Agr\u00edcola e Florestal' },
+  'Espa\u00e7os Naturais':                                     { fill: '#74c69d', label: 'Natural' },
+  'Espa\u00e7os de Ocupa\u00e7\u00e3o Turistica':              { fill: '#43aa8b', label: 'Ocupa\u00e7\u00e3o Tur\u00edstica' },
+  'Sistemas de Circula\u00e7\u00e3o e Mobilidade':             { fill: '#658a42', label: 'Circula\u00e7\u00e3o e Mobilidade' },
+  'Solo Urbanizado':                                           { fill: '#c1121f', label: 'Solo Urbanizado' },
+  'Solo Urbaniz\u00e1vel':                                     { fill: '#f4845f', label: 'Solo Urbaniz\u00e1vel' },
+};
+
 // Fire hazard classes → colors (PMDFCI CLASSE field)
 export const FIRE_COLORS = {
   'Muito baixa': '#ffffb2',
@@ -90,6 +105,7 @@ export const MUNICIPALITIES = [
   { id: 'sintra',  label: 'Sintra',  center: [38.800, -9.390], zoom: 12 },
   { id: 'cascais', label: 'Cascais', center: [38.697, -9.422], zoom: 12 },
   { id: 'oeiras',  label: 'Oeiras',  center: [38.700, -9.300], zoom: 12 },
+  { id: 'loures',  label: 'Loures',  center: [38.830, -9.165], zoom: 12 },
 ];
 
 
@@ -101,6 +117,7 @@ export const OVERLAY_DEFS = [
   { id: 'ren-sintra', name: 'REN \u2014 Reserva Ecol\u00f3gica',  group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 1,   color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-sintra.geojson' },
   { id: 'ren-cascais', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'cascais', server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-oeiras',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'oeiras',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-loures',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'loures',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
   // ─── Riscos Naturais ────────────────────────────────────

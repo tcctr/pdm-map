@@ -18,6 +18,7 @@ export let urbanLayer   = null;
 export let ruralLayer   = null;
 export let cascaisLayer = null;
 export let oeirasLayer  = null;
+export let louresLayer  = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -27,6 +28,9 @@ export function getCascaisReady()    { return _cascaisReady; }
 
 let _oeirasReady      = false;
 export function getOeirasReady()     { return _oeirasReady; }
+
+let _louresReady      = false;
+export function getLouresReady()     { return _louresReady; }
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -225,6 +229,30 @@ function loadOeiras(attempt = 0) {
   }
 }
 
+// ── Loures layer loader ──────────────────────────────────────
+
+function loadLoures(attempt = 0) {
+  louresLayer.clearLayers();
+  _callbacks.onLouresStatus?.('loading', 'Loures\u2026');
+  try {
+    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [6], opacity: 0.55, maxZoom: 15 });
+    layer.addTo(louresLayer);
+    layer.once('load', () => {
+      _louresReady = true;
+      _callbacks.onLouresLoaded?.('ok', 'Loures');
+    });
+    layer.once('loaderror', () => {
+      _callbacks.onLouresStatus?.('error', 'Loures: erro');
+      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadLoures(attempt + 1), RETRY_DELAYS[attempt]);
+    });
+    _louresReady = true;
+  } catch (e) {
+    console.error('Loures error:', e);
+    _callbacks.onLouresStatus?.('error', 'Loures: indispon\u00edvel');
+    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadLoures(attempt + 1), RETRY_DELAYS[attempt]);
+  }
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -326,6 +354,7 @@ export function initLayers(map, callbacks) {
   ruralLayer   = L.layerGroup().addTo(map);
   cascaisLayer = L.layerGroup().addTo(map);
   oeirasLayer  = L.layerGroup().addTo(map);
+  louresLayer  = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -335,4 +364,5 @@ export function initLayers(map, callbacks) {
   loadSintraRural();
   loadCascais();
   loadOeiras();
+  loadLoures();
 }
