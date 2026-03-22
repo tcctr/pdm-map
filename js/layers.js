@@ -17,12 +17,16 @@ let _callbacks       = {};
 export let urbanLayer   = null;
 export let ruralLayer   = null;
 export let cascaisLayer = null;
+export let oeirasLayer  = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
 
 let _cascaisReady     = false;
 export function getCascaisReady()    { return _cascaisReady; }
+
+let _oeirasReady      = false;
+export function getOeirasReady()     { return _oeirasReady; }
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -197,6 +201,30 @@ function loadCascais(attempt = 0) {
   }
 }
 
+// ── Oeiras layer loader ──────────────────────────────────────
+
+function loadOeiras(attempt = 0) {
+  oeirasLayer.clearLayers();
+  _callbacks.onOeirasStatus?.('loading', 'Oeiras\u2026');
+  try {
+    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [3], opacity: 0.55, maxZoom: 15 });
+    layer.addTo(oeirasLayer);
+    layer.once('load', () => {
+      _oeirasReady = true;
+      _callbacks.onOeirasLoaded?.('ok', 'Oeiras');
+    });
+    layer.once('loaderror', () => {
+      _callbacks.onOeirasStatus?.('error', 'Oeiras: erro');
+      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadOeiras(attempt + 1), RETRY_DELAYS[attempt]);
+    });
+    _oeirasReady = true;
+  } catch (e) {
+    console.error('Oeiras error:', e);
+    _callbacks.onOeirasStatus?.('error', 'Oeiras: indispon\u00edvel');
+    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadOeiras(attempt + 1), RETRY_DELAYS[attempt]);
+  }
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -232,10 +260,10 @@ export async function loadOverlay(id, activeMunicipality) {
     // All other layers: GeoJSON rendered client-side (cache-first, live fallback).
     let cachedFile, fallbackUrl;
     if (def.sintraSource && def.cascaisSource) {
-      // RAN: per-municipality source
-      const isCascais = activeMunicipality === 'cascais';
-      cachedFile  = isCascais ? def.cascaisCachedFile : def.sintraCachedFile;
-      const src   = isCascais ? def.cascaisSource     : def.sintraSource;
+      // RAN: per-municipality source; Oeiras uses the same AML source as Cascais (layer 12)
+      const isSintra = activeMunicipality === 'sintra';
+      cachedFile  = isSintra ? def.sintraCachedFile : def.cascaisCachedFile;
+      const src   = isSintra ? def.sintraSource     : def.cascaisSource;
       fallbackUrl = `${src.server}/${src.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`;
     } else {
       cachedFile  = def.cachedFile;
@@ -297,6 +325,7 @@ export function initLayers(map, callbacks) {
   urbanLayer   = L.layerGroup().addTo(map);
   ruralLayer   = L.layerGroup().addTo(map);
   cascaisLayer = L.layerGroup().addTo(map);
+  oeirasLayer  = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -305,4 +334,5 @@ export function initLayers(map, callbacks) {
   loadSintraUrban();
   loadSintraRural();
   loadCascais();
+  loadOeiras();
 }

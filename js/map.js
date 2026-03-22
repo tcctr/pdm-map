@@ -4,7 +4,7 @@
 
 import {
   MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM,
-  CASCAIS_BASE, CASCAIS_COLORS, CONDICIONANTES_BASE,
+  CASCAIS_BASE, CASCAIS_COLORS, OEIRAS_COLORS, CONDICIONANTES_BASE,
 } from './config.js';
 
 // ── Module-level state ───────────────────────────────────────
@@ -14,6 +14,7 @@ let _ovlState       = null;
 let _urbanLayer     = null;
 let _ruralLayer     = null;
 let _cascaisLayer   = null;
+let _oeirasLayer    = null;
 let _callbacks      = {};
 
 let _activeLayer        = 'zoning';
@@ -54,22 +55,45 @@ export function updateLayerVisibility() {
   _callbacks.onUpdateSintraChip?.();
 
   const zoomed = _map.getZoom() >= MIN_DATA_ZOOM;
-  const on = _activeLayer === 'zoning' && _activeMunicipality === 'cascais';
-  on && zoomed ? _map.addLayer(_cascaisLayer) : _map.removeLayer(_cascaisLayer);
 
+  // Cascais tile layer
+  const cascaisOn = _activeLayer === 'zoning' && _activeMunicipality === 'cascais';
+  cascaisOn && zoomed ? _map.addLayer(_cascaisLayer) : _map.removeLayer(_cascaisLayer);
+
+  // Oeiras tile layer
+  const oeirasOn = _activeLayer === 'zoning' && _activeMunicipality === 'oeiras';
+  oeirasOn && zoomed ? _map.addLayer(_oeirasLayer) : _map.removeLayer(_oeirasLayer);
+
+  // chip-cascais
   const cascaisEl = document.getElementById('chip-cascais');
-  if (!cascaisEl) return;
-  cascaisEl.style.display = _activeMunicipality === 'cascais' ? '' : 'none';
-  if (_activeMunicipality !== 'cascais') return;
-  if (_activeLayer !== 'zoning') return; // overlay active — leave chip as-is
-  if (cascaisEl.classList.contains('chip-loading')) return;
-  if (!zoomed) {
-    _callbacks.onSetChip?.('chip-cascais', 'warn', 'Cascais: zoom');
-  } else if (_map.getZoom() > 15) {
-    _callbacks.onSetChip?.('chip-cascais', 'warn', 'Cascais: recuar zoom');
-  } else {
-    const s = _callbacks.onGetChipLoadedState?.('chip-cascais');
-    if (s) _callbacks.onSetChip?.('chip-cascais', s.state, s.text);
+  if (cascaisEl) {
+    cascaisEl.style.display = _activeMunicipality === 'cascais' ? '' : 'none';
+    if (_activeMunicipality === 'cascais' && _activeLayer === 'zoning' && !cascaisEl.classList.contains('chip-loading')) {
+      if (!zoomed) {
+        _callbacks.onSetChip?.('chip-cascais', 'warn', 'Cascais: zoom');
+      } else if (_map.getZoom() > 15) {
+        _callbacks.onSetChip?.('chip-cascais', 'warn', 'Cascais: recuar zoom');
+      } else {
+        const s = _callbacks.onGetChipLoadedState?.('chip-cascais');
+        if (s) _callbacks.onSetChip?.('chip-cascais', s.state, s.text);
+      }
+    }
+  }
+
+  // chip-oeiras
+  const oeirasEl = document.getElementById('chip-oeiras');
+  if (oeirasEl) {
+    oeirasEl.style.display = _activeMunicipality === 'oeiras' ? '' : 'none';
+    if (_activeMunicipality === 'oeiras' && _activeLayer === 'zoning' && !oeirasEl.classList.contains('chip-loading')) {
+      if (!zoomed) {
+        _callbacks.onSetChip?.('chip-oeiras', 'warn', 'Oeiras: zoom');
+      } else if (_map.getZoom() > 15) {
+        _callbacks.onSetChip?.('chip-oeiras', 'warn', 'Oeiras: recuar zoom');
+      } else {
+        const s = _callbacks.onGetChipLoadedState?.('chip-oeiras');
+        if (s) _callbacks.onSetChip?.('chip-oeiras', s.state, s.text);
+      }
+    }
   }
 }
 
@@ -113,14 +137,14 @@ export function handleLayerSelect(value) {
     }
     updateLayerVisibility();
   } else if (value === 'none') {
-    [_urbanLayer, _ruralLayer, _cascaisLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer].forEach(l => _map.removeLayer(l));
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
       if (_ovlState[def.id].leafletLayer) _map.removeLayer(_ovlState[def.id].leafletLayer);
     }
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
-    [_urbanLayer, _ruralLayer, _cascaisLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer].forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {
@@ -206,8 +230,8 @@ export function initBasemapToggle(map) {
 
 export function initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer,
-  overlayShortName, loadOverlay, getCascaisReady,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer,
+  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady,
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
   onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet,
@@ -217,6 +241,7 @@ export function initMapHandlers({
   _urbanLayer   = urbanLayer;
   _ruralLayer   = ruralLayer;
   _cascaisLayer = cascaisLayer;
+  _oeirasLayer  = oeirasLayer;
   _callbacks = {
     onUpdateSintraChip,
     onSetChip,
@@ -232,6 +257,7 @@ export function initMapHandlers({
     onOverlayShortName: overlayShortName,
     onLoadOverlay:      loadOverlay,
     onGetCascaisReady:  getCascaisReady,
+    onGetOeirasReady:   getOeirasReady,
   };
 
   _map.on('zoomend', updateLayerVisibility);
@@ -246,6 +272,16 @@ export function initMapHandlers({
           const p   = fc.features[0].properties;
           const cat = p.Categoria || '';
           const cfg = CASCAIS_COLORS[cat] || { fill: '#888888', label: cat };
+          _callbacks.onShowDetail?.(p, cfg, cat);
+        });
+    } else if (_activeLayer === 'zoning' && _callbacks.onGetOeirasReady?.() && _map.hasLayer(_oeirasLayer)) {
+      L.esri.identifyFeatures({ url: CASCAIS_BASE })
+        .on(_map).at(e.latlng).layers('visible:3').tolerance(2)
+        .run((err, fc) => {
+          if (err || !fc || !fc.features.length) return;
+          const p   = fc.features[0].properties;
+          const cat = p.Categoria || '';
+          const cfg = OEIRAS_COLORS[cat] || { fill: '#888888', label: cat };
           _callbacks.onShowDetail?.(p, cfg, cat);
         });
     } else if (_activeLayer === 'incendio') {

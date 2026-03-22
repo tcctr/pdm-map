@@ -60,6 +60,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
     const name = displayName.toLowerCase();
     if (name.includes('cascais')) return 'cascais';
     if (name.includes('sintra'))  return 'sintra';
+    if (name.includes('oeiras'))  return 'oeiras';
     return null;
   }
 
@@ -75,7 +76,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
 
     const muni = detectMunicipality(item.display_name);
     if (muni) onMunicipalityDetected?.(muni);
-    const zoom = muni === 'cascais' ? 15 : 17;
+    const zoom = muni === 'cascais' || muni === 'oeiras' ? 15 : 17;
 
     const lat = parseFloat(item.lat);
     const lng = parseFloat(item.lon);
@@ -161,6 +162,7 @@ export async function reverseGeocode(lat, lng) {
       .filter(Boolean).join(' ').toLowerCase();
     if (place.includes('cascais')) return 'cascais';
     if (place.includes('sintra'))  return 'sintra';
+    if (place.includes('oeiras'))  return 'oeiras';
     return null;
   } catch {
     return null;

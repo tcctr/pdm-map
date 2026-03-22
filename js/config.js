@@ -57,6 +57,26 @@ export const CASCAIS_COLORS = {
   'PMOT em vigor':                            { fill: '#cccccc', label: 'PMOT em vigor' },
 };
 
+// Color palette for Oeiras zones (Categoria field, layer 3 — same AML server as Cascais)
+export const OEIRAS_COLORS = {
+  'Espa\u00e7o Canal':                                  { fill: '#555555', label: 'Canal' },
+  'Espa\u00e7o Central':                                { fill: '#c1121f', label: 'Central' },
+  'Espa\u00e7o Natural':                                { fill: '#74c69d', label: 'Natural' },
+  'Espa\u00e7o Residencial':                            { fill: '#f4845f', label: 'Residencial' },
+  'Espa\u00e7o Verde':                                  { fill: '#52b788', label: 'Verde' },
+  'Espa\u00e7o de Actividades Econ\u00f3micas':         { fill: '#9b5de5', label: 'Actividades Econ\u00f3micas' },
+  'Espa\u00e7o de Atividades Econ\u00f3micas':          { fill: '#9b5de5', label: 'Atividades Econ\u00f3micas' },
+  'Espa\u00e7o de Equipamento':                         { fill: '#4895ef', label: 'Equipamento' },
+  'Espa\u00e7o de Ocupa\u00e7\u00e3o Tur\u00edstica':  { fill: '#43aa8b', label: 'Ocupa\u00e7\u00e3o Tur\u00edstica' },
+  'Espa\u00e7o de Uso Especial':                        { fill: '#e9c46a', label: 'Uso Especial' },
+  'Espa\u00e7o de Uso Especial - Equipamentos':         { fill: '#4895ef', label: 'Uso Especial - Equipamentos' },
+  'Espa\u00e7o de Uso Especial - Turismo':              { fill: '#43aa8b', label: 'Uso Especial - Turismo' },
+  'Espa\u00e7o de Uso Especial Proposto':               { fill: '#ffe8a1', label: 'Uso Especial Proposto' },
+  'Solo Rural':                                         { fill: '#74c69d', label: 'Solo Rural' },
+  'Solo urbaniz\u00e1vel sem categoria associada':      { fill: '#f4a261', label: 'Solo Urbaniz\u00e1vel' },
+  'PMOT em vigor':                                      { fill: '#cccccc', label: 'PMOT em vigor' },
+};
+
 // Fire hazard classes → colors (PMDFCI CLASSE field)
 export const FIRE_COLORS = {
   'Muito baixa': '#ffffb2',
@@ -69,16 +89,18 @@ export const FIRE_COLORS = {
 export const MUNICIPALITIES = [
   { id: 'sintra',  label: 'Sintra',  center: [38.800, -9.390], zoom: 12 },
   { id: 'cascais', label: 'Cascais', center: [38.697, -9.422], zoom: 12 },
+  { id: 'oeiras',  label: 'Oeiras',  center: [38.700, -9.300], zoom: 12 },
 ];
 
 
 // Overlay layer definitions — loaded lazily when toggled on
-// muni: 'sintra' | 'cascais' | 'both'
+// muni: 'sintra' | 'cascais' | 'oeiras' | 'both'  ('both' = all municipalities)
 export const OVERLAY_DEFS = [
   // ─── Reservas (REN/RAN) ─────────────────────────────────
   { id: 'ran',        name: 'RAN \u2014 Reserva Agr\u00edcola',    group: 'Reservas (REN/RAN)',                muni: 'both',    server: RAN_BASE,            layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: RAN_BASE, layerId: 2 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 }, sintraCachedFile: 'ran-sintra.geojson', cascaisCachedFile: 'ran-cascais.geojson' },
   { id: 'ren-sintra', name: 'REN \u2014 Reserva Ecol\u00f3gica',  group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 1,   color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-sintra.geojson' },
   { id: 'ren-cascais', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'cascais', server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-oeiras',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'oeiras',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
   // ─── Riscos Naturais ────────────────────────────────────

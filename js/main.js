@@ -4,7 +4,7 @@
 
 import { OVERLAY_DEFS, MUNICIPALITIES } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
-import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, urbanLayer, ruralLayer, cascaisLayer } from './layers.js';
+import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer } from './layers.js';
 import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel } from './ui.js';
 import { initMap, initMapHandlers, initBasemapToggle, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './map.js';
 
@@ -134,6 +134,11 @@ function updateZoningOverlayChip() {
     else if (u === 'ok' && r === 'ok')       setOverlayChip('ok', 'Solo');
     else if (u === 'error' && r === 'error') setOverlayChip('error', 'Solo: erro');
     else                                     setOverlayChip('warn', 'Solo');
+  } else if (getActiveMunicipality() === 'oeiras') {
+    const oeirasState = getChipLoadedState('chip-oeiras')?.state;
+    if (!oeirasState)               setOverlayChip('loading', 'Solo\u2026');
+    else if (oeirasState === 'ok')  setOverlayChip('ok', 'Solo');
+    else                            setOverlayChip('error', 'Solo: erro');
   } else {
     const cascaisState = getChipLoadedState('chip-cascais')?.state;
     if (!cascaisState)              setOverlayChip('loading', 'Solo\u2026');
@@ -184,6 +189,8 @@ initLayers(map, {
   onSintraStatus:        update => { Object.assign(sintraStatus, update); updateSintraChip(); },
   onCascaisStatus:       (state, text) => setChip('chip-cascais', state, text),
   onCascaisLoaded:       (state, text) => { setChipLoaded('chip-cascais', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
+  onOeirasStatus:        (state, text) => setChip('chip-oeiras', state, text),
+  onOeirasLoaded:        (state, text) => { setChipLoaded('chip-oeiras', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
   onOverlayStatus:       (id, state, text) => { if (getActiveLayer() === id) setOverlayChip(state, text); },
   onFeatureClick:        (props, cfg, label) => showDetail(props, cfg, label),
   onOverlayFeatureClick: (def, props) => showOverlayDetail(def, props),
@@ -202,8 +209,8 @@ initUI({
 
 initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer,
-  overlayShortName, loadOverlay, getCascaisReady,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer,
+  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady,
   onUpdateSintraChip:         updateSintraChip,
   onSetChip:                  setChip,
   onGetChipLoadedState:       getChipLoadedState,
