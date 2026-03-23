@@ -3,8 +3,8 @@
 // ============================================================
 
 import {
-  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -19,6 +19,7 @@ export let ruralLayer   = null;
 export let cascaisLayer = null;
 export let oeirasLayer  = null;
 export let louresLayer  = null;
+export let amadoraLayer = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -31,6 +32,9 @@ export function getOeirasReady()     { return _oeirasReady; }
 
 let _louresReady      = false;
 export function getLouresReady()     { return _louresReady; }
+
+let _amadoraReady     = false;
+export function getAmadoraReady()    { return _amadoraReady; }
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -253,6 +257,93 @@ function loadLoures(attempt = 0) {
   }
 }
 
+// ── Amadora layer loader ─────────────────────────────────────
+
+function getAmadoraStyle(props) {
+  const cat = props.Categoria_2021 || '';
+  const cfg = AMADORA_COLORS[cat];
+  if (cfg) return makeStyle(cfg.fill);
+  const cls = props.Classe_2021 || '';
+  if (cls.includes('R\u00fastico')) return makeStyle('#74c69d');
+  return makeStyle('#adb5bd');
+}
+
+async function fetchAmadoraFeatures() {
+  const res = await fetch(AMADORA_WFS, { signal: AbortSignal.timeout(30000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.features || [];
+}
+
+async function loadAmadora(attempt = 0) {
+  _callbacks.onAmadoraStatus?.('loading', 'Amadora\u2026');
+
+  let features = null;
+
+  // 1. Try cached file
+  try {
+    const res = await fetch('/data/amadora-zoning.geojson', { signal: AbortSignal.timeout(15000) });
+    if (res.ok) {
+      const data = await res.json();
+      const f = data.features || [];
+      if (f.length > 0) features = f;
+      else console.warn('[cache] amadora-zoning.geojson returned 0 features — falling back to live');
+    } else {
+      console.warn(`[cache] amadora-zoning.geojson \u2192 HTTP ${res.status} — falling back to live`);
+    }
+  } catch (e) {
+    console.warn('[cache] amadora-zoning.geojson failed (' + e.message + ') — falling back to live');
+  }
+
+  // 2. Try DGT WFS live
+  if (!features) {
+    try {
+      features = await fetchAmadoraFeatures();
+      if (features.length > 0) {
+        liveFallbackCount++;
+        _callbacks.onFallback?.();
+      } else {
+        console.error('[live] Amadora WFS returned 0 features');
+        features = null;
+      }
+    } catch (e) {
+      console.error('[live] Amadora WFS failed:', e.message);
+    }
+  }
+
+  if (!features || features.length === 0) {
+    _callbacks.onAmadoraStatus?.('error', 'Amadora: erro');
+    if (attempt < RETRY_DELAYS.length) {
+      setTimeout(() => loadAmadora(attempt + 1), RETRY_DELAYS[attempt]);
+    }
+    return;
+  }
+
+  L.geoJSON({ type: 'FeatureCollection', features }, {
+    renderer: _renderer,
+    style: f => getAmadoraStyle(f.properties),
+    onEachFeature(feature, layer) {
+      layer.on('click', e => {
+        L.DomEvent.stopPropagation(e);
+        const p   = feature.properties;
+        const cat = p.Categoria_2021 || '';
+        const cfg = AMADORA_COLORS[cat] || { fill: '#adb5bd', label: cat };
+        const displayProps = {
+          ...p,
+          Descricao: p.Designacao_no_plano,
+          Area_Ha:   p.AREA_HA,
+          Classe:    p.Classe_2021,
+        };
+        _callbacks.onFeatureClick?.(displayProps, cfg, cat + (cfg.label ? ' \u2014 ' + cfg.label : ''));
+      });
+    },
+  }).addTo(amadoraLayer);
+
+  _amadoraReady = true;
+  _callbacks.onAmadoraLoaded?.('ok', 'Amadora');
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -339,6 +430,12 @@ export async function loadOverlay(id, activeMunicipality) {
 //   onSintraStatus(update)                — partial sintraStatus update
 //   onCascaisStatus(state, text)          — transient chip state
 //   onCascaisLoaded(state, text)          — permanent loaded state + triggers visibility
+//   onOeirasStatus(state, text)           — transient chip state
+//   onOeirasLoaded(state, text)           — permanent loaded state + triggers visibility
+//   onLouresStatus(state, text)           — transient chip state
+//   onLouresLoaded(state, text)           — permanent loaded state + triggers visibility
+//   onAmadoraStatus(state, text)          — transient chip state
+//   onAmadoraLoaded(state, text)          — permanent loaded state + triggers visibility
 //   onOverlayStatus(id, state, text)      — overlay chip update (guarded by id === activeLayer in caller)
 //   onFeatureClick(props, cfg, label)     — open detail panel for GeoJSON polygon click
 //   onOverlayFeatureClick(def, props)     — open detail panel for overlay polygon click
@@ -355,6 +452,7 @@ export function initLayers(map, callbacks) {
   cascaisLayer = L.layerGroup().addTo(map);
   oeirasLayer  = L.layerGroup().addTo(map);
   louresLayer  = L.layerGroup().addTo(map);
+  amadoraLayer = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -365,4 +463,5 @@ export function initLayers(map, callbacks) {
   loadCascais();
   loadOeiras();
   loadLoures();
+  loadAmadora();
 }

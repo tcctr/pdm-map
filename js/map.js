@@ -5,6 +5,7 @@
 import {
   MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM,
   CASCAIS_BASE, CASCAIS_COLORS, OEIRAS_COLORS, LOURES_COLORS, CONDICIONANTES_BASE,
+  AMADORA_COLORS,
 } from './config.js';
 
 // ── Module-level state ───────────────────────────────────────
@@ -16,6 +17,7 @@ let _ruralLayer     = null;
 let _cascaisLayer   = null;
 let _oeirasLayer    = null;
 let _louresLayer    = null;
+let _amadoraLayer   = null;
 let _callbacks      = {};
 
 let _activeLayer        = 'zoning';
@@ -69,6 +71,10 @@ export function updateLayerVisibility() {
   const louresOn = _activeLayer === 'zoning' && _activeMunicipality === 'loures';
   louresOn && zoomed ? _map.addLayer(_louresLayer) : _map.removeLayer(_louresLayer);
 
+  // Amadora GeoJSON layer
+  const amadoraOn = _activeLayer === 'zoning' && _activeMunicipality === 'amadora';
+  amadoraOn && zoomed ? _map.addLayer(_amadoraLayer) : _map.removeLayer(_amadoraLayer);
+
   // chip-cascais
   const cascaisEl = document.getElementById('chip-cascais');
   if (cascaisEl) {
@@ -116,6 +122,20 @@ export function updateLayerVisibility() {
       }
     }
   }
+
+  // chip-amadora (GeoJSON layer — no maxZoom cap)
+  const amadoraEl = document.getElementById('chip-amadora');
+  if (amadoraEl) {
+    amadoraEl.style.display = _activeMunicipality === 'amadora' ? '' : 'none';
+    if (_activeMunicipality === 'amadora' && _activeLayer === 'zoning' && !amadoraEl.classList.contains('chip-loading')) {
+      if (!zoomed) {
+        _callbacks.onSetChip?.('chip-amadora', 'warn', 'Amadora: zoom');
+      } else {
+        const s = _callbacks.onGetChipLoadedState?.('chip-amadora');
+        if (s) _callbacks.onSetChip?.('chip-amadora', s.state, s.text);
+      }
+    }
+  }
 }
 
 // ── Municipality switching ────────────────────────────────────
@@ -158,14 +178,14 @@ export function handleLayerSelect(value) {
     }
     updateLayerVisibility();
   } else if (value === 'none') {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer].forEach(l => _map.removeLayer(l));
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
       if (_ovlState[def.id].leafletLayer) _map.removeLayer(_ovlState[def.id].leafletLayer);
     }
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer].forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {
@@ -251,8 +271,8 @@ export function initBasemapToggle(map) {
 
 export function initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer,
-  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer,
+  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAmadoraReady,
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
   onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet,
@@ -264,6 +284,7 @@ export function initMapHandlers({
   _cascaisLayer = cascaisLayer;
   _oeirasLayer  = oeirasLayer;
   _louresLayer  = louresLayer;
+  _amadoraLayer = amadoraLayer;
   _callbacks = {
     onUpdateSintraChip,
     onSetChip,
@@ -276,11 +297,12 @@ export function initMapHandlers({
     onUpdateLayersBtnLabel,
     onCloseLayersSheet,
     onUpdateZoningOverlayChip,
-    onOverlayShortName: overlayShortName,
-    onLoadOverlay:      loadOverlay,
-    onGetCascaisReady:  getCascaisReady,
-    onGetOeirasReady:   getOeirasReady,
-    onGetLouresReady:   getLouresReady,
+    onOverlayShortName:  overlayShortName,
+    onLoadOverlay:       loadOverlay,
+    onGetCascaisReady:   getCascaisReady,
+    onGetOeirasReady:    getOeirasReady,
+    onGetLouresReady:    getLouresReady,
+    onGetAmadoraReady:   getAmadoraReady,
   };
 
   _map.on('zoomend', updateLayerVisibility);

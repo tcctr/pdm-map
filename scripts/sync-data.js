@@ -10,12 +10,15 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = join(__dirname, '..', 'data');
 
-// ── Base URL constants (mirrors index.html) ──────────────────
+// ── Base URL constants (mirrors config.js) ───────────────────
 const SINTRA_BASE         = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer';
 const CASCAIS_BASE        = 'https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer';
 const RAN_BASE            = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer';
 const REN_BASE            = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer';
 const CONDICIONANTES_BASE = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer';
+
+// Amadora — DGT CRUS WFS (public). 82 features, no pagination needed.
+const AMADORA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1115_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Amadora_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
 // ── Layer definitions ─────────────────────────────────────────
 const LAYERS = [
@@ -97,6 +100,13 @@ const LAYERS = [
     filename: 'perigosos.geojson',
     baseUrl: `${CONDICIONANTES_BASE}/368/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001',
+  },
+  // Amadora — DGT CRUS WFS (OGC WFS, not ArcGIS REST; 82 features, single-page response)
+  {
+    filename: 'amadora-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: AMADORA_WFS,
+    timeoutMs: 30000,
   },
 ];
 
@@ -215,6 +225,26 @@ async function loadMetadata() {
   }
 }
 
+// ── WFS fetch (single-request, no ArcGIS pagination) ─────────
+
+async function fetchWFSAll(wfsUrl, timeoutMs) {
+  const res = await fetch(wfsUrl, { signal: AbortSignal.timeout(timeoutMs) });
+  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+  const contentType = res.headers.get('content-type') || '';
+  const text = await res.text();
+  if (contentType.includes('text/html') || text.trimStart().startsWith('<')) {
+    throw new Error('WFS returned HTML/XML instead of GeoJSON (check outputFormat parameter)');
+  }
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error('WFS returned non-JSON response');
+  }
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.features || [];
+}
+
 // ── Main ──────────────────────────────────────────────────────
 
 async function main() {
@@ -230,17 +260,20 @@ async function main() {
 
   for (let i = 0; i < LAYERS.length; i++) {
     const layer = LAYERS[i];
-    const pageSize  = layer.pageSize  ?? 1000;
     const timeoutMs = layer.timeoutMs ?? 30000;
-    const sourceUrl = `${layer.baseUrl}?${layer.params}`;
+    const isWFS     = layer.type === 'wfs';
+    const pageSize  = isWFS ? null : (layer.pageSize ?? 1000);
+    const sourceUrl = isWFS ? layer.wfsUrl : `${layer.baseUrl}?${layer.params}`;
 
-    console.log(`[${i + 1}/${LAYERS.length}] ${layer.filename} (pageSize=${pageSize}, timeout=${timeoutMs / 1000}s)`);
+    console.log(`[${i + 1}/${LAYERS.length}] ${layer.filename} (${isWFS ? 'wfs' : `pageSize=${pageSize}`}, timeout=${timeoutMs / 1000}s)`);
     console.log(`    ${sourceUrl}`);
 
     if (i > 0) await sleep(1000); // 1 s delay between layers
 
     try {
-      const features = await fetchAllFeatures(layer.baseUrl, layer.params, pageSize, timeoutMs);
+      const features = isWFS
+        ? await fetchWFSAll(layer.wfsUrl, timeoutMs)
+        : await fetchAllFeatures(layer.baseUrl, layer.params, pageSize, timeoutMs);
 
       if (features.length === 0) {
         throw new Error('Response contained 0 features — skipping to avoid overwriting cached data');
