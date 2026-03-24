@@ -61,8 +61,10 @@ python3 -m http.server 8080
 - Amadora's own ArcGIS server is auth-protected; not on AML pdm_revisao (PDM revision in progress).
 
 **Almada zoning (tile layer — AML PDM_I_GERACAO 1st-gen server, always live):**
-- `AML_PDM1_BASE/2` via `L.esri.dynamicMapLayer` with `maxZoom: 14` — server's `maxScale:25000` makes tiles blank above zoom ~14; chip shows "recuar zoom" warning above zoom 14
-- Click info via `identifyFeatures` using `'all:2'` — field `Classe` → `ALMADA_COLORS`
+- `AML_PDM1_BASE/2` via `L.esri.dynamicMapLayer` with `maxZoom: 14` and `layerDefs: { 2: "Concelho = 'ALMADA'" }`
+- Server's `maxScale:25000` makes tiles blank above zoom 14 — chip warns "recuar zoom", same as Cascais
+- Layer 2 covers **18 AML municipalities** — the `layerDefs` filter is required to restrict rendering to Almada only
+- Click info via `identifyFeatures` using `'all:2'` (not `'visible:2'`) — field `Classe` → `ALMADA_COLORS`; `'all:2'` required because ArcGIS doesn't mark the layer visible at low zoom scale
 - `AML_PDM1_BASE` = `https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/PDM_I_GERACAO/MapServer`
 - Almada's own server is down/firewalled; not on AML pdm_revisao.
 
@@ -255,8 +257,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 ## Known Limitations
 
 - Cascais/Oeiras/Loures zoning geometry is blocked by AML server — tile rendering only, no GeoJSON export
-- Almada tiles go blank above zoom 14 (ArcGIS `maxScale:25000`) — chip warns "recuar zoom", same as Cascais
-- Almada `identifyFeatures` uses `'all:2'` (not `'visible:2'`) because ArcGIS doesn't mark the layer visible at low zoom scale
+- Almada tiles go blank above zoom 14 (ArcGIS `maxScale:25000`) — same behaviour as Cascais; see data source notes for `layerDefs` and `identifyFeatures` quirks
 - Sintra overlay layers only cover Sintra territory (except RAN and ren-* which load AML-wide data)
 - `WMS_SRUP_REN_RAN` (`RAN_BASE`) server on Sintra's infrastructure is unreliable — only `ran-sintra` now depends on it
 - `ren-sintra` removed — no unified queryable REN boundary layer exists on Sintra's server
