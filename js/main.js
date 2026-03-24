@@ -183,7 +183,7 @@ function toggleLayersSheet() {
 function updateLayersBtnLabel(value) {
   if (value === 'none') { document.getElementById('layers-btn-label').textContent = 'Mapa base'; return; }
   const def = OVERLAY_DEFS.find(d => d.id === value);
-  document.getElementById('layers-btn-label').textContent = def ? def.name : 'Zoneamento';
+  document.getElementById('layers-btn-label').textContent = def ? def.name : 'Mapeamento';
 }
 
 // ============================================================
