@@ -354,7 +354,7 @@ function loadAlmada(attempt = 0) {
   almadaLayer.clearLayers();
   _callbacks.onAlmadaStatus?.('loading', 'Almada\u2026');
   try {
-    const layer = L.esri.dynamicMapLayer({ url: AML_PDM1_BASE, layers: [2], opacity: 0.55 });
+    const layer = L.esri.dynamicMapLayer({ url: AML_PDM1_BASE, layers: [2], opacity: 0.55, layerDefs: { 2: "Concelho = 'ALMADA'" } });
     layer.addTo(almadaLayer);
     layer.once('load', () => {
       _almadaReady = true;
