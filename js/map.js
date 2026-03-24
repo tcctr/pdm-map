@@ -138,19 +138,19 @@ export function updateLayerVisibility() {
     }
   }
 
-  // Almada tile layer (minZoom 15 — tiles only at zoom ≥ 15)
+  // Almada tile layer (maxScale:25000 — tiles go blank above zoom 14)
   const almadaOn = _activeLayer === 'zoning' && _activeMunicipality === 'almada';
   almadaOn && zoomed ? _map.addLayer(_almadaLayer) : _map.removeLayer(_almadaLayer);
 
-  // chip-almada (tile layer — blank tiles below zoom 15)
+  // chip-almada (tile layer — blank tiles above zoom 14, same pattern as Cascais)
   const almadaEl = document.getElementById('chip-almada');
   if (almadaEl) {
     almadaEl.style.display = _activeMunicipality === 'almada' ? '' : 'none';
     if (_activeMunicipality === 'almada' && _activeLayer === 'zoning' && !almadaEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-almada', 'warn', 'Almada: zoom');
-      } else if (_map.getZoom() < 15) {
-        _callbacks.onSetChip?.('chip-almada', 'warn', 'Almada: zoom +');
+      } else if (_map.getZoom() > 14) {
+        _callbacks.onSetChip?.('chip-almada', 'warn', 'Almada: recuar zoom');
       } else {
         const s = _callbacks.onGetChipLoadedState?.('chip-almada');
         if (s) _callbacks.onSetChip?.('chip-almada', s.state, s.text);
