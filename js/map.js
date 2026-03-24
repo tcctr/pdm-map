@@ -5,7 +5,7 @@
 import {
   MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM,
   CASCAIS_BASE, CASCAIS_COLORS, OEIRAS_COLORS, LOURES_COLORS, CONDICIONANTES_BASE,
-  AMADORA_COLORS,
+  AMADORA_COLORS, AML_PDM1_BASE, ALMADA_COLORS,
 } from './config.js';
 
 // ── Module-level state ───────────────────────────────────────
@@ -18,6 +18,7 @@ let _cascaisLayer   = null;
 let _oeirasLayer    = null;
 let _louresLayer    = null;
 let _amadoraLayer   = null;
+let _almadaLayer    = null;
 let _callbacks      = {};
 
 let _activeLayer        = 'zoning';
@@ -136,6 +137,26 @@ export function updateLayerVisibility() {
       }
     }
   }
+
+  // Almada tile layer (minZoom 15 — tiles only at zoom ≥ 15)
+  const almadaOn = _activeLayer === 'zoning' && _activeMunicipality === 'almada';
+  almadaOn && zoomed ? _map.addLayer(_almadaLayer) : _map.removeLayer(_almadaLayer);
+
+  // chip-almada (tile layer — blank tiles below zoom 15)
+  const almadaEl = document.getElementById('chip-almada');
+  if (almadaEl) {
+    almadaEl.style.display = _activeMunicipality === 'almada' ? '' : 'none';
+    if (_activeMunicipality === 'almada' && _activeLayer === 'zoning' && !almadaEl.classList.contains('chip-loading')) {
+      if (!zoomed) {
+        _callbacks.onSetChip?.('chip-almada', 'warn', 'Almada: zoom');
+      } else if (_map.getZoom() < 15) {
+        _callbacks.onSetChip?.('chip-almada', 'warn', 'Almada: zoom +');
+      } else {
+        const s = _callbacks.onGetChipLoadedState?.('chip-almada');
+        if (s) _callbacks.onSetChip?.('chip-almada', s.state, s.text);
+      }
+    }
+  }
 }
 
 // ── Municipality switching ────────────────────────────────────
@@ -178,14 +199,14 @@ export function handleLayerSelect(value) {
     }
     updateLayerVisibility();
   } else if (value === 'none') {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer].forEach(l => _map.removeLayer(l));
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
       if (_ovlState[def.id].leafletLayer) _map.removeLayer(_ovlState[def.id].leafletLayer);
     }
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer].forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {
@@ -271,8 +292,8 @@ export function initBasemapToggle(map) {
 
 export function initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer,
-  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAmadoraReady,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer,
+  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAmadoraReady, getAlmadaReady,
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
   onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet,
@@ -285,6 +306,7 @@ export function initMapHandlers({
   _oeirasLayer  = oeirasLayer;
   _louresLayer  = louresLayer;
   _amadoraLayer = amadoraLayer;
+  _almadaLayer  = almadaLayer;
   _callbacks = {
     onUpdateSintraChip,
     onSetChip,
@@ -303,6 +325,7 @@ export function initMapHandlers({
     onGetOeirasReady:    getOeirasReady,
     onGetLouresReady:    getLouresReady,
     onGetAmadoraReady:   getAmadoraReady,
+    onGetAlmadaReady:    getAlmadaReady,
   };
 
   _map.on('zoomend', updateLayerVisibility);
@@ -337,6 +360,16 @@ export function initMapHandlers({
           const p   = fc.features[0].properties;
           const cat = p.Categoria || '';
           const cfg = LOURES_COLORS[cat] || { fill: '#888888', label: cat };
+          _callbacks.onShowDetail?.(p, cfg, cat);
+        });
+    } else if (_activeLayer === 'zoning' && _callbacks.onGetAlmadaReady?.() && _map.hasLayer(_almadaLayer)) {
+      L.esri.identifyFeatures({ url: AML_PDM1_BASE })
+        .on(_map).at(e.latlng).layers('all:2').tolerance(2)
+        .run((err, fc) => {
+          if (err || !fc || !fc.features.length) return;
+          const p   = fc.features[0].properties;
+          const cat = p.Classe || '';
+          const cfg = ALMADA_COLORS[cat] || { fill: '#888888', label: cat };
           _callbacks.onShowDetail?.(p, cfg, cat);
         });
     } else if (_activeLayer === 'incendio') {

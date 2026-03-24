@@ -3,8 +3,8 @@
 // ============================================================
 
 import {
-  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -20,6 +20,7 @@ export let cascaisLayer = null;
 export let oeirasLayer  = null;
 export let louresLayer  = null;
 export let amadoraLayer = null;
+export let almadaLayer  = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -35,6 +36,9 @@ export function getLouresReady()     { return _louresReady; }
 
 let _amadoraReady     = false;
 export function getAmadoraReady()    { return _amadoraReady; }
+
+let _almadaReady      = false;
+export function getAlmadaReady()     { return _almadaReady; }
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -344,6 +348,30 @@ async function loadAmadora(attempt = 0) {
   _callbacks.onAmadoraLoaded?.('ok', 'Amadora');
 }
 
+// ── Almada layer loader ──────────────────────────────────────
+
+function loadAlmada(attempt = 0) {
+  almadaLayer.clearLayers();
+  _callbacks.onAlmadaStatus?.('loading', 'Almada\u2026');
+  try {
+    const layer = L.esri.dynamicMapLayer({ url: AML_PDM1_BASE, layers: [2], opacity: 0.55 });
+    layer.addTo(almadaLayer);
+    layer.once('load', () => {
+      _almadaReady = true;
+      _callbacks.onAlmadaLoaded?.('ok', 'Almada');
+    });
+    layer.once('loaderror', () => {
+      _callbacks.onAlmadaStatus?.('error', 'Almada: erro');
+      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadAlmada(attempt + 1), RETRY_DELAYS[attempt]);
+    });
+    _almadaReady = true;
+  } catch (e) {
+    console.error('Almada error:', e);
+    _callbacks.onAlmadaStatus?.('error', 'Almada: indispon\u00edvel');
+    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadAlmada(attempt + 1), RETRY_DELAYS[attempt]);
+  }
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -436,6 +464,8 @@ export async function loadOverlay(id, activeMunicipality) {
 //   onLouresLoaded(state, text)           — permanent loaded state + triggers visibility
 //   onAmadoraStatus(state, text)          — transient chip state
 //   onAmadoraLoaded(state, text)          — permanent loaded state + triggers visibility
+//   onAlmadaStatus(state, text)           — transient chip state
+//   onAlmadaLoaded(state, text)           — permanent loaded state + triggers visibility
 //   onOverlayStatus(id, state, text)      — overlay chip update (guarded by id === activeLayer in caller)
 //   onFeatureClick(props, cfg, label)     — open detail panel for GeoJSON polygon click
 //   onOverlayFeatureClick(def, props)     — open detail panel for overlay polygon click
@@ -453,6 +483,7 @@ export function initLayers(map, callbacks) {
   oeirasLayer  = L.layerGroup().addTo(map);
   louresLayer  = L.layerGroup().addTo(map);
   amadoraLayer = L.layerGroup().addTo(map);
+  almadaLayer  = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -464,4 +495,5 @@ export function initLayers(map, callbacks) {
   loadOeiras();
   loadLoures();
   loadAmadora();
+  loadAlmada();
 }

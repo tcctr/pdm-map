@@ -4,7 +4,7 @@
 
 import { OVERLAY_DEFS, MUNICIPALITIES } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
-import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAmadoraReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer } from './layers.js';
+import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAmadoraReady, getAlmadaReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer } from './layers.js';
 import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel } from './ui.js';
 import { initMap, initMapHandlers, initBasemapToggle, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './map.js';
 
@@ -149,6 +149,11 @@ function updateZoningOverlayChip() {
     if (!amadoraState)               setOverlayChip('loading', 'Solo\u2026');
     else if (amadoraState === 'ok')  setOverlayChip('ok', 'Solo');
     else                             setOverlayChip('error', 'Solo: erro');
+  } else if (getActiveMunicipality() === 'almada') {
+    const almadaState = getChipLoadedState('chip-almada')?.state;
+    if (!almadaState)               setOverlayChip('loading', 'Solo\u2026');
+    else if (almadaState === 'ok')  setOverlayChip('ok', 'Solo');
+    else                            setOverlayChip('error', 'Solo: erro');
   } else {
     const cascaisState = getChipLoadedState('chip-cascais')?.state;
     if (!cascaisState)              setOverlayChip('loading', 'Solo\u2026');
@@ -205,6 +210,8 @@ initLayers(map, {
   onLouresLoaded:        (state, text) => { setChipLoaded('chip-loures', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
   onAmadoraStatus:       (state, text) => setChip('chip-amadora', state, text),
   onAmadoraLoaded:       (state, text) => { setChipLoaded('chip-amadora', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
+  onAlmadaStatus:        (state, text) => setChip('chip-almada', state, text),
+  onAlmadaLoaded:        (state, text) => { setChipLoaded('chip-almada', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
   onOverlayStatus:       (id, state, text) => { if (getActiveLayer() === id) setOverlayChip(state, text); },
   onFeatureClick:        (props, cfg, label) => showDetail(props, cfg, label),
   onOverlayFeatureClick: (def, props) => showOverlayDetail(def, props),
@@ -223,8 +230,8 @@ initUI({
 
 initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer,
-  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAmadoraReady,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer,
+  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAmadoraReady, getAlmadaReady,
   onUpdateSintraChip:         updateSintraChip,
   onSetChip:                  setChip,
   onGetChipLoadedState:       getChipLoadedState,

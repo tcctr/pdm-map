@@ -63,6 +63,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
     if (name.includes('oeiras'))  return 'oeiras';
     if (name.includes('loures'))  return 'loures';
     if (name.includes('amadora')) return 'amadora';
+    if (name.includes('almada'))  return 'almada';
     return null;
   }
 
@@ -78,7 +79,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
 
     const muni = detectMunicipality(item.display_name);
     if (muni) onMunicipalityDetected?.(muni);
-    const zoom = muni === 'cascais' || muni === 'oeiras' || muni === 'loures' || muni === 'amadora' ? 15 : 17;
+    const zoom = muni === 'cascais' || muni === 'oeiras' || muni === 'loures' || muni === 'amadora' || muni === 'almada' ? 15 : 17;
 
     const lat = parseFloat(item.lat);
     const lng = parseFloat(item.lon);
@@ -167,6 +168,7 @@ export async function reverseGeocode(lat, lng) {
     if (place.includes('oeiras'))  return 'oeiras';
     if (place.includes('loures'))  return 'loures';
     if (place.includes('amadora')) return 'amadora';
+    if (place.includes('almada'))  return 'almada';
     return null;
   } catch {
     return null;
