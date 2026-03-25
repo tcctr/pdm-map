@@ -4,7 +4,7 @@
 
 import {
   SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, LISBOA_COLORS, VFX_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, LISBOA_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -465,45 +465,28 @@ async function loadLisboa(attempt = 0) {
 }
 
 // ── Vila Franca de Xira layer loader ────────────────────────
+// AML pdm_revisao layer 10 — geometry blocked by server, tile rendering only.
 
-function getVfxiraStyle(props) {
-  const cls = props.Classe || '';
-  const cfg = VFX_COLORS[cls];
-  if (cfg) return makeStyle(cfg.fill);
-  return makeStyle('#adb5bd');
-}
-
-async function loadVfxira(attempt = 0) {
+function loadVfxira(attempt = 0) {
+  vfxiraLayer.clearLayers();
   _callbacks.onVfxiraStatus?.('loading', 'VF Xira\u2026');
-
-  const fallbackUrl = `${CASCAIS_BASE}/10/query?where=1%3D1&outFields=Classe%2CCategoria%2CSubcategor&outSR=4326`;
-  const result = await loadLayerData('vfxira-zoning.geojson', fallbackUrl);
-
-  if (!result || result.features.length === 0) {
-    _callbacks.onVfxiraStatus?.('error', 'VF Xira: erro');
-    if (attempt < RETRY_DELAYS.length) {
-      setTimeout(() => loadVfxira(attempt + 1), RETRY_DELAYS[attempt]);
-    }
-    return;
+  try {
+    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [10], opacity: 0.55, maxZoom: 15 });
+    layer.addTo(vfxiraLayer);
+    layer.once('load', () => {
+      _vfxiraReady = true;
+      _callbacks.onVfxiraLoaded?.('ok', 'VF Xira');
+    });
+    layer.once('loaderror', () => {
+      _callbacks.onVfxiraStatus?.('error', 'VF Xira: erro');
+      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadVfxira(attempt + 1), RETRY_DELAYS[attempt]);
+    });
+    _vfxiraReady = true;
+  } catch (e) {
+    console.error('VF Xira error:', e);
+    _callbacks.onVfxiraStatus?.('error', 'VF Xira: indispon\u00edvel');
+    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadVfxira(attempt + 1), RETRY_DELAYS[attempt]);
   }
-
-  L.geoJSON({ type: 'FeatureCollection', features: result.features }, {
-    renderer: _renderer,
-    style: f => getVfxiraStyle(f.properties),
-    onEachFeature(feature, layer) {
-      layer.on('click', e => {
-        L.DomEvent.stopPropagation(e);
-        const p   = feature.properties;
-        const cls = p.Classe || '';
-        const cfg = VFX_COLORS[cls] || { fill: '#adb5bd', label: cls };
-        const label = cls + (p.Categoria && p.Categoria !== 'N\u00e3o se aplica' ? ' \u2014 ' + p.Categoria : '');
-        _callbacks.onFeatureClick?.(p, cfg, label);
-      });
-    },
-  }).addTo(vfxiraLayer);
-
-  _vfxiraReady = true;
-  _callbacks.onVfxiraLoaded?.('ok', 'VF Xira');
 }
 
 // ── Overlay loader (exported — called from index.html on layer select) ──
@@ -600,7 +583,7 @@ export async function loadOverlay(id, activeMunicipality) {
 //   onAmadoraLoaded(state, text)          — permanent loaded state + triggers visibility
 //   onAlmadaStatus(state, text)           — transient chip state
 //   onAlmadaLoaded(state, text)           — permanent loaded state + triggers visibility
-//   onVfxiraStatus(state, text)           — transient chip state
+//   onVfxiraStatus(state, text)           — transient chip state (tile layer like Cascais)
 //   onVfxiraLoaded(state, text)           — permanent loaded state + triggers visibility
 //   onOverlayStatus(id, state, text)      — overlay chip update (guarded by id === activeLayer in caller)
 //   onFeatureClick(props, cfg, label)     — open detail panel for GeoJSON polygon click

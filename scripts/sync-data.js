@@ -118,13 +118,6 @@ const LAYERS = [
     wfsUrl: LISBOA_WFS,
     timeoutMs: 60000,
   },
-  // Vila Franca de Xira — AML pdm_revisao MapServer layer 10
-  // Field: Classe → 'Solo Rural' | 'Solo Urbano' | 'Outras Infraestruturas' | 'Valores Culturais'
-  {
-    filename: 'vfxira-zoning.geojson',
-    baseUrl: `${CASCAIS_BASE}/10/query`,
-    params: 'where=1%3D1&outFields=Classe%2CCategoria%2CSubcategor&outSR=4326',
-  },
 ];
 
 // ── Esri JSON → GeoJSON conversion ───────────────────────────

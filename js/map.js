@@ -182,13 +182,15 @@ export function updateLayerVisibility() {
   const vfxiraOn = _activeLayer === 'zoning' && _activeMunicipality === 'vfxira';
   vfxiraOn && zoomed ? _map.addLayer(_vfxiraLayer) : _map.removeLayer(_vfxiraLayer);
 
-  // chip-vfxira (GeoJSON layer — no maxZoom cap)
+  // chip-vfxira (tile layer — maxZoom:15, same pattern as Cascais/Oeiras/Loures)
   const vfxiraEl = document.getElementById('chip-vfxira');
   if (vfxiraEl) {
     vfxiraEl.style.display = _activeMunicipality === 'vfxira' ? '' : 'none';
     if (_activeMunicipality === 'vfxira' && _activeLayer === 'zoning' && !vfxiraEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-vfxira', 'warn', 'VF Xira: zoom');
+      } else if (_map.getZoom() > 15) {
+        _callbacks.onSetChip?.('chip-vfxira', 'warn', 'VF Xira: recuar zoom');
       } else {
         const s = _callbacks.onGetChipLoadedState?.('chip-vfxira');
         if (s) _callbacks.onSetChip?.('chip-vfxira', s.state, s.text);
@@ -412,6 +414,16 @@ export function initMapHandlers({
           const cat = p.Classe || '';
           const cfg = ALMADA_COLORS[cat] || { fill: '#888888', label: cat };
           _callbacks.onShowDetail?.(p, cfg, cat);
+        });
+    } else if (_activeLayer === 'zoning' && _callbacks.onGetVfxiraReady?.() && _map.hasLayer(_vfxiraLayer)) {
+      L.esri.identifyFeatures({ url: CASCAIS_BASE })
+        .on(_map).at(e.latlng).layers('visible:10').tolerance(2)
+        .run((err, fc) => {
+          if (err || !fc || !fc.features.length) return;
+          const p   = fc.features[0].properties;
+          const cls = p.Classe || '';
+          const cfg = VFX_COLORS[cls] || { fill: '#888888', label: cls };
+          _callbacks.onShowDetail?.(p, cfg, cls);
         });
     } else if (_activeLayer === 'incendio') {
       const def = OVERLAY_DEFS.find(d => d.id === 'incendio');
