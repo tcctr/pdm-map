@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for six municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada). Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
+**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for seven municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Lisboa). Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
 
 ## Architecture
 
@@ -68,6 +68,14 @@ python3 -m http.server 8080
 - `AML_PDM1_BASE` = `https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/PDM_I_GERACAO/MapServer`
 - Almada's own server is down/firewalled; not on AML pdm_revisao.
 
+**Lisboa zoning (GeoJSON, cache-first with DGT WFS live fallback):**
+- `data/lisboa-zoning.geojson` → fallback `LISBOA_WFS` (DGT CRUS public OGC WFS, 861 features)
+- Field `Categoria` → `LISBOA_COLORS`. Rendered client-side like Sintra/Amadora (not tiles).
+- `LISBOA_WFS` = `https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1106_1/WFService.aspx?...`
+- Lisboa's own ArcGIS server is auth-protected; DGT publishes CRUS from the current PDM.
+- Categories: `Espaço Habitacional`, `Espaço Verde`, `Espaço de Atividades Económicas`, `Espaço de Uso Especial Equipamentos e Infraestruturas`, `Não Atribuída`
+- Descriptor field: `Designacao_PlantaOrdenamento` (mapped → `Descricao` for detail panel display)
+
 **Overlay / Condicionantes layers — three servers:**
 - `RAN_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer` (Sintra RAN only — frequently offline)
 - `REN_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer` (Sintra REN + risk layers)
@@ -80,7 +88,7 @@ python3 -m http.server 8080
 ## Layer System
 
 ### Base zoning layers (always on by default)
-Six `L.layerGroup()` instances, one per municipality. Only visible at zoom ≥ `MIN_DATA_ZOOM` (1) and only when that municipality is active.
+Seven `L.layerGroup()` instances, one per municipality. Only visible at zoom ≥ `MIN_DATA_ZOOM` (1) and only when that municipality is active.
 
 | Layer | Type | Source |
 |-------|------|--------|
@@ -91,6 +99,7 @@ Six `L.layerGroup()` instances, one per municipality. Only visible at zoom ≥ `
 | `louresLayer` | dynamicMapLayer tiles | CASCAIS_BASE/6 |
 | `amadoraLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
 | `almadaLayer` | dynamicMapLayer tiles | AML_PDM1_BASE/2 |
+| `lisboaLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
 
 ### Overlay layers (`OVERLAY_DEFS` array)
 Radio-button selection — only one layer active at a time. Selecting any overlay hides the zoning. Selecting "Qualificação do Solo" restores it. Layers are **lazy-loaded** on first selection and cached in `ovlState`.
@@ -98,7 +107,7 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 `activeLayer` variable tracks what's selected: `'zoning'`, a def id, or `'none'` (all layers hidden — basemap only).
 
 **Renderers:**
-- Sintra + Amadora zoning: `renderer = L.svg({ padding: 1 })`
+- Sintra + Amadora + Lisboa zoning: `renderer = L.svg({ padding: 1 })`
 - Overlay GeoJSON with hatch patterns: `renderer` (SVG — canvas can't render `url()` fills)
 - Overlay GeoJSON without hatch: `overlayRenderer = L.canvas({ padding: 0.5 })`
 - Fire risk + tile municipalities: `L.esri.dynamicMapLayer` (server tiles, no GeoJSON download)
@@ -113,6 +122,7 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 | `ren-loures` | REN — Reserva Ecológica | loures | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-amadora` | REN — Reserva Ecológica | amadora | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-almada` | REN — Reserva Ecológica | almada | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
+| `ren-lisboa` | REN — Reserva Ecológica | lisboa | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `faixa` | Faixa Costeira | sintra | REN_BASE | 2 | `faixa.geojson` | blue fill |
 | `praias` | Praias | sintra | REN_BASE | 3 | `praias.geojson` | yellow fill |
 | `vertentes` | Instabilidade de Vertentes | sintra | REN_BASE | 12 | `vertentes.geojson` | red hatch (`hatch-risk-red`) |
@@ -126,7 +136,7 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 
 **Notes:**
 - `ren-sintra` was removed — no unified queryable REN boundary layer exists on Sintra's server.
-- `ren-cascais.geojson` is AML-wide and covers Cascais, Oeiras, Loures, Amadora, and Almada territory.
+- `ren-cascais.geojson` is AML-wide and covers Cascais, Oeiras, Loures, Amadora, Almada, and Lisboa territory.
 - **RAN** (`muni: 'both'`) uses `sintraSource` / `cascaisSource` fields: Sintra → CONDICIONANTES_BASE/264, all others → CASCAIS_BASE/12.
 - **SVG hatch patterns** are defined in a hidden `<svg>` in the HTML body: `hatch-ran`, `hatch-ren`, `hatch-risk-red`, `hatch-risk-orange`.
 
@@ -139,17 +149,17 @@ GeoJSON layers use `loadLayerData(cachedFile, fallbackUrl)`:
 2. Fetch live — if this also fails → `console.error`, return `null`
 3. `null` = both failed → layer shows error chip state
 
-Amadora uses a custom `loadAmadora()` that fetches from `/data/amadora-zoning.geojson` first, then falls back to the DGT WFS directly (not via `loadLayerData` since WFS needs a different fetch path).
+Amadora and Lisboa use custom loaders (`loadAmadora()`, `loadLisboa()`) that fetch from the cached file first, then fall back to the DGT WFS directly (not via `loadLayerData` since WFS needs a different fetch path).
 
 **What stays live-only (never cached):**
-- Cascais, Oeiras, Loures, Almada zoning tiles (`L.esri.dynamicMapLayer`)
+- Cascais, Oeiras, Loures, Almada zoning tiles (`L.esri.dynamicMapLayer`; Lisboa is GeoJSON/cached)
 - Fire risk tiles (`L.esri.dynamicMapLayer`)
 - All `identifyFeatures` click queries
 - Nominatim address search + reverse geocode
 
 **Fallback tracking:** `liveFallbackCount` increments each time a layer falls back to live. The `#cache-date` indicator shows `"Dados: DD/MM/YYYY (alguns em direto)"` if any fallback occurred.
 
-**Cached files** live in `data/` at the repo root (served at `/data/` by Vercel). Currently cached: `sintra-urban`, `sintra-rural`, `ran-cascais`, `ren-cascais`, `amadora-zoning`, `patrimonio`, `zep`, `perigosos`.
+**Cached files** live in `data/` at the repo root (served at `/data/` by Vercel). Currently cached: `sintra-urban`, `sintra-rural`, `ran-cascais`, `ren-cascais`, `amadora-zoning`, `lisboa-zoning`, `patrimonio`, `zep`, `perigosos`.
 
 ---
 
@@ -162,11 +172,12 @@ node scripts/sync-data.js
 
 - Paginates ArcGIS responses (follows `exceededTransferLimit`, 1 s delay between pages)
 - Tries `f=geojson` first; falls back to `f=json` + Esri→GeoJSON conversion if server returns HTML
-- **WFS support:** Amadora uses `fetchWFSAll()` (single-request OGC WFS, no pagination) via `type: 'wfs'` entry
+- **WFS support:** Amadora and Lisboa use `fetchWFSAll()` (single-request OGC WFS, no pagination) via `type: 'wfs'` entry
 - Never overwrites a cached file with 0-feature data
 - Writes `data/sync-metadata.json` with per-layer status and `lastRun` timestamp
 - Exits code 1 on any failure (for CI)
 - Large layers (`sintra-urban`, `sintra-rural`): `pageSize=500`, `timeout=60s`
+- Lisboa WFS: `timeout=60s` (861 features, larger than Amadora's 82)
 
 ---
 
@@ -190,7 +201,7 @@ Pushes with `github-actions[bot]` identity. Push failures are warnings, not fata
 Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 60000]` (15s, 30s, 1min):
 - Tile municipality layers (Cascais/Oeiras/Loures/Almada): clears layer group before each retry, uses `.once('loaderror')`
 - Overlays: retry count in `ovlState[id].retries`; timer guard checks `activeLayer === id && !st.loaded`. Resets on municipality switch.
-- Sintra urban/rural + Amadora: no retry — served from local cache, failures are near-instant
+- Sintra urban/rural + Amadora + Lisboa: retry via `attempt` param; served from local cache so failures are near-instant
 
 ---
 
@@ -223,7 +234,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - **App name / title:** Mapear (`<title>Mapear</title>`)
 - **Favicon:** `favicon.svg` — coral red (`#e63946`) map pin with white inner circle; linked via `<link rel="icon" type="image/svg+xml">`
 - **Top bar** (`#topbar`): municipality picker dropdown + address search (Nominatim)
-- **Status bar** (`#statusbar`): GPS chip → active municipality chip (one of: `chip-sintra`, `chip-cascais`, `chip-oeiras`, `chip-loures`, `chip-amadora`, `chip-almada`) → Solo overlay chip (`chip-overlay`)
+- **Status bar** (`#statusbar`): GPS chip → active municipality chip (one of: `chip-sintra`, `chip-cascais`, `chip-oeiras`, `chip-loures`, `chip-amadora`, `chip-almada`, `chip-lisboa`) → Solo overlay chip (`chip-overlay`)
 - **Layers button** (`#layers-btn`): bottom-left floating pill labeled **"Mapeamento"** (default); slides up when detail panel is open; opens layers popup
 - **Layers popup** (`#layers-sheet`): compact popup anchored above the layers button (positioned dynamically via `getBoundingClientRect`); header row has "Camadas" title (left) + "Limpar" text button (right); contains overlay radio list below
 - **Limpar button** (`#layers-clear`): top-right of layers popup; sets `activeLayer = 'none'`, removes all layers, deselects all radios — shows just the basemap
@@ -237,7 +248,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 
 **Municipality picker:** dropdown in topbar. Selecting a municipality pans (no zoom change) to its center and resets overlays. GPS auto-detection calls `selectMunicipality()` without panning. Centers/zooms in `MUNICIPALITIES` array.
 
-**Address search:** Nominatim query uses `limit=7`, `countrycodes=pt`. When GPS is available, a `viewbox` (~0.30°×0.20° box) biases results toward the user's location (`bounded=0`). Detects all six municipalities in results; zooms to 15 for tile-rendered municipalities (Cascais, Oeiras, Loures, Amadora, Almada), 17 for Sintra. Results outside covered municipalities show "⚠ Sem dados PDM disponíveis". Keyboard navigation: Up/Down arrows, Enter selects, Escape clears. Dropdown fades out (150ms) on selection.
+**Address search:** Nominatim query uses `limit=7`, `countrycodes=pt`. When GPS is available, a `viewbox` (~0.30°×0.20° box) biases results toward the user's location (`bounded=0`). Detects all seven municipalities in results; zooms to 15 for Cascais, Oeiras, Loures, Amadora, Almada, Lisboa, and 17 for Sintra. Results outside covered municipalities show "⚠ Sem dados PDM disponíveis". Keyboard navigation: Up/Down arrows, Enter selects, Escape clears. Dropdown fades out (150ms) on selection.
 
 ---
 
@@ -252,6 +263,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | Loures | tiles (maxZoom:15) | zoom > 15 | "Loures: recuar zoom" |
 | Amadora | GeoJSON | zoom < MIN_DATA_ZOOM | "Amadora: zoom" |
 | Almada | tiles (maxZoom:14) | zoom > 14 | "Almada: recuar zoom" |
+| Lisboa | GeoJSON | zoom < MIN_DATA_ZOOM | "Lisboa: zoom" |
 
 ---
 
