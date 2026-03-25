@@ -221,6 +221,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 ## UI Structure
 
 - **App name / title:** Mapear (`<title>Mapear</title>`)
+- **Favicon:** `favicon.svg` — coral red (`#e63946`) map pin with white inner circle; linked via `<link rel="icon" type="image/svg+xml">`
 - **Top bar** (`#topbar`): municipality picker dropdown + address search (Nominatim)
 - **Status bar** (`#statusbar`): GPS chip → active municipality chip (one of: `chip-sintra`, `chip-cascais`, `chip-oeiras`, `chip-loures`, `chip-amadora`, `chip-almada`) → Solo overlay chip (`chip-overlay`)
 - **Layers button** (`#layers-btn`): bottom-left floating pill labeled **"Mapeamento"** (default); slides up when detail panel is open; opens layers popup
