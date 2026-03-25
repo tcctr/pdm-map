@@ -19,6 +19,10 @@ export const AMADORA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1115
 // Field: Classe → "Solo Rural" | "Urbanizável" | "Urbanizado".
 export const AML_PDM1_BASE = 'https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/PDM_I_GERACAO/MapServer';
 
+// Lisboa zoning — DGT CRUS WFS (public, CC BY 4.0). GeoJSON output.
+// Lisboa's own ArcGIS server requires authentication; DGT publishes CRUS from the current PDM.
+export const LISBOA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1106_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Lisboa_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+
 export const MIN_DATA_ZOOM = 1;
 export const RETRY_DELAYS = [15000, 30000, 60000]; // 15 s, 30 s, 1 min
 
@@ -122,6 +126,26 @@ export const AMADORA_COLORS = {
   'N\u00e3o Atribu\u00edda':                                          { fill: '#adb5bd', label: 'N\u00e3o Atribu\u00edda' },
 };
 
+// Color palette for Lisboa zones (Categoria_2021 field — DGT CRUS DR 15/2015 classification)
+export const LISBOA_COLORS = {
+  'Espa\u00e7o Central':                                              { fill: '#c1121f', label: 'Central' },
+  'Espa\u00e7o Residencial':                                          { fill: '#f4845f', label: 'Residencial' },
+  'Espa\u00e7o Habitacional':                                         { fill: '#f4845f', label: 'Habitacional' },
+  'Espa\u00e7o de Atividades Econ\u00f3micas':                        { fill: '#9b5de5', label: 'Atividades Econ\u00f3micas' },
+  'Espa\u00e7o de Atividades Econ\u00f3micas e Log\u00edsticas':      { fill: '#7b2fff', label: 'At. Econ. e Log\u00edsticas' },
+  'Espa\u00e7o de Uso Especial Equipamentos e Infraestruturas':       { fill: '#4895ef', label: 'Equipamentos e Infra.' },
+  'Espa\u00e7o de Uso Especial Turismo e Lazer':                      { fill: '#43aa8b', label: 'Turismo e Lazer' },
+  'Espa\u00e7o de Uso Especial Turismo':                              { fill: '#43aa8b', label: 'Turismo' },
+  'Espa\u00e7o de Uso Especial Defesa e Seguran\u00e7a Nacional':     { fill: '#0d47a1', label: 'Defesa e Seguran\u00e7a' },
+  'Espa\u00e7o Verde':                                                { fill: '#52b788', label: 'Verde' },
+  'Espa\u00e7o Canal':                                                { fill: '#555555', label: 'Canal' },
+  'Espa\u00e7o Natural':                                              { fill: '#74c69d', label: 'Natural' },
+  'Espa\u00e7o Agr\u00edcola':                                        { fill: '#d4a017', label: 'Agr\u00edcola' },
+  'Espa\u00e7o Florestal':                                            { fill: '#2d6a4f', label: 'Florestal' },
+  'Espa\u00e7o de Explora\u00e7\u00e3o de Recursos Geol\u00f3gicos': { fill: '#6c757d', label: 'Recursos Geol\u00f3gicos' },
+  'N\u00e3o Atribu\u00edda':                                          { fill: '#adb5bd', label: 'N\u00e3o Atribu\u00edda' },
+};
+
 // Color palette for Almada zones (Classe field — PDM_I_GERACAO AML layer 2, 1st-gen DGT classification)
 export const ALMADA_COLORS = {
   'Solo Rural':    { fill: '#1a9850', label: 'Solo Rural' },
@@ -145,6 +169,7 @@ export const MUNICIPALITIES = [
   { id: 'loures',   label: 'Loures',   center: [38.830, -9.165], zoom: 12 },
   { id: 'amadora',  label: 'Amadora',  center: [38.752, -9.225], zoom: 13 },
   { id: 'almada',   label: 'Almada',   center: [38.675, -9.160], zoom: 13 },
+  { id: 'lisboa',   label: 'Lisboa',   center: [38.717, -9.133], zoom: 13 },
 ];
 
 
@@ -158,6 +183,7 @@ export const OVERLAY_DEFS = [
   { id: 'ren-loures',   name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'loures',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-amadora',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'amadora', server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-almada',   name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'almada',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-lisboa',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
   // ─── Riscos Naturais ────────────────────────────────────

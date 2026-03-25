@@ -20,6 +20,9 @@ const CONDICIONANTES_BASE = 'https://sig.cm-sintra.pt/arcgis/rest/services/WMS_I
 // Amadora — DGT CRUS WFS (public). 82 features, no pagination needed.
 const AMADORA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1115_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Amadora_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
+// Lisboa — DGT CRUS WFS (public). GeoJSON output, no pagination needed.
+const LISBOA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1106_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Lisboa_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+
 // ── Layer definitions ─────────────────────────────────────────
 const LAYERS = [
   // Base layers — large, use smaller pages (500) and longer timeout (60s)
@@ -107,6 +110,13 @@ const LAYERS = [
     type: 'wfs',
     wfsUrl: AMADORA_WFS,
     timeoutMs: 30000,
+  },
+  // Lisboa — DGT CRUS WFS (OGC WFS, not ArcGIS REST; single-page response)
+  {
+    filename: 'lisboa-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: LISBOA_WFS,
+    timeoutMs: 60000,
   },
 ];
 

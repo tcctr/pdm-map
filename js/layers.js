@@ -3,8 +3,8 @@
 // ============================================================
 
 import {
-  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, LISBOA_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -21,6 +21,7 @@ export let oeirasLayer  = null;
 export let louresLayer  = null;
 export let amadoraLayer = null;
 export let almadaLayer  = null;
+export let lisboaLayer  = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -39,6 +40,9 @@ export function getAmadoraReady()    { return _amadoraReady; }
 
 let _almadaReady      = false;
 export function getAlmadaReady()     { return _almadaReady; }
+
+let _lisboaReady      = false;
+export function getLisboaReady()     { return _lisboaReady; }
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -372,6 +376,90 @@ function loadAlmada(attempt = 0) {
   }
 }
 
+// ── Lisboa layer loader ──────────────────────────────────────
+
+function getLisboaStyle(props) {
+  const cat = props.Categoria || '';
+  const cfg = LISBOA_COLORS[cat];
+  if (cfg) return makeStyle(cfg.fill);
+  return makeStyle('#adb5bd');
+}
+
+async function fetchLisboaFeatures() {
+  const res = await fetch(LISBOA_WFS, { signal: AbortSignal.timeout(30000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.features || [];
+}
+
+async function loadLisboa(attempt = 0) {
+  _callbacks.onLisboaStatus?.('loading', 'Lisboa\u2026');
+
+  let features = null;
+
+  // 1. Try cached file
+  try {
+    const res = await fetch('/data/lisboa-zoning.geojson', { signal: AbortSignal.timeout(15000) });
+    if (res.ok) {
+      const data = await res.json();
+      const f = data.features || [];
+      if (f.length > 0) features = f;
+      else console.warn('[cache] lisboa-zoning.geojson returned 0 features — falling back to live');
+    } else {
+      console.warn(`[cache] lisboa-zoning.geojson \u2192 HTTP ${res.status} — falling back to live`);
+    }
+  } catch (e) {
+    console.warn('[cache] lisboa-zoning.geojson failed (' + e.message + ') — falling back to live');
+  }
+
+  // 2. Try DGT WFS live
+  if (!features) {
+    try {
+      features = await fetchLisboaFeatures();
+      if (features.length > 0) {
+        liveFallbackCount++;
+        _callbacks.onFallback?.();
+      } else {
+        console.error('[live] Lisboa WFS returned 0 features');
+        features = null;
+      }
+    } catch (e) {
+      console.error('[live] Lisboa WFS failed:', e.message);
+    }
+  }
+
+  if (!features || features.length === 0) {
+    _callbacks.onLisboaStatus?.('error', 'Lisboa: erro');
+    if (attempt < RETRY_DELAYS.length) {
+      setTimeout(() => loadLisboa(attempt + 1), RETRY_DELAYS[attempt]);
+    }
+    return;
+  }
+
+  L.geoJSON({ type: 'FeatureCollection', features }, {
+    renderer: _renderer,
+    style: f => getLisboaStyle(f.properties),
+    onEachFeature(feature, layer) {
+      layer.on('click', e => {
+        L.DomEvent.stopPropagation(e);
+        const p   = feature.properties;
+        const cat = p.Categoria || '';
+        const cfg = LISBOA_COLORS[cat] || { fill: '#adb5bd', label: cat };
+        const displayProps = {
+          ...p,
+          Descricao: p.Designacao_PlantaOrdenamento,
+          area_ha:   p.Area_Ha,
+        };
+        _callbacks.onFeatureClick?.(displayProps, cfg, cat + (cfg.label ? ' \u2014 ' + cfg.label : ''));
+      });
+    },
+  }).addTo(lisboaLayer);
+
+  _lisboaReady = true;
+  _callbacks.onLisboaLoaded?.('ok', 'Lisboa');
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -484,6 +572,7 @@ export function initLayers(map, callbacks) {
   louresLayer  = L.layerGroup().addTo(map);
   amadoraLayer = L.layerGroup().addTo(map);
   almadaLayer  = L.layerGroup().addTo(map);
+  lisboaLayer  = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -496,4 +585,5 @@ export function initLayers(map, callbacks) {
   loadLoures();
   loadAmadora();
   loadAlmada();
+  loadLisboa();
 }

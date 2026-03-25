@@ -5,35 +5,35 @@
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer/55/query?where=1%3D1&outFields=CAT%2CDescricao%2CRegulamento%2CPag_Regulamento%2CGuiao%2CPag_Guiao%2CRelatorio%2CPag_relatorio%2Carea_ha&outSR=4326",
       "featureCount": 985,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:16:56.938Z"
+      "lastSuccessfulSync": "2026-03-25T22:27:39.848Z"
     },
     "sintra-rural.geojson": {
       "filename": "sintra-rural.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer/54/query?where=1%3D1&outFields=Ord_Categ%2CDescricao%2CRegulamento%2CPag_Regulamento%2CGuiao%2CPag_Guiao%2CRelatorio%2CPag_relatorio%2CArea_Ha&outSR=4326",
       "featureCount": 1316,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:17:03.680Z"
+      "lastSuccessfulSync": "2026-03-25T22:27:45.871Z"
     },
     "ran-sintra.geojson": {
       "filename": "ran-sintra.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer/264/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 169,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:17:05.333Z"
+      "lastSuccessfulSync": "2026-03-25T22:27:47.636Z"
     },
     "ran-cascais.geojson": {
       "filename": "ran-cascais.geojson",
       "sourceUrl": "https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer/12/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 414,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:17:11.708Z"
+      "lastSuccessfulSync": "2026-03-25T22:27:51.079Z"
     },
     "ren-cascais.geojson": {
       "filename": "ren-cascais.geojson",
       "sourceUrl": "https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/pdm_revisao/MapServer/11/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 857,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:17:24.224Z"
+      "lastSuccessfulSync": "2026-03-25T22:27:59.337Z"
     },
     "faixa.geojson": {
       "filename": "faixa.geojson",
@@ -54,49 +54,49 @@
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer/12/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 315,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:18:27.689Z"
+      "lastSuccessfulSync": "2026-03-25T22:29:03.492Z"
     },
     "erosao.geojson": {
       "filename": "erosao.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer/13/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 1,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:18:29.332Z"
+      "lastSuccessfulSync": "2026-03-25T22:29:04.909Z"
     },
     "mar.geojson": {
       "filename": "mar.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer/11/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 1,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:18:30.523Z"
+      "lastSuccessfulSync": "2026-03-25T22:29:06.023Z"
     },
     "cheias.geojson": {
       "filename": "cheias.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer/10/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 48,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:18:31.893Z"
+      "lastSuccessfulSync": "2026-03-25T22:29:07.225Z"
     },
     "patrimonio.geojson": {
       "filename": "patrimonio.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer/299/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 79,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:18:33.228Z"
+      "lastSuccessfulSync": "2026-03-25T22:29:08.406Z"
     },
     "zep.geojson": {
       "filename": "zep.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer/302/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 13,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:18:34.412Z"
+      "lastSuccessfulSync": "2026-03-25T22:29:09.475Z"
     },
     "perigosos.geojson": {
       "filename": "perigosos.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer/368/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 2,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:18:35.571Z"
+      "lastSuccessfulSync": "2026-03-25T22:29:10.562Z"
     },
     "ren-sintra.geojson": {
       "filename": "ren-sintra.geojson",
@@ -110,10 +110,17 @@
       "sourceUrl": "https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1115_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Amadora_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326",
       "featureCount": 82,
       "status": "success",
-      "lastSuccessfulSync": "2026-03-24T01:18:48.411Z"
+      "lastSuccessfulSync": "2026-03-25T22:29:38.771Z"
+    },
+    "lisboa-zoning.geojson": {
+      "filename": "lisboa-zoning.geojson",
+      "sourceUrl": "https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1106_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Lisboa_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326",
+      "featureCount": 861,
+      "status": "success",
+      "lastSuccessfulSync": "2026-03-25T22:30:00.052Z"
     }
   },
-  "lastRun": "2026-03-24T01:16:52.116Z",
-  "lastRunSucceeded": 13,
+  "lastRun": "2026-03-25T22:27:36.308Z",
+  "lastRunSucceeded": 14,
   "lastRunFailed": 2
 }
