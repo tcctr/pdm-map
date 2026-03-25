@@ -5,7 +5,7 @@
 import {
   MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM,
   CASCAIS_BASE, CASCAIS_COLORS, OEIRAS_COLORS, LOURES_COLORS, CONDICIONANTES_BASE,
-  AMADORA_COLORS, AML_PDM1_BASE, ALMADA_COLORS, LISBOA_COLORS,
+  AMADORA_COLORS, AML_PDM1_BASE, ALMADA_COLORS, LISBOA_COLORS, VFX_COLORS,
 } from './config.js';
 
 // ── Module-level state ───────────────────────────────────────
@@ -20,6 +20,7 @@ let _louresLayer    = null;
 let _amadoraLayer   = null;
 let _almadaLayer    = null;
 let _lisboaLayer    = null;
+let _vfxiraLayer    = null;
 let _callbacks      = {};
 
 let _activeLayer        = 'zoning';
@@ -176,6 +177,24 @@ export function updateLayerVisibility() {
       }
     }
   }
+
+  // Vila Franca de Xira GeoJSON layer
+  const vfxiraOn = _activeLayer === 'zoning' && _activeMunicipality === 'vfxira';
+  vfxiraOn && zoomed ? _map.addLayer(_vfxiraLayer) : _map.removeLayer(_vfxiraLayer);
+
+  // chip-vfxira (GeoJSON layer — no maxZoom cap)
+  const vfxiraEl = document.getElementById('chip-vfxira');
+  if (vfxiraEl) {
+    vfxiraEl.style.display = _activeMunicipality === 'vfxira' ? '' : 'none';
+    if (_activeMunicipality === 'vfxira' && _activeLayer === 'zoning' && !vfxiraEl.classList.contains('chip-loading')) {
+      if (!zoomed) {
+        _callbacks.onSetChip?.('chip-vfxira', 'warn', 'VF Xira: zoom');
+      } else {
+        const s = _callbacks.onGetChipLoadedState?.('chip-vfxira');
+        if (s) _callbacks.onSetChip?.('chip-vfxira', s.state, s.text);
+      }
+    }
+  }
 }
 
 // ── Municipality switching ────────────────────────────────────
@@ -218,14 +237,14 @@ export function handleLayerSelect(value) {
     }
     updateLayerVisibility();
   } else if (value === 'none') {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _lisboaLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _lisboaLayer, _vfxiraLayer].forEach(l => _map.removeLayer(l));
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
       if (_ovlState[def.id].leafletLayer) _map.removeLayer(_ovlState[def.id].leafletLayer);
     }
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _lisboaLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _lisboaLayer, _vfxiraLayer].forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {
@@ -311,8 +330,8 @@ export function initBasemapToggle(map) {
 
 export function initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer,
-  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAmadoraReady, getAlmadaReady,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer,
+  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAmadoraReady, getAlmadaReady, getVfxiraReady,
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
   onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet,
@@ -327,6 +346,7 @@ export function initMapHandlers({
   _amadoraLayer = amadoraLayer;
   _almadaLayer  = almadaLayer;
   _lisboaLayer  = lisboaLayer;
+  _vfxiraLayer  = vfxiraLayer;
   _callbacks = {
     onUpdateSintraChip,
     onSetChip,
@@ -346,6 +366,7 @@ export function initMapHandlers({
     onGetLouresReady:    getLouresReady,
     onGetAmadoraReady:   getAmadoraReady,
     onGetAlmadaReady:    getAlmadaReady,
+    onGetVfxiraReady:    getVfxiraReady,
   };
 
   _map.on('zoomend', updateLayerVisibility);

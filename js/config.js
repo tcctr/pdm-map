@@ -153,6 +153,14 @@ export const ALMADA_COLORS = {
   'Urbanizado':    { fill: '#c1121f', label: 'Solo Urbanizado' },
 };
 
+// Color palette for Vila Franca de Xira zones (Classe field — pdm_revisao AML layer 10)
+export const VFX_COLORS = {
+  'Solo Rural':               { fill: '#1a9850', label: 'Solo Rural' },
+  'Solo Urbano':              { fill: '#c1121f', label: 'Solo Urbano' },
+  'Outras Infraestruturas':   { fill: '#555555', label: 'Infraestruturas' },
+  'Valores Culturais':        { fill: '#9b5de5', label: 'Valores Culturais' },
+};
+
 // Fire hazard classes → colors (PMDFCI CLASSE field)
 export const FIRE_COLORS = {
   'Muito baixa': '#ffffb2',
@@ -163,18 +171,19 @@ export const FIRE_COLORS = {
 };
 
 export const MUNICIPALITIES = [
-  { id: 'sintra',   label: 'Sintra',   center: [38.800, -9.390], zoom: 12 },
-  { id: 'cascais',  label: 'Cascais',  center: [38.697, -9.422], zoom: 12 },
-  { id: 'oeiras',   label: 'Oeiras',   center: [38.700, -9.300], zoom: 12 },
-  { id: 'loures',   label: 'Loures',   center: [38.830, -9.165], zoom: 12 },
-  { id: 'amadora',  label: 'Amadora',  center: [38.752, -9.225], zoom: 13 },
-  { id: 'almada',   label: 'Almada',   center: [38.675, -9.160], zoom: 13 },
-  { id: 'lisboa',   label: 'Lisboa',   center: [38.717, -9.133], zoom: 13 },
+  { id: 'sintra',   label: 'Sintra',        center: [38.800, -9.390], zoom: 12 },
+  { id: 'cascais',  label: 'Cascais',       center: [38.697, -9.422], zoom: 12 },
+  { id: 'oeiras',   label: 'Oeiras',        center: [38.700, -9.300], zoom: 12 },
+  { id: 'loures',   label: 'Loures',        center: [38.830, -9.165], zoom: 12 },
+  { id: 'amadora',  label: 'Amadora',       center: [38.752, -9.225], zoom: 13 },
+  { id: 'almada',   label: 'Almada',        center: [38.675, -9.160], zoom: 13 },
+  { id: 'lisboa',   label: 'Lisboa',        center: [38.717, -9.133], zoom: 13 },
+  { id: 'vfxira',   label: 'V.F. de Xira',  center: [38.955, -8.990], zoom: 12 },
 ];
 
 
 // Overlay layer definitions — loaded lazily when toggled on
-// muni: 'sintra' | 'cascais' | 'oeiras' | 'loures' | 'amadora' | 'almada' | 'both'  ('both' = all municipalities)
+// muni: 'sintra' | 'cascais' | 'oeiras' | 'loures' | 'amadora' | 'almada' | 'lisboa' | 'vfxira' | 'both'  ('both' = all municipalities)
 export const OVERLAY_DEFS = [
   // ─── Reservas (REN/RAN) ─────────────────────────────────
   { id: 'ran',          name: 'RAN \u2014 Reserva Agr\u00edcola',   group: 'Reservas (REN/RAN)',                muni: 'both',    server: RAN_BASE,            layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: CONDICIONANTES_BASE, layerId: 264 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 }, sintraCachedFile: 'ran-sintra.geojson', cascaisCachedFile: 'ran-cascais.geojson' },
@@ -184,6 +193,7 @@ export const OVERLAY_DEFS = [
   { id: 'ren-amadora',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'amadora', server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-almada',   name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'almada',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-lisboa',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-vfxira',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'vfxira',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
   // ─── Riscos Naturais ────────────────────────────────────
