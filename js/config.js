@@ -23,6 +23,11 @@ export const AML_PDM1_BASE = 'https://sig.aml.pt/arcgis/rest/services/Planeament
 // Lisboa's own ArcGIS server requires authentication; DGT publishes CRUS from the current PDM.
 export const LISBOA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1106_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Lisboa_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
+// Mafra zoning — DGT CRUS WFS (public, CC BY 4.0). 1709 features, GeoJSON output.
+// Mafra's own ArcGIS server has TLS issues; AML pdm_revisao layer 5 blocks geometry export.
+// DGT publishes CRUS from the current PDM (2023-03-13). Field: Categoria.
+export const MAFRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1109_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Mafra_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+
 export const MIN_DATA_ZOOM = 1;
 export const RETRY_DELAYS = [15000, 30000, 60000]; // 15 s, 30 s, 1 min
 
@@ -153,6 +158,22 @@ export const ALMADA_COLORS = {
   'Urbanizado':    { fill: '#c1121f', label: 'Solo Urbanizado' },
 };
 
+// Color palette for Mafra zones (Categoria field — DGT CRUS WFS, 2023 PDM)
+export const MAFRA_COLORS = {
+  'Aglomerado Rural':                                         { fill: '#9e9e9e', label: 'Aglomerado Rural' },
+  '\u00c1rea de Edifica\u00e7\u00e3o Dispersa':              { fill: '#f4a261', label: 'Edif. Dispersa' },
+  'Espa\u00e7o Agr\u00edcola':                               { fill: '#d4a017', label: 'Agr\u00edcola' },
+  'Espa\u00e7o Florestal':                                   { fill: '#2d6a4f', label: 'Florestal' },
+  'Espa\u00e7o Habitacional':                                { fill: '#f4845f', label: 'Habitacional' },
+  'Espa\u00e7o Natural e Paisag\u00edstico':                 { fill: '#74c69d', label: 'Natural e Paisag.' },
+  'Espa\u00e7o Verde':                                       { fill: '#52b788', label: 'Verde' },
+  'Espa\u00e7o de Atividades Econ\u00f3micas':               { fill: '#9b5de5', label: 'Atividades Econ.' },
+  'Espa\u00e7o de Atividades Industriais':                   { fill: '#884aaa', label: 'Atividades Industriais' },
+  'Espa\u00e7o de Equipamentos e Infraestruturas':           { fill: '#4895ef', label: 'Equipamentos e Infra.' },
+  'Espa\u00e7o de Explora\u00e7\u00e3o de Recursos Energ\u00e9ticos e Geol\u00f3gicos': { fill: '#6c757d', label: 'Recursos Energ. e Geol.' },
+  'Espa\u00e7o de Uso Especial Equipamentos e Infraestruturas': { fill: '#0d47a1', label: 'Uso Esp. Equip. e Infra.' },
+};
+
 // Color palette for Vila Franca de Xira zones (Classe field — pdm_revisao AML layer 10)
 export const VFX_COLORS = {
   'Solo Rural':               { fill: '#1a9850', label: 'Solo Rural' },
@@ -179,11 +200,12 @@ export const MUNICIPALITIES = [
   { id: 'almada',   label: 'Almada',        center: [38.675, -9.160], zoom: 13 },
   { id: 'lisboa',   label: 'Lisboa',        center: [38.717, -9.133], zoom: 13 },
   { id: 'vfxira',   label: 'V.F. de Xira',  center: [38.955, -8.990], zoom: 12 },
+  { id: 'mafra',    label: 'Mafra',         center: [38.965, -9.295], zoom: 12 },
 ];
 
 
 // Overlay layer definitions — loaded lazily when toggled on
-// muni: 'sintra' | 'cascais' | 'oeiras' | 'loures' | 'amadora' | 'almada' | 'lisboa' | 'vfxira' | 'both'  ('both' = all municipalities)
+// muni: 'sintra' | 'cascais' | 'oeiras' | 'loures' | 'amadora' | 'almada' | 'lisboa' | 'vfxira' | 'mafra' | 'both'  ('both' = all municipalities)
 export const OVERLAY_DEFS = [
   // ─── Reservas (REN/RAN) ─────────────────────────────────
   { id: 'ran',          name: 'RAN \u2014 Reserva Agr\u00edcola',   group: 'Reservas (REN/RAN)',                muni: 'both',    server: RAN_BASE,            layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: CONDICIONANTES_BASE, layerId: 264 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 }, sintraCachedFile: 'ran-sintra.geojson', cascaisCachedFile: 'ran-cascais.geojson' },
@@ -194,6 +216,7 @@ export const OVERLAY_DEFS = [
   { id: 'ren-almada',   name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'almada',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-lisboa',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-vfxira',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'vfxira',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-mafra',   name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'mafra',   server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
   // ─── Riscos Naturais ────────────────────────────────────

@@ -3,8 +3,8 @@
 // ============================================================
 
 import {
-  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, LISBOA_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, LISBOA_COLORS, MAFRA_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -23,6 +23,7 @@ export let amadoraLayer = null;
 export let almadaLayer  = null;
 export let lisboaLayer  = null;
 export let vfxiraLayer  = null;
+export let mafraLayer   = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -47,6 +48,9 @@ export function getLisboaReady()     { return _lisboaReady; }
 
 let _vfxiraReady      = false;
 export function getVfxiraReady()     { return _vfxiraReady; }
+
+let _mafraReady       = false;
+export function getMafraReady()      { return _mafraReady; }
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -489,6 +493,90 @@ function loadVfxira(attempt = 0) {
   }
 }
 
+// ── Mafra layer loader ───────────────────────────────────────
+
+function getMafraStyle(props) {
+  const cat = props.Categoria || '';
+  const cfg = MAFRA_COLORS[cat];
+  if (cfg) return makeStyle(cfg.fill);
+  return makeStyle('#adb5bd');
+}
+
+async function fetchMafraFeatures() {
+  const res = await fetch(MAFRA_WFS, { signal: AbortSignal.timeout(60000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.features || [];
+}
+
+async function loadMafra(attempt = 0) {
+  _callbacks.onMafraStatus?.('loading', 'Mafra\u2026');
+
+  let features = null;
+
+  // 1. Try cached file
+  try {
+    const res = await fetch('/data/mafra-zoning.geojson', { signal: AbortSignal.timeout(15000) });
+    if (res.ok) {
+      const data = await res.json();
+      const f = data.features || [];
+      if (f.length > 0) features = f;
+      else console.warn('[cache] mafra-zoning.geojson returned 0 features — falling back to live');
+    } else {
+      console.warn(`[cache] mafra-zoning.geojson \u2192 HTTP ${res.status} — falling back to live`);
+    }
+  } catch (e) {
+    console.warn('[cache] mafra-zoning.geojson failed (' + e.message + ') — falling back to live');
+  }
+
+  // 2. Try DGT WFS live
+  if (!features) {
+    try {
+      features = await fetchMafraFeatures();
+      if (features.length > 0) {
+        liveFallbackCount++;
+        _callbacks.onFallback?.();
+      } else {
+        console.error('[live] Mafra WFS returned 0 features');
+        features = null;
+      }
+    } catch (e) {
+      console.error('[live] Mafra WFS failed:', e.message);
+    }
+  }
+
+  if (!features || features.length === 0) {
+    _callbacks.onMafraStatus?.('error', 'Mafra: erro');
+    if (attempt < RETRY_DELAYS.length) {
+      setTimeout(() => loadMafra(attempt + 1), RETRY_DELAYS[attempt]);
+    }
+    return;
+  }
+
+  L.geoJSON({ type: 'FeatureCollection', features }, {
+    renderer: _renderer,
+    style: f => getMafraStyle(f.properties),
+    onEachFeature(feature, layer) {
+      layer.on('click', e => {
+        L.DomEvent.stopPropagation(e);
+        const p   = feature.properties;
+        const cat = p.Categoria || '';
+        const cfg = MAFRA_COLORS[cat] || { fill: '#adb5bd', label: cat };
+        const displayProps = {
+          ...p,
+          Descricao: p.Designacao_PlantaOrdenamento,
+          area_ha:   p.Area_Ha,
+        };
+        _callbacks.onFeatureClick?.(displayProps, cfg, cat + (cfg.label ? ' \u2014 ' + cfg.label : ''));
+      });
+    },
+  }).addTo(mafraLayer);
+
+  _mafraReady = true;
+  _callbacks.onMafraLoaded?.('ok', 'Mafra');
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -585,6 +673,8 @@ export async function loadOverlay(id, activeMunicipality) {
 //   onAlmadaLoaded(state, text)           — permanent loaded state + triggers visibility
 //   onVfxiraStatus(state, text)           — transient chip state (tile layer like Cascais)
 //   onVfxiraLoaded(state, text)           — permanent loaded state + triggers visibility
+//   onMafraStatus(state, text)            — transient chip state (GeoJSON like Lisboa)
+//   onMafraLoaded(state, text)            — permanent loaded state + triggers visibility
 //   onOverlayStatus(id, state, text)      — overlay chip update (guarded by id === activeLayer in caller)
 //   onFeatureClick(props, cfg, label)     — open detail panel for GeoJSON polygon click
 //   onOverlayFeatureClick(def, props)     — open detail panel for overlay polygon click
@@ -605,6 +695,7 @@ export function initLayers(map, callbacks) {
   almadaLayer  = L.layerGroup().addTo(map);
   lisboaLayer  = L.layerGroup().addTo(map);
   vfxiraLayer  = L.layerGroup().addTo(map);
+  mafraLayer   = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -619,4 +710,5 @@ export function initLayers(map, callbacks) {
   loadAlmada();
   loadLisboa();
   loadVfxira();
+  loadMafra();
 }

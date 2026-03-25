@@ -23,6 +23,9 @@ const AMADORA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1115_1/WFSe
 // Lisboa — DGT CRUS WFS (public). GeoJSON output, no pagination needed.
 const LISBOA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1106_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Lisboa_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
+// Mafra — DGT CRUS WFS (public). 1709 features, GeoJSON output, no pagination needed.
+const MAFRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1109_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Mafra_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+
 // ── Layer definitions ─────────────────────────────────────────
 const LAYERS = [
   // Base layers — large, use smaller pages (500) and longer timeout (60s)
@@ -117,6 +120,13 @@ const LAYERS = [
     type: 'wfs',
     wfsUrl: LISBOA_WFS,
     timeoutMs: 60000,
+  },
+  // Mafra — DGT CRUS WFS (OGC WFS; 1709 features, larger than Lisboa — longer timeout)
+  {
+    filename: 'mafra-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: MAFRA_WFS,
+    timeoutMs: 90000,
   },
 ];
 
