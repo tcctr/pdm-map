@@ -5,7 +5,7 @@
 import {
   MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM,
   CASCAIS_BASE, CASCAIS_COLORS, OEIRAS_COLORS, LOURES_COLORS, CONDICIONANTES_BASE,
-  AMADORA_COLORS, AML_PDM1_BASE, ALMADA_COLORS, LISBOA_COLORS, VFX_COLORS, MAFRA_COLORS,
+  AML_PDM1_BASE, ALMADA_COLORS, VFX_COLORS,
 } from './config.js';
 
 // ── Module-level state ───────────────────────────────────────
@@ -352,7 +352,7 @@ export function initBasemapToggle(map) {
 export function initMapHandlers({
   ovlState,
   urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer, mafraLayer,
-  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAmadoraReady, getAlmadaReady, getVfxiraReady,
+  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getVfxiraReady,
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
   onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet,
@@ -386,7 +386,6 @@ export function initMapHandlers({
     onGetCascaisReady:   getCascaisReady,
     onGetOeirasReady:    getOeirasReady,
     onGetLouresReady:    getLouresReady,
-    onGetAmadoraReady:   getAmadoraReady,
     onGetAlmadaReady:    getAlmadaReady,
     onGetVfxiraReady:    getVfxiraReady,
   };

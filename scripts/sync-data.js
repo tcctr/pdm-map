@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// sync-data.js — Downloads all GeoJSON-paginated ArcGIS layers to public/data/
+// sync-data.js — Downloads all GeoJSON-paginated ArcGIS layers to data/
 // Usage: node scripts/sync-data.js
 
 import { writeFile, readFile } from 'fs/promises';
@@ -311,7 +311,7 @@ async function main() {
         lastSuccessfulSync: nowISO,
       };
 
-      console.log(`    ✓ ${features.length} features → public/data/${layer.filename}`);
+      console.log(`    ✓ ${features.length} features → data/${layer.filename}`);
       results.succeeded.push(layer.filename);
 
     } catch (err) {

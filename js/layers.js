@@ -28,6 +28,10 @@ export let mafraLayer   = null;
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
 
+// In-memory cache for overlay GeoJSON that is reused across municipality switches
+// (e.g. ren-cascais.geojson is shared by all ren-* overlays). Keyed by cachedFile name.
+const _overlayDataCache = {};
+
 let _cascaisReady     = false;
 export function getCascaisReady()    { return _cascaisReady; }
 
@@ -44,13 +48,11 @@ let _almadaReady      = false;
 export function getAlmadaReady()     { return _almadaReady; }
 
 let _lisboaReady      = false;
-export function getLisboaReady()     { return _lisboaReady; }
 
 let _vfxiraReady      = false;
 export function getVfxiraReady()     { return _vfxiraReady; }
 
 let _mafraReady       = false;
-export function getMafraReady()      { return _mafraReady; }
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -621,7 +623,11 @@ export async function loadOverlay(id, activeMunicipality) {
       cachedFile  = def.cachedFile;
       fallbackUrl = `${def.server}/${def.layerId}/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001`;
     }
-    const result = await loadLayerData(cachedFile, fallbackUrl);
+    let result = cachedFile ? _overlayDataCache[cachedFile] : null;
+    if (!result) {
+      result = await loadLayerData(cachedFile, fallbackUrl);
+      if (result && cachedFile) _overlayDataCache[cachedFile] = result;
+    }
     if (!result) throw new Error('Both cache and live failed');
     const allFeatures = result.features;
     L.geoJSON({ type: 'FeatureCollection', features: allFeatures }, {
