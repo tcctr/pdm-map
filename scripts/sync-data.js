@@ -26,6 +26,10 @@ const LISBOA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1106_1/WFSer
 // Mafra — DGT CRUS WFS (public). 1709 features, GeoJSON output, no pagination needed.
 const MAFRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1109_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Mafra_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
+// Montijo — DGT CRUS WFS (public). 532 features, GeoJSON output, no pagination needed.
+// INE code 1507. Urban areas (Categoria_2021='Não Atribuída') styled via Classe_2021 fallback.
+const MONTIJO_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1507_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Montijo_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+
 
 // ── Layer definitions ─────────────────────────────────────────
 const LAYERS = [
@@ -128,6 +132,13 @@ const LAYERS = [
     type: 'wfs',
     wfsUrl: MAFRA_WFS,
     timeoutMs: 90000,
+  },
+  // Montijo — DGT CRUS WFS (OGC WFS; 532 features, similar to Lisboa)
+  {
+    filename: 'montijo-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: MONTIJO_WFS,
+    timeoutMs: 60000,
   },
 ];
 

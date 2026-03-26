@@ -4,7 +4,7 @@
 
 import { OVERLAY_DEFS, MUNICIPALITIES } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
-import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer } from './layers.js';
+import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer } from './layers.js';
 import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel } from './ui.js';
 import { initMap, initMapHandlers, initBasemapToggle, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './map.js';
 
@@ -184,6 +184,11 @@ function updateZoningOverlayChip() {
     if (!alcocheteState)               setOverlayChip('loading', 'Solo\u2026');
     else if (alcocheteState === 'ok')  setOverlayChip('ok', 'Solo');
     else                               setOverlayChip('error', 'Solo: erro');
+  } else if (getActiveMunicipality() === 'montijo') {
+    const montijoState = getChipLoadedState('chip-montijo')?.state;
+    if (!montijoState)                setOverlayChip('loading', 'Solo\u2026');
+    else if (montijoState === 'ok')   setOverlayChip('ok', 'Solo');
+    else                              setOverlayChip('error', 'Solo: erro');
   } else if (getActiveMunicipality() === 'moita') {
     const moitaState = getChipLoadedState('chip-moita')?.state;
     if (!moitaState)               setOverlayChip('loading', 'Solo\u2026');
@@ -263,6 +268,8 @@ initLayers(map, {
   onAlcocheteLoaded:     (state, text) => { setChipLoaded('chip-alcochete', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
   onMoitaStatus:         (state, text) => setChip('chip-moita', state, text),
   onMoitaLoaded:         (state, text) => { setChipLoaded('chip-moita', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
+  onMontijoStatus:       (state, text) => setChip('chip-montijo', state, text),
+  onMontijoLoaded:       (state, text) => { setChipLoaded('chip-montijo', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
   onOverlayStatus:       (id, state, text) => { if (getActiveLayer() === id) setOverlayChip(state, text); },
   onFeatureClick:        (props, cfg, label) => showDetail(props, cfg, label),
   onOverlayFeatureClick: (def, props) => showOverlayDetail(def, props),
@@ -281,7 +288,7 @@ initUI({
 
 initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer,
   overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady,
   onUpdateSintraChip:         updateSintraChip,
   onSetChip:                  setChip,

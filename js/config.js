@@ -28,6 +28,12 @@ export const LISBOA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1106_
 // DGT publishes CRUS from the current PDM (2023-03-13). Field: Categoria.
 export const MAFRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1109_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Mafra_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
+// Montijo zoning — DGT CRUS WFS (public, CC BY 4.0). 532 features, GeoJSON output.
+// Montijo's own server (mtgeo.mun-montijo.pt) works but splits PDM across 35 per-category layers.
+// DGT WFS uses Categoria_2021 (8 values). Urban areas return Categoria_2021='Não Atribuída' —
+// style/click fall back to Classe_2021 ('Solo Urbano' / 'Solo Urbano (urbanizável – transitório)').
+export const MONTIJO_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1507_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Montijo_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+
 // Odivelas zoning — DGT CRUS WFS (public, CC BY 4.0). 222 features, GeoJSON output.
 // Odivelas' own ArcGIS server (sig.cm-odivelas.pt) is unreachable; AML pdm_revisao layer 8
 // blocks geometry export. DGT publishes CRUS from the current PDM. Field: Categoria.
@@ -218,6 +224,22 @@ export const ODIVELAS_COLORS = {
   'Equipamentos e Outras Estruturas':                                        { fill: '#adb5bd', label: 'Equipamentos' },
 };
 
+// Color palette for Montijo zones (Categoria_2021 + Classe_2021 fallback — DGT CRUS WFS 1507)
+// Urban areas arrive as Categoria_2021='Não Atribuída'; style/click resolve via Classe_2021.
+export const MONTIJO_COLORS = {
+  // Categoria_2021 (DGT WFS DR 15/2015 harmonized classification)
+  'Espa\u00e7o Agr\u00edcola':                                { fill: '#d4a017', label: 'Agr\u00edcola' },
+  'Espa\u00e7o Florestal':                                    { fill: '#2d6a4f', label: 'Florestal' },
+  'Espa\u00e7o Natural e Paisag\u00edstico':                  { fill: '#74c69d', label: 'Natural e Paisag.' },
+  'Espa\u00e7o de Atividades Econ\u00f3micas':                { fill: '#9b5de5', label: 'Atividades Econ.' },
+  'Espa\u00e7o de Atividades Industriais':                    { fill: '#884aaa', label: 'Atividades Industriais' },
+  'Espa\u00e7o Verde':                                        { fill: '#52b788', label: 'Verde' },
+  'Espa\u00e7o de Equipamentos e Infraestruturas':            { fill: '#4895ef', label: 'Equipamentos e Infra.' },
+  // Classe_2021 fallbacks for Categoria_2021 = 'Não Atribuída' (urban areas in 1997 PDM)
+  'Solo Urbano':                                              { fill: '#c1121f', label: 'Urbano' },
+  'Solo Urbano (urbaniz\u00e1vel \u2013 transit\u00f3rio)':   { fill: '#f4845f', label: 'Urbaniz\u00e1vel' },
+};
+
 // Color palette for Moita zones (Categoria field — pdm_revisao AML layer 4)
 // 1st-generation PDM classification (pre-DR 15/2015). No scale restriction (minScale/maxScale both 0).
 export const MOITA_COLORS = {
@@ -262,6 +284,7 @@ export const MUNICIPALITIES = [
   { id: 'odivelas',      label: 'Odivelas',      center: [38.793, -9.176], zoom: 13 },
   { id: 'alcochete',     label: 'Alcochete',     center: [38.717, -8.917], zoom: 12 },
   { id: 'moita',         label: 'Moita',         center: [38.638, -8.990], zoom: 13 },
+  { id: 'montijo',       label: 'Montijo',       center: [38.706, -8.975], zoom: 12 },
   { id: 'grande-lisboa', label: 'Grande Lisboa', center: [38.756, -9.208], zoom: 10 },
 ];
 
@@ -283,6 +306,7 @@ export const OVERLAY_DEFS = [
   { id: 'ren-alcochete',     name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'alcochete',      server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-barreiro',     name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'barreiro',       server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-moita',        name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'moita',          server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-montijo',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'montijo',        server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-grande-lisboa', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'grande-lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
