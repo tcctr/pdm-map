@@ -4,7 +4,7 @@
 
 import { OVERLAY_DEFS, MUNICIPALITIES } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
-import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer } from './layers.js';
+import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer } from './layers.js';
 import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel } from './ui.js';
 import { initMap, initMapHandlers, initBasemapToggle, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './map.js';
 
@@ -154,6 +154,11 @@ function updateZoningOverlayChip() {
     if (!almadaState)               setOverlayChip('loading', 'Solo\u2026');
     else if (almadaState === 'ok')  setOverlayChip('ok', 'Solo');
     else                            setOverlayChip('error', 'Solo: erro');
+  } else if (getActiveMunicipality() === 'barreiro') {
+    const barreiroState = getChipLoadedState('chip-barreiro')?.state;
+    if (!barreiroState)               setOverlayChip('loading', 'Solo\u2026');
+    else if (barreiroState === 'ok')  setOverlayChip('ok', 'Solo');
+    else                              setOverlayChip('error', 'Solo: erro');
   } else if (getActiveMunicipality() === 'lisboa') {
     const lisboaState = getChipLoadedState('chip-lisboa')?.state;
     if (!lisboaState)               setOverlayChip('loading', 'Solo\u2026');
@@ -239,6 +244,8 @@ initLayers(map, {
   onAmadoraLoaded:       (state, text) => { setChipLoaded('chip-amadora', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
   onAlmadaStatus:        (state, text) => setChip('chip-almada', state, text),
   onAlmadaLoaded:        (state, text) => { setChipLoaded('chip-almada', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
+  onBarreiroStatus:      (state, text) => setChip('chip-barreiro', state, text),
+  onBarreiroLoaded:      (state, text) => { setChipLoaded('chip-barreiro', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
   onLisboaStatus:        (state, text) => setChip('chip-lisboa', state, text),
   onLisboaLoaded:        (state, text) => { setChipLoaded('chip-lisboa', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
   onVfxiraStatus:        (state, text) => setChip('chip-vfxira', state, text),
@@ -267,8 +274,8 @@ initUI({
 
 initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer,
-  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer,
+  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady,
   onUpdateSintraChip:         updateSintraChip,
   onSetChip:                  setChip,
   onGetChipLoadedState:       getChipLoadedState,

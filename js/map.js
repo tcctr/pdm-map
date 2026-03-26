@@ -5,7 +5,7 @@
 import {
   MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM,
   CASCAIS_BASE, CASCAIS_COLORS, OEIRAS_COLORS, LOURES_COLORS, CONDICIONANTES_BASE,
-  AML_PDM1_BASE, ALMADA_COLORS, ALCOCHETE_COLORS, ODIVELAS_COLORS, VFX_COLORS,
+  AML_PDM1_BASE, ALMADA_COLORS, BARREIRO_COLORS, ALCOCHETE_COLORS, ODIVELAS_COLORS, VFX_COLORS,
 } from './config.js';
 
 // ── Module-level state ───────────────────────────────────────
@@ -24,6 +24,7 @@ let _vfxiraLayer    = null;
 let _mafraLayer     = null;
 let _odivelaLayer   = null;
 let _alcocheteLayer = null;
+let _barreiroLayer  = null;
 let _callbacks      = {};
 
 let _activeLayer        = 'zoning';
@@ -260,6 +261,26 @@ export function updateLayerVisibility() {
     }
   }
 
+  // Barreiro tile layer (maxScale:25000 — tiles go blank above zoom 14, same as Almada/Alcochete)
+  const barreiroOn = _activeLayer === 'zoning' && (_activeMunicipality === 'barreiro' || isGL);
+  barreiroOn && zoomed ? _map.addLayer(_barreiroLayer) : _map.removeLayer(_barreiroLayer);
+
+  // chip-barreiro (tile layer — blank tiles above zoom 14, same pattern as Almada/Alcochete)
+  const barreiroEl = document.getElementById('chip-barreiro');
+  if (barreiroEl) {
+    barreiroEl.style.display = _activeMunicipality === 'barreiro' ? '' : 'none';
+    if (_activeMunicipality === 'barreiro' && _activeLayer === 'zoning' && !barreiroEl.classList.contains('chip-loading')) {
+      if (!zoomed) {
+        _callbacks.onSetChip?.('chip-barreiro', 'warn', 'Barreiro: zoom');
+      } else if (_map.getZoom() > 14) {
+        _callbacks.onSetChip?.('chip-barreiro', 'warn', 'Barreiro: recuar zoom');
+      } else {
+        const s = _callbacks.onGetChipLoadedState?.('chip-barreiro');
+        if (s) _callbacks.onSetChip?.('chip-barreiro', s.state, s.text);
+      }
+    }
+  }
+
   // chip-grande-lisboa — single chip replaces all individual chips when region view is active
   const glEl = document.getElementById('chip-grande-lisboa');
   if (glEl) {
@@ -308,14 +329,14 @@ export function handleLayerSelect(value) {
     }
     updateLayerVisibility();
   } else if (value === 'none') {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer].forEach(l => _map.removeLayer(l));
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
       if (_ovlState[def.id].leafletLayer) _map.removeLayer(_ovlState[def.id].leafletLayer);
     }
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer].forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {
@@ -401,8 +422,8 @@ export function initBasemapToggle(map) {
 
 export function initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer,
-  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer,
+  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady,
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
   onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet,
@@ -416,6 +437,7 @@ export function initMapHandlers({
   _louresLayer  = louresLayer;
   _amadoraLayer = amadoraLayer;
   _almadaLayer  = almadaLayer;
+  _barreiroLayer = barreiroLayer;
   _lisboaLayer  = lisboaLayer;
   _vfxiraLayer  = vfxiraLayer;
   _mafraLayer    = mafraLayer;
@@ -439,6 +461,7 @@ export function initMapHandlers({
     onGetOeirasReady:    getOeirasReady,
     onGetLouresReady:    getLouresReady,
     onGetAlmadaReady:    getAlmadaReady,
+    onGetBarreiroReady:  getBarreiroReady,
     onGetAlcocheteReady: getAlcocheteReady,
     onGetOdivelasReady:  getOdivelasReady,
     onGetVfxiraReady:    getVfxiraReady,
@@ -486,6 +509,16 @@ export function initMapHandlers({
           const p   = fc.features[0].properties;
           const cat = p.Classe || '';
           const cfg = ALMADA_COLORS[cat] || { fill: '#888888', label: cat };
+          _callbacks.onShowDetail?.(p, cfg, cat);
+        });
+    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetBarreiroReady?.() && _map.hasLayer(_barreiroLayer)) {
+      L.esri.identifyFeatures({ url: AML_PDM1_BASE })
+        .on(_map).at(e.latlng).layers('all:2').tolerance(2)
+        .run((err, fc) => {
+          if (err || !fc || !fc.features.length) return;
+          const p   = fc.features[0].properties;
+          const cat = p.Classe || '';
+          const cfg = BARREIRO_COLORS[cat] || { fill: '#888888', label: cat };
           _callbacks.onShowDetail?.(p, cfg, cat);
         });
     } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetAlcocheteReady?.() && _map.hasLayer(_alcocheteLayer)) {

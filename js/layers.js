@@ -4,7 +4,7 @@
 
 import {
   SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, LISBOA_COLORS, MAFRA_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, BARREIRO_COLORS, LISBOA_COLORS, MAFRA_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -26,6 +26,7 @@ export let vfxiraLayer    = null;
 export let mafraLayer     = null;
 export let odivelaLayer   = null;
 export let alcocheteLayer = null;
+export let barreiroLayer  = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -61,6 +62,9 @@ export function getOdivelasReady()   { return _odivelaReady; }
 
 let _alcocheteReady   = false;
 export function getAlcocheteReady()  { return _alcocheteReady; }
+
+let _barreiroReady    = false;
+export function getBarreiroReady()   { return _barreiroReady; }
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -640,6 +644,34 @@ function loadAlcochete(attempt = 0) {
   }
 }
 
+// ── Barreiro layer loader ─────────────────────────────────────
+// AML PDM_I_GERACAO layer 2 — geometry blocked by server, tile rendering only.
+// layerDefs filter required: layer 2 covers 18 AML municipalities.
+// identifyFeatures must use 'all:2' (same quirk as Almada/Alcochete).
+// DGT WFS (code 1504) exists but returns HTTP 502 — tile-only for now.
+
+function loadBarreiro(attempt = 0) {
+  barreiroLayer.clearLayers();
+  _callbacks.onBarreiroStatus?.('loading', 'Barreiro\u2026');
+  try {
+    const layer = L.esri.dynamicMapLayer({ url: AML_PDM1_BASE, layers: [2], opacity: 0.55, maxZoom: 14, layerDefs: { 2: "Concelho = 'BARREIRO'" } });
+    layer.addTo(barreiroLayer);
+    layer.once('load', () => {
+      _barreiroReady = true;
+      _callbacks.onBarreiroLoaded?.('ok', 'Barreiro');
+    });
+    layer.once('loaderror', () => {
+      _callbacks.onBarreiroStatus?.('error', 'Barreiro: erro');
+      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadBarreiro(attempt + 1), RETRY_DELAYS[attempt]);
+    });
+    _barreiroReady = true;
+  } catch (e) {
+    console.error('Barreiro error:', e);
+    _callbacks.onBarreiroStatus?.('error', 'Barreiro: indispon\u00edvel');
+    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadBarreiro(attempt + 1), RETRY_DELAYS[attempt]);
+  }
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -765,6 +797,7 @@ export function initLayers(map, callbacks) {
   mafraLayer    = L.layerGroup().addTo(map);
   odivelaLayer   = L.layerGroup().addTo(map);
   alcocheteLayer = L.layerGroup().addTo(map);
+  barreiroLayer  = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -782,4 +815,5 @@ export function initLayers(map, callbacks) {
   loadMafra();
   loadOdivelas();
   loadAlcochete();
+  loadBarreiro();
 }

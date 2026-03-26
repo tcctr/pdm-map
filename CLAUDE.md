@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for eleven municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete), plus a **Grande Lisboa** region view that renders all eleven simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
+**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for twelve municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete), plus a **Grande Lisboa** region view that renders all twelve simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
 
 ## Architecture
 
@@ -68,6 +68,12 @@ python3 -m http.server 8080
 - `AML_PDM1_BASE` = `https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/PDM_I_GERACAO/MapServer`
 - Almada's own server is down/firewalled; not on AML pdm_revisao.
 
+**Barreiro zoning (tile layer — AML PDM_I_GERACAO 1st-gen server, always live):**
+- `AML_PDM1_BASE/2` via `L.esri.dynamicMapLayer` with `maxZoom: 14` and `layerDefs: { 2: "Concelho = 'BARREIRO'" }`
+- Same server/layer/quirks as Almada/Alcochete: `maxScale:25000`, tiles blank above zoom 14, `'all:2'` for identifyFeatures
+- Click info via `identifyFeatures` using `'all:2'` — field `Classe` → `BARREIRO_COLORS` (3 values: `Solo Rural`, `Urbanizado`, `Urbanizável`)
+- Barreiro's own server (`sig.cm-barreiro.pt`) is firewalled/unreachable; not on AML pdm_revisao; DGT WFS 1504 exists but returns HTTP 502
+
 **Alcochete zoning (tile layer — AML PDM_I_GERACAO 1st-gen server, always live):**
 - `AML_PDM1_BASE/2` via `L.esri.dynamicMapLayer` with `maxZoom: 14` and `layerDefs: { 2: "Concelho = 'ALCOCHETE'" }`
 - Same server/layer/quirks as Almada: `maxScale:25000`, tiles blank above zoom 14, `'all:2'` for identifyFeatures
@@ -129,6 +135,7 @@ Eleven `L.layerGroup()` instances, one per municipality. Only visible at zoom �
 | `louresLayer` | dynamicMapLayer tiles | CASCAIS_BASE/6 |
 | `amadoraLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
 | `almadaLayer` | dynamicMapLayer tiles | AML_PDM1_BASE/2 |
+| `barreiroLayer` | dynamicMapLayer tiles | AML_PDM1_BASE/2 |
 | `lisboaLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
 | `vfxiraLayer` | dynamicMapLayer tiles | CASCAIS_BASE/10 |
 | `mafraLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
@@ -161,6 +168,7 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 | `ren-mafra` | REN — Reserva Ecológica | mafra | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-odivelas` | REN — Reserva Ecológica | odivelas | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-alcochete` | REN — Reserva Ecológica | alcochete | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
+| `ren-barreiro` | REN — Reserva Ecológica | barreiro | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-grande-lisboa` | REN — Reserva Ecológica | grande-lisboa | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `faixa` | Faixa Costeira | sintra | REN_BASE | 2 | `faixa.geojson` | blue fill |
 | `praias` | Praias | sintra | REN_BASE | 3 | `praias.geojson` | yellow fill |
@@ -310,6 +318,8 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | Odivelas | tiles (maxZoom:15) | zoom > 15 | "Odivelas: recuar zoom" |
 | Alcochete | tiles (maxZoom:14) | zoom < MIN_DATA_ZOOM | "Alcochete: zoom" |
 | Alcochete | tiles (maxZoom:14) | zoom > 14 | "Alcochete: recuar zoom" |
+| Barreiro | tiles (maxZoom:14) | zoom < MIN_DATA_ZOOM | "Barreiro: zoom" |
+| Barreiro | tiles (maxZoom:14) | zoom > 14 | "Barreiro: recuar zoom" |
 
 ---
 
@@ -339,6 +349,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - No DGT WFS published for Vila Franca de Xira — tile-only source
 - Odivelas' own ArcGIS server (`sig.cm-odivelas.pt`) is unreachable; DGT WFS 1116_1 returns HTTP 502 — AML pdm_revisao layer 8 tile rendering used instead
 - Alcochete's own server (`sig.cm-alcochete.pt`) is unreachable; not on AML pdm_revisao; DGT WFS 1502 exists but has only granular 1997-era `Designacao_no_plano` field — AML PDM_I_GERACAO tiles used instead
+- Barreiro's own server (`sig.cm-barreiro.pt`) is firewalled/unreachable; not on AML pdm_revisao; DGT WFS 1504 returns HTTP 502 — AML PDM_I_GERACAO tiles used instead
 - Mafra's own ArcGIS server (`sig.cm-mafra.pt`) has TLS certificate issues
 - Grande Lisboa tile municipalities (Cascais, Oeiras, Loures, Almada, VFXira) are not clickable in region view — `identifyFeatures` is disabled to avoid querying the wrong layer
 

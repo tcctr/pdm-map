@@ -69,6 +69,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
     if (name.includes('mafra')) return 'mafra';
     if (name.includes('odivelas')) return 'odivelas';
     if (name.includes('alcochete')) return 'alcochete';
+    if (name.includes('barreiro')) return 'barreiro';
     return null;
   }
 
@@ -84,7 +85,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
 
     const muni = detectMunicipality(item.display_name);
     if (muni) onMunicipalityDetected?.(muni);
-    const zoom = muni === 'cascais' || muni === 'oeiras' || muni === 'loures' || muni === 'amadora' || muni === 'almada' || muni === 'lisboa' || muni === 'vfxira' || muni === 'mafra' || muni === 'odivelas' || muni === 'alcochete' ? 15 : 17;
+    const zoom = muni === 'cascais' || muni === 'oeiras' || muni === 'loures' || muni === 'amadora' || muni === 'almada' || muni === 'barreiro' || muni === 'lisboa' || muni === 'vfxira' || muni === 'mafra' || muni === 'odivelas' || muni === 'alcochete' ? 15 : 17;
 
     const lat = parseFloat(item.lat);
     const lng = parseFloat(item.lon);
@@ -179,6 +180,7 @@ export async function reverseGeocode(lat, lng) {
     if (place.includes('mafra')) return 'mafra';
     if (place.includes('odivelas')) return 'odivelas';
     if (place.includes('alcochete')) return 'alcochete';
+    if (place.includes('barreiro')) return 'barreiro';
     return null;
   } catch {
     return null;
