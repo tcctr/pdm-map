@@ -5,7 +5,7 @@
 import {
   MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM,
   CASCAIS_BASE, CASCAIS_COLORS, OEIRAS_COLORS, LOURES_COLORS, CONDICIONANTES_BASE,
-  AML_PDM1_BASE, ALMADA_COLORS, BARREIRO_COLORS, ALCOCHETE_COLORS, ODIVELAS_COLORS, VFX_COLORS,
+  AML_PDM1_BASE, ALMADA_COLORS, BARREIRO_COLORS, ALCOCHETE_COLORS, ODIVELAS_COLORS, VFX_COLORS, MOITA_COLORS,
 } from './config.js';
 
 // ── Module-level state ───────────────────────────────────────
@@ -25,6 +25,7 @@ let _mafraLayer     = null;
 let _odivelaLayer   = null;
 let _alcocheteLayer = null;
 let _barreiroLayer  = null;
+let _moitaLayer     = null;
 let _callbacks      = {};
 
 let _activeLayer        = 'zoning';
@@ -281,6 +282,26 @@ export function updateLayerVisibility() {
     }
   }
 
+  // Moita tile layer (AML pdm_revisao layer 4 — no scale restriction, same as Odivelas)
+  const moitaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'moita' || isGL);
+  moitaOn && zoomed ? _map.addLayer(_moitaLayer) : _map.removeLayer(_moitaLayer);
+
+  // chip-moita (tile layer — no server maxScale, but maxZoom:15 used defensively)
+  const moitaEl = document.getElementById('chip-moita');
+  if (moitaEl) {
+    moitaEl.style.display = _activeMunicipality === 'moita' ? '' : 'none';
+    if (_activeMunicipality === 'moita' && _activeLayer === 'zoning' && !moitaEl.classList.contains('chip-loading')) {
+      if (!zoomed) {
+        _callbacks.onSetChip?.('chip-moita', 'warn', 'Moita: zoom');
+      } else if (_map.getZoom() > 15) {
+        _callbacks.onSetChip?.('chip-moita', 'warn', 'Moita: recuar zoom');
+      } else {
+        const s = _callbacks.onGetChipLoadedState?.('chip-moita');
+        if (s) _callbacks.onSetChip?.('chip-moita', s.state, s.text);
+      }
+    }
+  }
+
   // chip-grande-lisboa — single chip replaces all individual chips when region view is active
   const glEl = document.getElementById('chip-grande-lisboa');
   if (glEl) {
@@ -329,14 +350,14 @@ export function handleLayerSelect(value) {
     }
     updateLayerVisibility();
   } else if (value === 'none') {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer].forEach(l => _map.removeLayer(l));
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
       if (_ovlState[def.id].leafletLayer) _map.removeLayer(_ovlState[def.id].leafletLayer);
     }
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer].forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {
@@ -422,8 +443,8 @@ export function initBasemapToggle(map) {
 
 export function initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer,
-  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer,
+  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady,
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
   onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet,
@@ -443,6 +464,7 @@ export function initMapHandlers({
   _mafraLayer    = mafraLayer;
   _odivelaLayer  = odivelaLayer;
   _alcocheteLayer = alcocheteLayer;
+  _moitaLayer     = moitaLayer;
   _callbacks = {
     onUpdateSintraChip,
     onSetChip,
@@ -465,6 +487,7 @@ export function initMapHandlers({
     onGetAlcocheteReady: getAlcocheteReady,
     onGetOdivelasReady:  getOdivelasReady,
     onGetVfxiraReady:    getVfxiraReady,
+    onGetMoitaReady:     getMoitaReady,
   };
 
   _map.on('zoomend', updateLayerVisibility);
@@ -479,6 +502,7 @@ export function initMapHandlers({
       const cascaisQueries = [
         { layer: _cascaisLayer,  spec: 'visible:2',  colors: CASCAIS_COLORS,  field: 'Categoria' },
         { layer: _oeirasLayer,   spec: 'visible:3',  colors: OEIRAS_COLORS,   field: 'Categoria' },
+        { layer: _moitaLayer,    spec: 'visible:4',  colors: MOITA_COLORS,    field: 'Categoria' },
         { layer: _louresLayer,   spec: 'visible:6',  colors: LOURES_COLORS,   field: 'Categoria' },
         { layer: _odivelaLayer,  spec: 'visible:8',  colors: ODIVELAS_COLORS, field: 'Categoria' },
         { layer: _vfxiraLayer,   spec: 'visible:10', colors: VFX_COLORS,      field: 'Classe'    },
@@ -584,6 +608,16 @@ export function initMapHandlers({
           const cls = p.Classe || '';
           const cfg = VFX_COLORS[cls] || { fill: '#888888', label: cls };
           _callbacks.onShowDetail?.(p, cfg, cls);
+        });
+    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetMoitaReady?.() && _map.hasLayer(_moitaLayer)) {
+      L.esri.identifyFeatures({ url: CASCAIS_BASE })
+        .on(_map).at(e.latlng).layers('visible:4').tolerance(2)
+        .run((err, fc) => {
+          if (err || !fc || !fc.features.length) return;
+          const p   = fc.features[0].properties;
+          const cat = p.Categoria || '';
+          const cfg = MOITA_COLORS[cat] || { fill: '#888888', label: cat };
+          _callbacks.onShowDetail?.(p, cfg, cat);
         });
     } else if (_activeLayer === 'incendio') {
       const def = OVERLAY_DEFS.find(d => d.id === 'incendio');

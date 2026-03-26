@@ -218,6 +218,19 @@ export const ODIVELAS_COLORS = {
   'Equipamentos e Outras Estruturas':                                        { fill: '#adb5bd', label: 'Equipamentos' },
 };
 
+// Color palette for Moita zones (Categoria field — pdm_revisao AML layer 4)
+// 1st-generation PDM classification (pre-DR 15/2015). No scale restriction (minScale/maxScale both 0).
+export const MOITA_COLORS = {
+  'Solo urbanizado':                                    { fill: '#c1121f', label: 'Solo Urbanizado' },
+  'Solo urbanizado programado':                         { fill: '#f4845f', label: 'Urbanizado Programado' },
+  'Solo urbanizado - Solo urbanizado programado':       { fill: '#e05c5c', label: 'Urbanizado/Programado' },
+  'Espa\u00e7os agr\u00edcolas periurbanos':            { fill: '#d4a017', label: 'Agr\u00edcola Periurbano' },
+  'Espa\u00e7os agro-pecu\u00e1rios':                  { fill: '#a0785a', label: 'Agro-Pecu\u00e1rio' },
+  'Rio Tejo':                                           { fill: '#0070ff', label: 'Rio Tejo' },
+  'Geral':                                              { fill: '#adb5bd', label: 'Geral' },
+  'N\u00e3o disponibilizado':                           { fill: '#888888', label: 'N\u00e3o Disponibilizado' },
+};
+
 // Color palette for Vila Franca de Xira zones (Classe field — pdm_revisao AML layer 10)
 export const VFX_COLORS = {
   'Solo Rural':               { fill: '#1a9850', label: 'Solo Rural' },
@@ -248,6 +261,7 @@ export const MUNICIPALITIES = [
   { id: 'mafra',         label: 'Mafra',         center: [38.965, -9.295], zoom: 12 },
   { id: 'odivelas',      label: 'Odivelas',      center: [38.793, -9.176], zoom: 13 },
   { id: 'alcochete',     label: 'Alcochete',     center: [38.717, -8.917], zoom: 12 },
+  { id: 'moita',         label: 'Moita',         center: [38.638, -8.990], zoom: 13 },
   { id: 'grande-lisboa', label: 'Grande Lisboa', center: [38.756, -9.208], zoom: 10 },
 ];
 
@@ -268,6 +282,7 @@ export const OVERLAY_DEFS = [
   { id: 'ren-odivelas',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'odivelas',       server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-alcochete',     name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'alcochete',      server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-barreiro',     name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'barreiro',       server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-moita',        name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'moita',          server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-grande-lisboa', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'grande-lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },

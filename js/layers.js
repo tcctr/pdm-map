@@ -27,6 +27,7 @@ export let mafraLayer     = null;
 export let odivelaLayer   = null;
 export let alcocheteLayer = null;
 export let barreiroLayer  = null;
+export let moitaLayer     = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -65,6 +66,9 @@ export function getAlcocheteReady()  { return _alcocheteReady; }
 
 let _barreiroReady    = false;
 export function getBarreiroReady()   { return _barreiroReady; }
+
+let _moitaReady       = false;
+export function getMoitaReady()      { return _moitaReady; }
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -672,6 +676,33 @@ function loadBarreiro(attempt = 0) {
   }
 }
 
+// ── Moita layer loader ────────────────────────────────────────
+// AML pdm_revisao layer 4 — geometry blocked by server, tile rendering only.
+// No scale restriction (minScale/maxScale both 0), no layerDefs needed (single-municipality layer).
+// Field: Categoria (8 values). DGT WFS _1505_1 returns HTTP 500 — tile-only source.
+
+function loadMoita(attempt = 0) {
+  moitaLayer.clearLayers();
+  _callbacks.onMoitaStatus?.('loading', 'Moita\u2026');
+  try {
+    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [4], opacity: 0.55, maxZoom: 15 });
+    layer.addTo(moitaLayer);
+    layer.once('load', () => {
+      _moitaReady = true;
+      _callbacks.onMoitaLoaded?.('ok', 'Moita');
+    });
+    layer.once('loaderror', () => {
+      _callbacks.onMoitaStatus?.('error', 'Moita: erro');
+      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadMoita(attempt + 1), RETRY_DELAYS[attempt]);
+    });
+    _moitaReady = true;
+  } catch (e) {
+    console.error('Moita error:', e);
+    _callbacks.onMoitaStatus?.('error', 'Moita: indispon\u00edvel');
+    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadMoita(attempt + 1), RETRY_DELAYS[attempt]);
+  }
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -798,6 +829,7 @@ export function initLayers(map, callbacks) {
   odivelaLayer   = L.layerGroup().addTo(map);
   alcocheteLayer = L.layerGroup().addTo(map);
   barreiroLayer  = L.layerGroup().addTo(map);
+  moitaLayer     = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -816,4 +848,5 @@ export function initLayers(map, callbacks) {
   loadOdivelas();
   loadAlcochete();
   loadBarreiro();
+  loadMoita();
 }

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for twelve municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete), plus a **Grande Lisboa** region view that renders all twelve simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
+**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for thirteen municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete, Moita), plus a **Grande Lisboa** region view that renders all thirteen simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
 
 ## Architecture
 
@@ -74,6 +74,16 @@ python3 -m http.server 8080
 - Click info via `identifyFeatures` using `'all:2'` — field `Classe` → `BARREIRO_COLORS` (3 values: `Solo Rural`, `Urbanizado`, `Urbanizável`)
 - Barreiro's own server (`sig.cm-barreiro.pt`) is firewalled/unreachable; not on AML pdm_revisao; DGT WFS 1504 exists but returns HTTP 502
 
+**Moita zoning (tile layer — AML pdm_revisao, always live):**
+- `CASCAIS_BASE/4` via `L.esri.dynamicMapLayer` with `maxZoom: 15` (same AML server as Cascais/Odivelas)
+- AML server blocks geometry export — tile rendering only, no GeoJSON download
+- Click info via `identifyFeatures` using `'visible:4'` — field `Categoria` → `MOITA_COLORS`
+- No `layerDefs` filter needed (layer 4 is single-municipality)
+- No scale restrictions (minScale/maxScale both 0) — tiles show at all zoom levels, same as Odivelas
+- 1,327 features; 8 `Categoria` values; `Subcategor` field holds granular 34-value sub-classification
+- Moita's own GIS portal (`geomoita.cm-moita.pt`) is offline (ClearOS default page, last modified 2018); DGT WFS 1505_1 returns HTTP 500
+- PDM last altered April 14, 2025 — AML server reflects this data
+
 **Alcochete zoning (tile layer — AML PDM_I_GERACAO 1st-gen server, always live):**
 - `AML_PDM1_BASE/2` via `L.esri.dynamicMapLayer` with `maxZoom: 14` and `layerDefs: { 2: "Concelho = 'ALCOCHETE'" }`
 - Same server/layer/quirks as Almada: `maxScale:25000`, tiles blank above zoom 14, `'all:2'` for identifyFeatures
@@ -141,6 +151,7 @@ Twelve `L.layerGroup()` instances, one per municipality. Only visible at zoom �
 | `mafraLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
 | `odivelaLayer` | dynamicMapLayer tiles | CASCAIS_BASE/8 |
 | `alcocheteLayer` | dynamicMapLayer tiles | AML_PDM1_BASE/2 |
+| `moitaLayer` | dynamicMapLayer tiles | CASCAIS_BASE/4 |
 
 ### Overlay layers (`OVERLAY_DEFS` array)
 Radio-button selection — only one layer active at a time. Selecting any overlay hides the zoning. Selecting "Qualificação do Solo" restores it. Layers are **lazy-loaded** on first selection and cached in `ovlState`.
@@ -169,6 +180,7 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 | `ren-odivelas` | REN — Reserva Ecológica | odivelas | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-alcochete` | REN — Reserva Ecológica | alcochete | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-barreiro` | REN — Reserva Ecológica | barreiro | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
+| `ren-moita` | REN — Reserva Ecológica | moita | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-grande-lisboa` | REN — Reserva Ecológica | grande-lisboa | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `faixa` | Faixa Costeira | sintra | REN_BASE | 2 | `faixa.geojson` | blue fill |
 | `praias` | Praias | sintra | REN_BASE | 3 | `praias.geojson` | yellow fill |
@@ -320,6 +332,8 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | Alcochete | tiles (maxZoom:14) | zoom > 14 | "Alcochete: recuar zoom" |
 | Barreiro | tiles (maxZoom:14) | zoom < MIN_DATA_ZOOM | "Barreiro: zoom" |
 | Barreiro | tiles (maxZoom:14) | zoom > 14 | "Barreiro: recuar zoom" |
+| Moita | tiles (maxZoom:15) | zoom < MIN_DATA_ZOOM | "Moita: zoom" |
+| Moita | tiles (maxZoom:15) | zoom > 15 | "Moita: recuar zoom" |
 
 ---
 
@@ -328,7 +342,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 `grande-lisboa` is a special entry in `MUNICIPALITIES` (`id: 'grande-lisboa'`, `center: [38.756, -9.208]`, `zoom: 10`). It is not a real municipality — it is a region overlay mode.
 
 **How it works:**
-- `updateLayerVisibility` checks `isGL = _activeMunicipality === 'grande-lisboa'` and adds all twelve `xOn` conditions with `|| isGL`, making every layer group visible simultaneously.
+- `updateLayerVisibility` checks `isGL = _activeMunicipality === 'grande-lisboa'` and adds all thirteen `xOn` conditions with `|| isGL`, making every layer group visible simultaneously.
 - `updateSintraChip` in `ui.js` extends its `on` check to include `grande-lisboa` so Sintra urban/rural layers are also added to the map. The Sintra chip itself is still hidden (only shown for `activeMunicipality === 'sintra'`).
 - `pickMunicipality` uses `map.setView(cfg.center, cfg.zoom)` instead of `panTo` so zoom resets to 10.
 - In Grande Lisboa mode, clicking fires all tile identify queries in parallel (6 queries: 5 CASCAIS_BASE layers + 1 AML_PDM1_BASE layer 2 covering Almada/Barreiro/Alcochete) and shows the first non-empty result. GeoJSON polygon clicks (Sintra, Amadora, Lisboa, Mafra) also work via Leaflet's built-in feature events. All 12 municipalities are clickable in region view.
@@ -351,7 +365,8 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - Alcochete's own server (`sig.cm-alcochete.pt`) is unreachable; not on AML pdm_revisao; DGT WFS 1502 exists but has only granular 1997-era `Designacao_no_plano` field — AML PDM_I_GERACAO tiles used instead
 - Barreiro's own server (`sig.cm-barreiro.pt`) is firewalled/unreachable; not on AML pdm_revisao; DGT WFS 1504 returns HTTP 502 — AML PDM_I_GERACAO tiles used instead
 - Mafra's own ArcGIS server (`sig.cm-mafra.pt`) has TLS certificate issues
-- Grande Lisboa tile clicks fire 6 parallel identify queries and show the first result — there is no guarantee of which municipality "wins" near borders, but in practice each AML layer only has features for its own territory
+- Grande Lisboa tile clicks fire 7 parallel identify queries (6 CASCAIS_BASE layers including Moita + 1 AML_PDM1_BASE) and show the first result — in practice each AML layer only has features for its own territory
+- Moita's own GIS portal (`geomoita.cm-moita.pt`) is offline; DGT WFS 1505_1 returns HTTP 500 — AML pdm_revisao layer 4 tile rendering used instead
 
 ---
 
