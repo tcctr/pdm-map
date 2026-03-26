@@ -28,6 +28,7 @@ let _barreiroLayer  = null;
 let _moitaLayer     = null;
 let _montijoLayer   = null;
 let _palmelaLayer   = null;
+let _seixalLayer    = null;
 let _callbacks      = {};
 
 let _activeLayer        = 'zoning';
@@ -340,6 +341,24 @@ export function updateLayerVisibility() {
     }
   }
 
+  // Seixal GeoJSON layer
+  const seixalOn = _activeLayer === 'zoning' && (_activeMunicipality === 'seixal' || isGL);
+  seixalOn && zoomed ? _map.addLayer(_seixalLayer) : _map.removeLayer(_seixalLayer);
+
+  // chip-seixal (GeoJSON layer — no maxZoom cap)
+  const seixalEl = document.getElementById('chip-seixal');
+  if (seixalEl) {
+    seixalEl.style.display = _activeMunicipality === 'seixal' ? '' : 'none';
+    if (_activeMunicipality === 'seixal' && _activeLayer === 'zoning' && !seixalEl.classList.contains('chip-loading')) {
+      if (!zoomed) {
+        _callbacks.onSetChip?.('chip-seixal', 'warn', 'Seixal: zoom');
+      } else {
+        const s = _callbacks.onGetChipLoadedState?.('chip-seixal');
+        if (s) _callbacks.onSetChip?.('chip-seixal', s.state, s.text);
+      }
+    }
+  }
+
   // chip-grande-lisboa — single chip replaces all individual chips when region view is active
   const glEl = document.getElementById('chip-grande-lisboa');
   if (glEl) {
@@ -388,14 +407,14 @@ export function handleLayerSelect(value) {
     }
     updateLayerVisibility();
   } else if (value === 'none') {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer, _montijoLayer, _palmelaLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer, _montijoLayer, _palmelaLayer, _seixalLayer].forEach(l => _map.removeLayer(l));
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
       if (_ovlState[def.id].leafletLayer) _map.removeLayer(_ovlState[def.id].leafletLayer);
     }
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer, _montijoLayer, _palmelaLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer, _montijoLayer, _palmelaLayer, _seixalLayer].forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {
@@ -481,7 +500,7 @@ export function initBasemapToggle(map) {
 
 export function initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer, seixalLayer,
   overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady,
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
@@ -505,6 +524,7 @@ export function initMapHandlers({
   _moitaLayer     = moitaLayer;
   _montijoLayer   = montijoLayer;
   _palmelaLayer   = palmelaLayer;
+  _seixalLayer    = seixalLayer;
   _callbacks = {
     onUpdateSintraChip,
     onSetChip,

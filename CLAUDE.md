@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for fifteen municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete, Moita, Montijo, Palmela), plus a **Grande Lisboa** region view that renders all fifteen simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
+**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for sixteen municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete, Moita, Montijo, Palmela, Seixal), plus a **Grande Lisboa** region view that renders all sixteen simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
 
 ## Architecture
 
@@ -103,6 +103,17 @@ python3 -m http.server 8080
 - Blank `tipo` (`' '`) = "Compromissos" (approved plan overlays) — styled gray.
 - DGT WFS 1508 exists but has only 57 features (very sparse high-level CRUS); municipality server is the authoritative source.
 - AML PDM_I_GERACAO has 244 Palmela features but only 3 coarse classes — not used.
+- Actual feature count is 928 (not 1,097 — the server's `returnCountOnly` confirms 928).
+
+**Seixal zoning (GeoJSON, cache-first with ArcGIS FeatureServer live fallback):**
+- `data/seixal-zoning.geojson` → fallback `SEIXAL_BASE/27/query` (sig.cm-seixal.pt hosted FeatureServer, public)
+- Field `designacao` (9 values after `.trim()`) → `SEIXAL_COLORS`. `layer` field → `Descricao` in detail panel.
+- `SEIXAL_BASE` = `https://sig.cm-seixal.pt/arcgis/rest/services/Hosted/PDM_PO_Classificacao_Solo/FeatureServer`
+- Rendered client-side like Sintra/Amadora/Lisboa/Mafra/Palmela (not tiles).
+- 903 features, WGS84 (EPSG:4326) — single-page fetch (no pagination needed).
+- AML pdm_revisao layer 9 blocks geometry export (tile-only) — hosted FeatureServer is the only usable source.
+- Whitespace quirks: `designacao` values have trailing spaces/newlines in source data (e.g. `'Espaço Natural '`, `'Espaço de Exploração de Recursos Geológicos\n'`). Pre-handled with `.trim()` in style fn and click handler.
+- `'Espaço de OcupaçãoTurística'` has no space between `ção` and `Turística` — data entry error in source; `SEIXAL_COLORS` key matches raw value.
 
 **Alcochete zoning (tile layer — AML PDM_I_GERACAO 1st-gen server, always live):**
 - `AML_PDM1_BASE/2` via `L.esri.dynamicMapLayer` with `maxZoom: 14` and `layerDefs: { 2: "Concelho = 'ALCOCHETE'" }`
@@ -174,6 +185,7 @@ Twelve `L.layerGroup()` instances, one per municipality. Only visible at zoom �
 | `moitaLayer` | dynamicMapLayer tiles | CASCAIS_BASE/4 |
 | `montijoLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
 | `palmelaLayer` | GeoJSON (SVG renderer) | sig.cm-palmela.pt ArcGIS REST |
+| `seixalLayer` | GeoJSON (SVG renderer) | sig.cm-seixal.pt hosted FeatureServer |
 
 ### Overlay layers (`OVERLAY_DEFS` array)
 Radio-button selection — only one layer active at a time. Selecting any overlay hides the zoning. Selecting "Qualificação do Solo" restores it. Layers are **lazy-loaded** on first selection and cached in `ovlState`.
@@ -205,6 +217,7 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 | `ren-moita` | REN — Reserva Ecológica | moita | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-montijo` | REN — Reserva Ecológica | montijo | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-palmela` | REN — Reserva Ecológica | palmela | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
+| `ren-seixal` | REN — Reserva Ecológica | seixal | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-grande-lisboa` | REN — Reserva Ecológica | grande-lisboa | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `faixa` | Faixa Costeira | sintra | REN_BASE | 2 | `faixa.geojson` | blue fill |
 | `praias` | Praias | sintra | REN_BASE | 3 | `praias.geojson` | yellow fill |
@@ -243,7 +256,7 @@ Amadora, Lisboa, Mafra, and Montijo use custom loaders (`loadAmadora()`, `loadLi
 
 **Fallback tracking:** `liveFallbackCount` increments each time a layer falls back to live. The `#cache-date` indicator shows `"Dados: DD/MM/YYYY (alguns em direto)"` if any fallback occurred.
 
-**Cached files** live in `data/` at the repo root (served at `/data/` by Vercel). Currently cached: `sintra-urban`, `sintra-rural`, `ran-cascais`, `ren-cascais`, `amadora-zoning`, `lisboa-zoning`, `mafra-zoning`, `montijo-zoning`, `odivelas-zoning`, `patrimonio`, `zep`, `perigosos`.
+**Cached files** live in `data/` at the repo root (served at `/data/` by Vercel). Currently cached: `sintra-urban`, `sintra-rural`, `ran-cascais`, `ren-cascais`, `amadora-zoning`, `lisboa-zoning`, `mafra-zoning`, `montijo-zoning`, `palmela-zoning`, `seixal-zoning`, `odivelas-zoning`, `patrimonio`, `zep`, `perigosos`.
 
 ---
 
@@ -360,6 +373,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | Moita | tiles (maxZoom:15) | zoom > 15 | "Moita: recuar zoom" |
 | Montijo | GeoJSON | zoom < MIN_DATA_ZOOM | "Montijo: zoom" |
 | Palmela | GeoJSON | zoom < MIN_DATA_ZOOM | "Palmela: zoom" |
+| Seixal | GeoJSON | zoom < MIN_DATA_ZOOM | "Seixal: zoom" |
 
 ---
 
@@ -368,10 +382,10 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 `grande-lisboa` is a special entry in `MUNICIPALITIES` (`id: 'grande-lisboa'`, `center: [38.756, -9.208]`, `zoom: 10`). It is not a real municipality — it is a region overlay mode.
 
 **How it works:**
-- `updateLayerVisibility` checks `isGL = _activeMunicipality === 'grande-lisboa'` and adds all fourteen `xOn` conditions with `|| isGL`, making every layer group visible simultaneously.
+- `updateLayerVisibility` checks `isGL = _activeMunicipality === 'grande-lisboa'` and adds all sixteen `xOn` conditions with `|| isGL`, making every layer group visible simultaneously.
 - `updateSintraChip` in `ui.js` extends its `on` check to include `grande-lisboa` so Sintra urban/rural layers are also added to the map. The Sintra chip itself is still hidden (only shown for `activeMunicipality === 'sintra'`).
 - `pickMunicipality` uses `map.setView(cfg.center, cfg.zoom)` instead of `panTo` so zoom resets to 10.
-- In Grande Lisboa mode, clicking fires all tile identify queries in parallel (6 queries: 5 CASCAIS_BASE layers + 1 AML_PDM1_BASE layer 2 covering Almada/Barreiro/Alcochete) and shows the first non-empty result. GeoJSON polygon clicks (Sintra, Amadora, Lisboa, Mafra) also work via Leaflet's built-in feature events. All 12 municipalities are clickable in region view.
+- In Grande Lisboa mode, clicking fires all tile identify queries in parallel (6 queries: 5 CASCAIS_BASE layers + 1 AML_PDM1_BASE layer 2 covering Almada/Barreiro/Alcochete) and shows the first non-empty result. GeoJSON polygon clicks (Sintra, Amadora, Lisboa, Mafra, Montijo, Palmela, Seixal) also work via Leaflet's built-in feature events. All 16 municipalities are clickable in region view.
 - `chip-grande-lisboa` shows 'ok' immediately; all per-municipality chips are hidden.
 - `updateZoningOverlayChip` shows `setOverlayChip('ok', 'Solo')` immediately.
 - Overlay panel: only **Qualificação do Solo**, **RAN** (`muni: 'both'`, uses `ran-cascais.geojson`), and **REN** (`ren-grande-lisboa`, uses `ren-cascais.geojson`). All Sintra-specific layers are filtered out by `buildOverlayPanel`.
@@ -394,8 +408,10 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - Grande Lisboa tile clicks fire 7 parallel identify queries (6 CASCAIS_BASE layers including Moita + 1 AML_PDM1_BASE) and show the first result — in practice each AML layer only has features for its own territory
 - Moita's own GIS portal (`geomoita.cm-moita.pt`) is offline; DGT WFS 1505_1 returns HTTP 500 — AML pdm_revisao layer 4 tile rendering used instead
 - Montijo's DGT WFS (`SDISNITWFSCRUS_1507_1`) maps all urban areas to `Categoria_2021='Não Atribuída'` — style falls back to `Classe_2021` for coloring (1997 PDM classification predates DR 15/2015)
-- Palmela DGT WFS (1508) has only 57 features (very sparse) — municipality's own ArcGIS server (`sig.cm-palmela.pt/arcgis/rest/services/PMOTs/MapServer/17`) used instead (1,097 features)
+- Palmela DGT WFS (1508) has only 57 features (very sparse) — municipality's own ArcGIS server (`sig.cm-palmela.pt/arcgis/rest/services/PMOTs/MapServer/17`) used instead (928 features)
 - Palmela's 1997 PDM embeds PNA/RNES protected-area sub-zones and PGRI flood-risk zones as `tipo` values within the main zoning layer — they are colored distinctly but appear in the same layer as regular zoning
+- Seixal's AML pdm_revisao layer 9 blocks geometry export (tile-only) — hosted FeatureServer (`sig.cm-seixal.pt`) used instead (903 features)
+- Seixal `designacao` field values have trailing whitespace/newlines in source data — handled with `.trim()` in style fn and click handler
 
 ---
 

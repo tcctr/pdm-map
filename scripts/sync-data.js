@@ -30,9 +30,13 @@ const MAFRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1109_1/WFServ
 // INE code 1507. Urban areas (Categoria_2021='Não Atribuída') styled via Classe_2021 fallback.
 const MONTIJO_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1507_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Montijo_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
-// Palmela — sig.cm-palmela.pt ArcGIS REST (public). 1097 features. maxRecordCount: 50000.
+// Palmela — sig.cm-palmela.pt ArcGIS REST (public). 928 features. maxRecordCount: 50000.
 // PMOTs/MapServer/17 (PDM Ordenamento polígonos). Field: tipo (43 values); design = granular name.
 const PALMELA_BASE = 'https://sig.cm-palmela.pt/arcgis/rest/services/PMOTs/MapServer';
+
+// Seixal — sig.cm-seixal.pt hosted FeatureServer (public). 903 features. WGS84 (EPSG:4326).
+// PDM_PO_Classificacao_Solo/FeatureServer/27. Field: designacao (9 values); layer = granular name.
+const SEIXAL_BASE = 'https://sig.cm-seixal.pt/arcgis/rest/services/Hosted/PDM_PO_Classificacao_Solo/FeatureServer';
 
 
 // ── Layer definitions ─────────────────────────────────────────
@@ -144,10 +148,17 @@ const LAYERS = [
     wfsUrl: MONTIJO_WFS,
     timeoutMs: 60000,
   },
-  // Palmela — sig.cm-palmela.pt ArcGIS REST (1097 features, maxRecordCount=50000 — single page)
+  // Palmela — sig.cm-palmela.pt ArcGIS REST (928 features, maxRecordCount=50000 — single page)
   {
     filename: 'palmela-zoning.geojson',
     baseUrl: `${PALMELA_BASE}/17/query`,
+    params: 'where=1%3D1&outFields=*&outSR=4326',
+    timeoutMs: 30000,
+  },
+  // Seixal — sig.cm-seixal.pt hosted FeatureServer (903 features, WGS84 — single page)
+  {
+    filename: 'seixal-zoning.geojson',
+    baseUrl: `${SEIXAL_BASE}/27/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326',
     timeoutMs: 30000,
   },

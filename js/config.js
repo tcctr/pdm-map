@@ -39,6 +39,11 @@ export const MONTIJO_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1507
 // coloring; design for granular designation (detail panel Descricao). maxRecordCount: 50000.
 export const PALMELA_BASE = 'https://sig.cm-palmela.pt/arcgis/rest/services/PMOTs/MapServer';
 
+// Seixal zoning — sig.cm-seixal.pt hosted FeatureServer (public). 903 features, GeoJSON export.
+// PDM_PO_Classificacao_Solo/FeatureServer/27. Field: designacao (9 values, requires .trim() —
+// some values have trailing spaces/newlines from source data). layer field → Descricao.
+export const SEIXAL_BASE = 'https://sig.cm-seixal.pt/arcgis/rest/services/Hosted/PDM_PO_Classificacao_Solo/FeatureServer';
+
 // Odivelas zoning — DGT CRUS WFS (public, CC BY 4.0). 222 features, GeoJSON output.
 // Odivelas' own ArcGIS server (sig.cm-odivelas.pt) is unreachable; AML pdm_revisao layer 8
 // blocks geometry export. DGT publishes CRUS from the current PDM. Field: Categoria.
@@ -245,6 +250,21 @@ export const MONTIJO_COLORS = {
   'Solo Urbano (urbaniz\u00e1vel \u2013 transit\u00f3rio)':   { fill: '#f4845f', label: 'Urbaniz\u00e1vel' },
 };
 
+// Color palette for Seixal zones (designacao field — sig.cm-seixal.pt FeatureServer/27)
+// 9 distinct designacao values after trim(). Source data has trailing spaces/newlines on
+// 'Espaço Natural', 'Espaço de Exploração de Recursos Geológicos', 'Solo Urbano - Urbanizável'.
+export const SEIXAL_COLORS = {
+  'Espa\u00e7o Residencial':                                                   { fill: '#c1121f', label: 'Residencial' },
+  'Espa\u00e7o Urbano de Baixa Densidade':                                     { fill: '#f4845f', label: 'Baixa Densidade' },
+  'Espa\u00e7o de Actividades Econ\u00f3micas':                                { fill: '#9b5de5', label: 'Atividades Econ.' },
+  'Espa\u00e7o Uso Especial - Equipamentos e Infraestruturas':                 { fill: '#4895ef', label: 'Equipamentos e Infra.' },
+  'Espa\u00e7o Verde':                                                         { fill: '#52b788', label: 'Verde' },
+  'Espa\u00e7o Agr\u00edcola ou Florestal':                                    { fill: '#d4a017', label: 'Agr\u00edcola/Florestal' },
+  'Espa\u00e7o Natural':                                                       { fill: '#74c69d', label: 'Natural' },
+  'Espa\u00e7o de Explora\u00e7\u00e3o de Recursos Geol\u00f3gicos':          { fill: '#b8860b', label: 'Rec. Geol\u00f3gicos' },
+  'Espa\u00e7o de Ocupa\u00e7\u00e3oTur\u00edstica':                          { fill: '#fb8500', label: 'Tur\u00edstico' },
+};
+
 // Color palette for Palmela zones (tipo field — sig.cm-palmela.pt PMOTs/17)
 // 1997 PDM (43 tipo values). tipo is the broad category for coloring;
 // design is the granular sub-designation shown in the detail panel as Descricao.
@@ -351,6 +371,7 @@ export const MUNICIPALITIES = [
   { id: 'moita',         label: 'Moita',         center: [38.638, -8.990], zoom: 13 },
   { id: 'montijo',       label: 'Montijo',       center: [38.706, -8.975], zoom: 12 },
   { id: 'palmela',       label: 'Palmela',       center: [38.556, -8.900], zoom: 11 },
+  { id: 'seixal',        label: 'Seixal',        center: [38.625, -9.095], zoom: 12 },
   { id: 'grande-lisboa', label: 'Grande Lisboa', center: [38.756, -9.208], zoom: 10 },
 ];
 
@@ -374,6 +395,7 @@ export const OVERLAY_DEFS = [
   { id: 'ren-moita',        name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'moita',          server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-montijo',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'montijo',        server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-palmela',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'palmela',        server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-seixal',       name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'seixal',         server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-grande-lisboa', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'grande-lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },

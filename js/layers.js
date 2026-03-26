@@ -3,8 +3,8 @@
 // ============================================================
 
 import {
-  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS, MONTIJO_WFS, PALMELA_BASE,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, BARREIRO_COLORS, LISBOA_COLORS, MAFRA_COLORS, MONTIJO_COLORS, PALMELA_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS, MONTIJO_WFS, PALMELA_BASE, SEIXAL_BASE,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, BARREIRO_COLORS, LISBOA_COLORS, MAFRA_COLORS, MONTIJO_COLORS, PALMELA_COLORS, SEIXAL_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -30,6 +30,7 @@ export let barreiroLayer  = null;
 export let moitaLayer     = null;
 export let montijoLayer   = null;
 export let palmelaLayer   = null;
+export let seixalLayer    = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -73,6 +74,7 @@ let _moitaReady       = false;
 export function getMoitaReady()      { return _moitaReady; }
 
 let _palmelaReady     = false;
+let _seixalReady      = false;
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -887,6 +889,93 @@ async function loadPalmela(attempt = 0) {
   _callbacks.onPalmelaLoaded?.('ok', 'Palmela');
 }
 
+// ── Seixal layer loader ───────────────────────────────────────
+// sig.cm-seixal.pt hosted FeatureServer/27. 903 features, cache-first.
+// Field: designacao (9 values, requires .trim() — trailing spaces/newlines in source data).
+// layer field → Descricao in detail panel.
+
+function getSeixalStyle(props) {
+  const des = (props.designacao || '').trim();
+  const cfg = SEIXAL_COLORS[des];
+  return makeStyle(cfg ? cfg.fill : '#adb5bd');
+}
+
+async function fetchSeixalFeatures() {
+  const url = `${SEIXAL_BASE}/27/query?where=1%3D1&outFields=*&outSR=4326&f=geojson`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.features || [];
+}
+
+async function loadSeixal(attempt = 0) {
+  _callbacks.onSeixalStatus?.('loading', 'Seixal\u2026');
+
+  let features = null;
+
+  // 1. Try cached file
+  try {
+    const res = await fetch('/data/seixal-zoning.geojson', { signal: AbortSignal.timeout(15000) });
+    if (res.ok) {
+      const data = await res.json();
+      const f = data.features || [];
+      if (f.length > 0) features = f;
+      else console.warn('[cache] seixal-zoning.geojson returned 0 features \u2014 falling back to live');
+    } else {
+      console.warn(`[cache] seixal-zoning.geojson \u2192 HTTP ${res.status} \u2014 falling back to live`);
+    }
+  } catch (e) {
+    console.warn('[cache] seixal-zoning.geojson failed (' + e.message + ') \u2014 falling back to live');
+  }
+
+  // 2. Try live ArcGIS FeatureServer
+  if (!features) {
+    try {
+      features = await fetchSeixalFeatures();
+      if (features.length > 0) {
+        liveFallbackCount++;
+        _callbacks.onFallback?.();
+      } else {
+        console.error('[live] Seixal FeatureServer returned 0 features');
+        features = null;
+      }
+    } catch (e) {
+      console.error('[live] Seixal FeatureServer failed:', e.message);
+    }
+  }
+
+  if (!features || features.length === 0) {
+    _callbacks.onSeixalStatus?.('error', 'Seixal: erro');
+    if (attempt < RETRY_DELAYS.length) {
+      setTimeout(() => loadSeixal(attempt + 1), RETRY_DELAYS[attempt]);
+    }
+    return;
+  }
+
+  L.geoJSON({ type: 'FeatureCollection', features }, {
+    renderer: _renderer,
+    style: f => getSeixalStyle(f.properties),
+    onEachFeature(feature, layer) {
+      layer.on('click', e => {
+        L.DomEvent.stopPropagation(e);
+        const p   = feature.properties;
+        const des = (p.designacao || '').trim();
+        const cfg = SEIXAL_COLORS[des] || { fill: '#adb5bd', label: des || 'Desconhecido' };
+        const displayProps = {
+          ...p,
+          Descricao: p.layer,
+          area_ha:   p.area_ha,
+        };
+        _callbacks.onFeatureClick?.(displayProps, cfg, des + (cfg.label !== des ? ' \u2014 ' + cfg.label : ''));
+      });
+    },
+  }).addTo(seixalLayer);
+
+  _seixalReady = true;
+  _callbacks.onSeixalLoaded?.('ok', 'Seixal');
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -1016,6 +1105,7 @@ export function initLayers(map, callbacks) {
   moitaLayer     = L.layerGroup().addTo(map);
   montijoLayer   = L.layerGroup().addTo(map);
   palmelaLayer   = L.layerGroup().addTo(map);
+  seixalLayer    = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -1037,4 +1127,5 @@ export function initLayers(map, callbacks) {
   loadMoita();
   loadMontijo();
   loadPalmela();
+  loadSeixal();
 }
