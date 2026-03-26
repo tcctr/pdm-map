@@ -124,7 +124,7 @@ python3 -m http.server 8080
 ## Layer System
 
 ### Base zoning layers (always on by default)
-Eleven `L.layerGroup()` instances, one per municipality. Only visible at zoom ≥ `MIN_DATA_ZOOM` (1) and only when that municipality is active (or when Grande Lisboa is active, in which case all eleven show simultaneously).
+Twelve `L.layerGroup()` instances, one per municipality. Only visible at zoom ≥ `MIN_DATA_ZOOM` (1) and only when that municipality is active (or when Grande Lisboa is active, in which case all twelve show simultaneously).
 
 | Layer | Type | Source |
 |-------|------|--------|
@@ -183,7 +183,7 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 
 **Notes:**
 - `ren-sintra` was removed — no unified queryable REN boundary layer exists on Sintra's server.
-- `ren-cascais.geojson` is AML-wide and covers Cascais, Oeiras, Loures, Amadora, Almada, Lisboa, Vila Franca de Xira, and Mafra territory. Reused by `ren-grande-lisboa`.
+- `ren-cascais.geojson` is AML-wide and covers all non-Sintra municipalities (Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete). Reused by `ren-grande-lisboa`.
 - **RAN** (`muni: 'both'`) uses `sintraSource` / `cascaisSource` fields: Sintra → CONDICIONANTES_BASE/264, all others (including Grande Lisboa) → CASCAIS_BASE/12.
 - **SVG hatch patterns** are defined in a hidden `<svg>` in the HTML body: `hatch-ran`, `hatch-ren`, `hatch-risk-red`, `hatch-risk-orange`.
 - Overlay panel for Grande Lisboa shows only: Qualificação do Solo + RAN (`muni: 'both'`) + REN (`ren-grande-lisboa`). All Sintra-specific overlays are hidden.
@@ -200,7 +200,7 @@ GeoJSON layers use `loadLayerData(cachedFile, fallbackUrl)`:
 Amadora, Lisboa, and Mafra use custom loaders (`loadAmadora()`, `loadLisboa()`, `loadMafra()`) that fetch from the cached file first, then fall back to the DGT WFS directly (not via `loadLayerData` since WFS needs a different fetch path).
 
 **What stays live-only (never cached):**
-- Cascais, Oeiras, Loures, Almada, Vila Franca de Xira zoning tiles (`L.esri.dynamicMapLayer`)
+- Cascais, Oeiras, Loures, Almada, Barreiro, Vila Franca de Xira, Odivelas, Alcochete zoning tiles (`L.esri.dynamicMapLayer`)
 - Fire risk tiles (`L.esri.dynamicMapLayer`)
 - All `identifyFeatures` click queries
 - Nominatim address search + reverse geocode
@@ -247,7 +247,7 @@ Pushes with `github-actions[bot]` identity. Push failures are warnings, not fata
 ## Auto-Retry
 
 Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 60000]` (15s, 30s, 1min):
-- Tile municipality layers (Cascais/Oeiras/Loures/Almada/VFXira): clears layer group before each retry, uses `.once('loaderror')`
+- Tile municipality layers (Cascais/Oeiras/Loures/Almada/Barreiro/VFXira/Odivelas/Alcochete): clears layer group before each retry, uses `.once('loaderror')`
 - Overlays: retry count in `ovlState[id].retries`; timer guard checks `activeLayer === id && !st.loaded`. Resets on municipality switch.
 - Sintra urban/rural + Amadora + Lisboa + Mafra: retry via `attempt` param; served from local cache so failures are near-instant
 
@@ -282,7 +282,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - **App name / title:** Mapear (`<title>Mapear</title>`)
 - **Favicon:** `favicon.svg` — coral red (`#e63946`) map pin with white inner circle; linked via `<link rel="icon" type="image/svg+xml">`
 - **Top bar** (`#topbar`): municipality picker dropdown + address search (Nominatim)
-- **Status bar** (`#statusbar`): GPS chip → active municipality chip (one of: `chip-sintra`, `chip-cascais`, `chip-oeiras`, `chip-loures`, `chip-amadora`, `chip-almada`, `chip-lisboa`, `chip-vfxira`, `chip-mafra`, `chip-grande-lisboa`) → Solo overlay chip (`chip-overlay`). In Grande Lisboa mode, `chip-grande-lisboa` replaces all individual municipality chips and always shows 'ok'.
+- **Status bar** (`#statusbar`): GPS chip → active municipality chip (one of: `chip-sintra`, `chip-cascais`, `chip-oeiras`, `chip-loures`, `chip-amadora`, `chip-almada`, `chip-barreiro`, `chip-lisboa`, `chip-vfxira`, `chip-mafra`, `chip-odivelas`, `chip-alcochete`, `chip-grande-lisboa`) → Solo overlay chip (`chip-overlay`). In Grande Lisboa mode, `chip-grande-lisboa` replaces all individual municipality chips and always shows 'ok'.
 - **Layers button** (`#layers-btn`): bottom-left floating pill labeled **"Mapeamento"** (default); slides up when detail panel is open; opens layers popup
 - **Layers popup** (`#layers-sheet`): compact popup anchored above the layers button (positioned dynamically via `getBoundingClientRect`); header row has "Camadas" title (left) + "Limpar" text button (right); contains overlay radio list below
 - **Limpar button** (`#layers-clear`): top-right of layers popup; sets `activeLayer = 'none'`, removes all layers, deselects all radios — shows just the basemap
@@ -296,7 +296,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 
 **Municipality picker:** dropdown in topbar. Selecting a municipality pans (no zoom change) to its center and resets overlays. **Exception: Grande Lisboa uses `setView` to also set zoom** (zoom 10, center ~`[38.756, -9.208]`) so the whole region fits in view. GPS auto-detection calls `selectMunicipality()` without panning and never selects Grande Lisboa. Centers/zooms in `MUNICIPALITIES` array.
 
-**Address search:** Nominatim query uses `limit=7`, `countrycodes=pt`. When GPS is available, a `viewbox` (~0.30°×0.20° box) biases results toward the user's location (`bounded=0`). Detects all nine municipalities in results; zooms to 15 for Cascais, Oeiras, Loures, Amadora, Almada, Lisboa, Vila Franca de Xira, Mafra, and 17 for Sintra. Results outside covered municipalities show "⚠ Sem dados PDM disponíveis". Keyboard navigation: Up/Down arrows, Enter selects, Escape clears. Dropdown fades out (150ms) on selection.
+**Address search:** Nominatim query uses `limit=7`, `countrycodes=pt`. When GPS is available, a `viewbox` (~0.30°×0.20° box) biases results toward the user's location (`bounded=0`). Detects all twelve municipalities in results; zooms to 15 for Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete, and 17 for Sintra. Results outside covered municipalities show "⚠ Sem dados PDM disponíveis". Keyboard navigation: Up/Down arrows, Enter selects, Escape clears. Dropdown fades out (150ms) on selection.
 
 ---
 
@@ -328,10 +328,10 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 `grande-lisboa` is a special entry in `MUNICIPALITIES` (`id: 'grande-lisboa'`, `center: [38.756, -9.208]`, `zoom: 10`). It is not a real municipality — it is a region overlay mode.
 
 **How it works:**
-- `updateLayerVisibility` checks `isGL = _activeMunicipality === 'grande-lisboa'` and adds all eleven `xOn` conditions with `|| isGL`, making every layer group visible simultaneously.
+- `updateLayerVisibility` checks `isGL = _activeMunicipality === 'grande-lisboa'` and adds all twelve `xOn` conditions with `|| isGL`, making every layer group visible simultaneously.
 - `updateSintraChip` in `ui.js` extends its `on` check to include `grande-lisboa` so Sintra urban/rural layers are also added to the map. The Sintra chip itself is still hidden (only shown for `activeMunicipality === 'sintra'`).
 - `pickMunicipality` uses `map.setView(cfg.center, cfg.zoom)` instead of `panTo` so zoom resets to 10.
-- Tile `identifyFeatures` click handlers are guarded with `_activeMunicipality !== 'grande-lisboa'` — in region mode, clicking tile areas does nothing (no way to know which of five tile layers the user intended). GeoJSON polygon clicks (Sintra, Amadora, Lisboa, Mafra) still work via Leaflet's built-in feature events.
+- Tile `identifyFeatures` click handlers are guarded with `_activeMunicipality !== 'grande-lisboa'` — in region mode, clicking tile areas does nothing (no way to know which tile layer the user intended). GeoJSON polygon clicks (Sintra, Amadora, Lisboa, Mafra) still work via Leaflet's built-in feature events.
 - `chip-grande-lisboa` shows 'ok' immediately; all per-municipality chips are hidden.
 - `updateZoningOverlayChip` shows `setOverlayChip('ok', 'Solo')` immediately.
 - Overlay panel: only **Qualificação do Solo**, **RAN** (`muni: 'both'`, uses `ran-cascais.geojson`), and **REN** (`ren-grande-lisboa`, uses `ren-cascais.geojson`). All Sintra-specific layers are filtered out by `buildOverlayPanel`.
@@ -351,7 +351,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - Alcochete's own server (`sig.cm-alcochete.pt`) is unreachable; not on AML pdm_revisao; DGT WFS 1502 exists but has only granular 1997-era `Designacao_no_plano` field — AML PDM_I_GERACAO tiles used instead
 - Barreiro's own server (`sig.cm-barreiro.pt`) is firewalled/unreachable; not on AML pdm_revisao; DGT WFS 1504 returns HTTP 502 — AML PDM_I_GERACAO tiles used instead
 - Mafra's own ArcGIS server (`sig.cm-mafra.pt`) has TLS certificate issues
-- Grande Lisboa tile municipalities (Cascais, Oeiras, Loures, Almada, VFXira) are not clickable in region view — `identifyFeatures` is disabled to avoid querying the wrong layer
+- Grande Lisboa tile municipalities (Cascais, Oeiras, Loures, Almada, Barreiro, VFXira, Odivelas, Alcochete) are not clickable in region view — `identifyFeatures` is disabled to avoid querying the wrong layer
 
 ---
 
