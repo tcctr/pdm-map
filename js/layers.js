@@ -3,8 +3,8 @@
 // ============================================================
 
 import {
-  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS, MONTIJO_WFS,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, BARREIRO_COLORS, LISBOA_COLORS, MAFRA_COLORS, MONTIJO_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS, MONTIJO_WFS, PALMELA_BASE,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, BARREIRO_COLORS, LISBOA_COLORS, MAFRA_COLORS, MONTIJO_COLORS, PALMELA_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -29,6 +29,7 @@ export let alcocheteLayer = null;
 export let barreiroLayer  = null;
 export let moitaLayer     = null;
 export let montijoLayer   = null;
+export let palmelaLayer   = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -70,6 +71,8 @@ export function getBarreiroReady()   { return _barreiroReady; }
 
 let _moitaReady       = false;
 export function getMoitaReady()      { return _moitaReady; }
+
+let _palmelaReady     = false;
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -798,6 +801,92 @@ async function loadMontijo(attempt = 0) {
   _callbacks.onMontijoLoaded?.('ok', 'Montijo');
 }
 
+// ── Palmela layer loader ──────────────────────────────────────
+// sig.cm-palmela.pt ArcGIS REST PMOTs/MapServer/17. 1097 features, cache-first.
+// Field: tipo (43 values). design → Descricao in detail panel.
+// Blank tipo (' ') = 'Compromissos' (approved plan overlays).
+
+function getPalmelaStyle(props) {
+  const tipo = (props.tipo || '').trim();
+  const cfg = PALMELA_COLORS[tipo] || PALMELA_COLORS[' '];
+  return makeStyle(cfg ? cfg.fill : '#adb5bd');
+}
+
+async function fetchPalmelaFeatures() {
+  const url = `${PALMELA_BASE}/17/query?where=1%3D1&outFields=tipo%2Cdesign&outSR=4326&f=geojson`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.features || [];
+}
+
+async function loadPalmela(attempt = 0) {
+  _callbacks.onPalmelaStatus?.('loading', 'Palmela\u2026');
+
+  let features = null;
+
+  // 1. Try cached file
+  try {
+    const res = await fetch('/data/palmela-zoning.geojson', { signal: AbortSignal.timeout(15000) });
+    if (res.ok) {
+      const data = await res.json();
+      const f = data.features || [];
+      if (f.length > 0) features = f;
+      else console.warn('[cache] palmela-zoning.geojson returned 0 features \u2014 falling back to live');
+    } else {
+      console.warn(`[cache] palmela-zoning.geojson \u2192 HTTP ${res.status} \u2014 falling back to live`);
+    }
+  } catch (e) {
+    console.warn('[cache] palmela-zoning.geojson failed (' + e.message + ') \u2014 falling back to live');
+  }
+
+  // 2. Try live ArcGIS REST
+  if (!features) {
+    try {
+      features = await fetchPalmelaFeatures();
+      if (features.length > 0) {
+        liveFallbackCount++;
+        _callbacks.onFallback?.();
+      } else {
+        console.error('[live] Palmela ArcGIS returned 0 features');
+        features = null;
+      }
+    } catch (e) {
+      console.error('[live] Palmela ArcGIS failed:', e.message);
+    }
+  }
+
+  if (!features || features.length === 0) {
+    _callbacks.onPalmelaStatus?.('error', 'Palmela: erro');
+    if (attempt < RETRY_DELAYS.length) {
+      setTimeout(() => loadPalmela(attempt + 1), RETRY_DELAYS[attempt]);
+    }
+    return;
+  }
+
+  L.geoJSON({ type: 'FeatureCollection', features }, {
+    renderer: _renderer,
+    style: f => getPalmelaStyle(f.properties),
+    onEachFeature(feature, layer) {
+      layer.on('click', e => {
+        L.DomEvent.stopPropagation(e);
+        const p    = feature.properties;
+        const tipo = (p.tipo || '').trim();
+        const cfg  = PALMELA_COLORS[tipo] || { fill: '#adb5bd', label: tipo || 'Desconhecido' };
+        const displayProps = {
+          ...p,
+          Descricao: p.design,
+        };
+        _callbacks.onFeatureClick?.(displayProps, cfg, tipo + (cfg.label !== tipo ? ' \u2014 ' + cfg.label : ''));
+      });
+    },
+  }).addTo(palmelaLayer);
+
+  _palmelaReady = true;
+  _callbacks.onPalmelaLoaded?.('ok', 'Palmela');
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -926,6 +1015,7 @@ export function initLayers(map, callbacks) {
   barreiroLayer  = L.layerGroup().addTo(map);
   moitaLayer     = L.layerGroup().addTo(map);
   montijoLayer   = L.layerGroup().addTo(map);
+  palmelaLayer   = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -946,4 +1036,5 @@ export function initLayers(map, callbacks) {
   loadBarreiro();
   loadMoita();
   loadMontijo();
+  loadPalmela();
 }

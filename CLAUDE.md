@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for fourteen municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete, Moita, Montijo), plus a **Grande Lisboa** region view that renders all thirteen simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
+**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for fifteen municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete, Moita, Montijo, Palmela), plus a **Grande Lisboa** region view that renders all fifteen simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
 
 ## Architecture
 
@@ -93,6 +93,17 @@ python3 -m http.server 8080
 - Moita's own GIS portal (`geomoita.cm-moita.pt`) is offline (ClearOS default page, last modified 2018); DGT WFS 1505_1 returns HTTP 500
 - PDM last altered April 14, 2025 — AML server reflects this data
 
+**Palmela zoning (GeoJSON, cache-first with ArcGIS REST live fallback):**
+- `data/palmela-zoning.geojson` → fallback `PALMELA_BASE/17/query` (sig.cm-palmela.pt, public ArcGIS REST)
+- Field `tipo` (43 values) → `PALMELA_COLORS`. `design` field → `Descricao` in detail panel.
+- `PALMELA_BASE` = `https://sig.cm-palmela.pt/arcgis/rest/services/PMOTs/MapServer`
+- Rendered client-side like Sintra/Amadora/Lisboa/Mafra/Montijo (not tiles).
+- 1,097 features; `maxRecordCount: 50000` — single-page fetch (no pagination needed).
+- 1997 PDM (pre-DR 15/2015). Layer mixes zoning + condicionantes: PNA (Parque Natural da Arrábida) and RNES (Reserva Natural do Estuário do Sado) protected-area sub-zones and PGRI flood-risk zones are encoded as `tipo` values within the same layer.
+- Blank `tipo` (`' '`) = "Compromissos" (approved plan overlays) — styled gray.
+- DGT WFS 1508 exists but has only 57 features (very sparse high-level CRUS); municipality server is the authoritative source.
+- AML PDM_I_GERACAO has 244 Palmela features but only 3 coarse classes — not used.
+
 **Alcochete zoning (tile layer — AML PDM_I_GERACAO 1st-gen server, always live):**
 - `AML_PDM1_BASE/2` via `L.esri.dynamicMapLayer` with `maxZoom: 14` and `layerDefs: { 2: "Concelho = 'ALCOCHETE'" }`
 - Same server/layer/quirks as Almada: `maxScale:25000`, tiles blank above zoom 14, `'all:2'` for identifyFeatures
@@ -162,6 +173,7 @@ Twelve `L.layerGroup()` instances, one per municipality. Only visible at zoom �
 | `alcocheteLayer` | dynamicMapLayer tiles | AML_PDM1_BASE/2 |
 | `moitaLayer` | dynamicMapLayer tiles | CASCAIS_BASE/4 |
 | `montijoLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
+| `palmelaLayer` | GeoJSON (SVG renderer) | sig.cm-palmela.pt ArcGIS REST |
 
 ### Overlay layers (`OVERLAY_DEFS` array)
 Radio-button selection — only one layer active at a time. Selecting any overlay hides the zoning. Selecting "Qualificação do Solo" restores it. Layers are **lazy-loaded** on first selection and cached in `ovlState`.
@@ -192,6 +204,7 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 | `ren-barreiro` | REN — Reserva Ecológica | barreiro | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-moita` | REN — Reserva Ecológica | moita | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-montijo` | REN — Reserva Ecológica | montijo | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
+| `ren-palmela` | REN — Reserva Ecológica | palmela | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-grande-lisboa` | REN — Reserva Ecológica | grande-lisboa | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `faixa` | Faixa Costeira | sintra | REN_BASE | 2 | `faixa.geojson` | blue fill |
 | `praias` | Praias | sintra | REN_BASE | 3 | `praias.geojson` | yellow fill |
@@ -346,6 +359,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | Moita | tiles (maxZoom:15) | zoom < MIN_DATA_ZOOM | "Moita: zoom" |
 | Moita | tiles (maxZoom:15) | zoom > 15 | "Moita: recuar zoom" |
 | Montijo | GeoJSON | zoom < MIN_DATA_ZOOM | "Montijo: zoom" |
+| Palmela | GeoJSON | zoom < MIN_DATA_ZOOM | "Palmela: zoom" |
 
 ---
 
@@ -380,6 +394,8 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - Grande Lisboa tile clicks fire 7 parallel identify queries (6 CASCAIS_BASE layers including Moita + 1 AML_PDM1_BASE) and show the first result — in practice each AML layer only has features for its own territory
 - Moita's own GIS portal (`geomoita.cm-moita.pt`) is offline; DGT WFS 1505_1 returns HTTP 500 — AML pdm_revisao layer 4 tile rendering used instead
 - Montijo's DGT WFS (`SDISNITWFSCRUS_1507_1`) maps all urban areas to `Categoria_2021='Não Atribuída'` — style falls back to `Classe_2021` for coloring (1997 PDM classification predates DR 15/2015)
+- Palmela DGT WFS (1508) has only 57 features (very sparse) — municipality's own ArcGIS server (`sig.cm-palmela.pt/arcgis/rest/services/PMOTs/MapServer/17`) used instead (1,097 features)
+- Palmela's 1997 PDM embeds PNA/RNES protected-area sub-zones and PGRI flood-risk zones as `tipo` values within the main zoning layer — they are colored distinctly but appear in the same layer as regular zoning
 
 ---
 

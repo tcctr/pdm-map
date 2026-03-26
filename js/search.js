@@ -72,6 +72,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
     if (name.includes('barreiro')) return 'barreiro';
     if (name.includes('moita')) return 'moita';
     if (name.includes('montijo')) return 'montijo';
+    if (name.includes('palmela')) return 'palmela';
     return null;
   }
 
@@ -87,7 +88,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
 
     const muni = detectMunicipality(item.display_name);
     if (muni) onMunicipalityDetected?.(muni);
-    const zoom = muni === 'cascais' || muni === 'oeiras' || muni === 'loures' || muni === 'amadora' || muni === 'almada' || muni === 'barreiro' || muni === 'lisboa' || muni === 'vfxira' || muni === 'mafra' || muni === 'odivelas' || muni === 'alcochete' || muni === 'moita' || muni === 'montijo' ? 15 : 17;
+    const zoom = muni === 'cascais' || muni === 'oeiras' || muni === 'loures' || muni === 'amadora' || muni === 'almada' || muni === 'barreiro' || muni === 'lisboa' || muni === 'vfxira' || muni === 'mafra' || muni === 'odivelas' || muni === 'alcochete' || muni === 'moita' || muni === 'montijo' || muni === 'palmela' ? 15 : 17;
 
     const lat = parseFloat(item.lat);
     const lng = parseFloat(item.lon);
@@ -185,6 +186,7 @@ export async function reverseGeocode(lat, lng) {
     if (place.includes('barreiro')) return 'barreiro';
     if (place.includes('moita')) return 'moita';
     if (place.includes('montijo')) return 'montijo';
+    if (place.includes('palmela')) return 'palmela';
     return null;
   } catch {
     return null;

@@ -34,6 +34,11 @@ export const MAFRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1109_1
 // style/click fall back to Classe_2021 ('Solo Urbano' / 'Solo Urbano (urbanizável – transitório)').
 export const MONTIJO_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1507_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Montijo_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
+// Palmela zoning — sig.cm-palmela.pt ArcGIS REST (public). 1097 features, GeoJSON export.
+// Layer 17 (PDM Ordenamento polígonos) in PMOTs/MapServer. Field: tipo (43 values) for
+// coloring; design for granular designation (detail panel Descricao). maxRecordCount: 50000.
+export const PALMELA_BASE = 'https://sig.cm-palmela.pt/arcgis/rest/services/PMOTs/MapServer';
+
 // Odivelas zoning — DGT CRUS WFS (public, CC BY 4.0). 222 features, GeoJSON output.
 // Odivelas' own ArcGIS server (sig.cm-odivelas.pt) is unreachable; AML pdm_revisao layer 8
 // blocks geometry export. DGT publishes CRUS from the current PDM. Field: Categoria.
@@ -240,6 +245,66 @@ export const MONTIJO_COLORS = {
   'Solo Urbano (urbaniz\u00e1vel \u2013 transit\u00f3rio)':   { fill: '#f4845f', label: 'Urbaniz\u00e1vel' },
 };
 
+// Color palette for Palmela zones (tipo field — sig.cm-palmela.pt PMOTs/17)
+// 1997 PDM (43 tipo values). tipo is the broad category for coloring;
+// design is the granular sub-designation shown in the detail panel as Descricao.
+// Blank tipo (' ') = "Compromissos" (approved plans overlaid on zoning).
+// Includes PNA/RNES protected-area sub-zones and PGRI flood-risk zones embedded in the layer.
+export const PALMELA_COLORS = {
+  // ── Urbano ─────────────────────────────────────────────────
+  'Espa\u00e7os Urbanos':                                                                                                                 { fill: '#c1121f', label: 'Urbano' },
+  'Espa\u00e7os Urbaniz\u00e1veis - Habitacionais Alta Densidade':                                                                        { fill: '#e63946', label: 'Hab. Alta Densidade' },
+  'Espa\u00e7os Urbaniz\u00e1veis - Habitacionais M\u00e9dia Densidade':                                                                   { fill: '#f4845f', label: 'Hab. M\u00e9dia Densidade' },
+  'Espa\u00e7os Urbaniz\u00e1veis - Habitacionais Baixa Densidade':                                                                       { fill: '#f7a07a', label: 'Hab. Baixa Densidade' },
+  'Espa\u00e7os de Recupera\u00e7\u00e3o e Reconvers\u00e3o Urban\u00edstica - \u00c1reas Constitu\u00eddas em Avos':                      { fill: '#e8a0a0', label: 'Recup. Urban. (Avos)' },
+  'Espa\u00e7os de Recupera\u00e7\u00e3o e Reconvers\u00e3o Urban\u00edstica - \u00c1reas Fraccionadas em 0,5 ha':                         { fill: '#e8b4b4', label: 'Recup. Urban. (0,5 ha)' },
+  'Espa\u00e7os de Recupera\u00e7\u00e3o e Reconvers\u00e3o Urban\u00edstica - \u00c1reas Fraccionadas N\u00e3o Urbanizadas':              { fill: '#f0c8c8', label: 'Recup. Urban. (N\u00e3o Urb.)' },
+  'Espa\u00e7os Urbaniz\u00e1veis - \u00c1rea Verde Livre Urbana':                                                                         { fill: '#52b788', label: 'Verde Urbano' },
+  'Espa\u00e7os Urbaniz\u00e1veis - Verde de Recreio e Lazer':                                                                            { fill: '#40916c', label: 'Verde de Recreio' },
+  // ── Industrial ─────────────────────────────────────────────
+  'Espa\u00e7os Industriais - Existentes':                                                                                                 { fill: '#9b5de5', label: 'Industrial Existente' },
+  'Espa\u00e7os Industriais - Previstos':                                                                                                  { fill: '#b77ae8', label: 'Industrial Previsto' },
+  'Espa\u00e7os Urbaniz\u00e1veis - Industriais Existentes':                                                                              { fill: '#7b3fbf', label: 'Urb. Industrial Exist.' },
+  'Espa\u00e7os Urbaniz\u00e1veis - Industriais Previstos':                                                                               { fill: '#a060c8', label: 'Urb. Industrial Prev.' },
+  // ── Tur\u00edstico ────────────────────────────────────────────
+  'Espa\u00e7os de Ocupa\u00e7\u00e3o Tur\u00edstica':                                                                                     { fill: '#fb8500', label: 'Ocupa\u00e7\u00e3o Tur\u00edstica' },
+  'Unidades Territoriais de Voca\u00e7\u00e3o Tur\u00edstica':                                                                            { fill: '#ffb703', label: 'Voca\u00e7\u00e3o Tur\u00edstica' },
+  // ── Agr\u00edcola / Agroflorestal ─────────────────────────────
+  'Espa\u00e7os Agr\u00edcolas Cat. I':                                                                                                    { fill: '#d4a017', label: 'Agr\u00edcola Cat. I' },
+  'Espa\u00e7os Agr\u00edcolas Cat. II':                                                                                                   { fill: '#c8b040', label: 'Agr\u00edcola Cat. II' },
+  'Espa\u00e7os Agro-florestais Cat. I':                                                                                                   { fill: '#b8860b', label: 'Agroflorestal Cat. I' },
+  'Espa\u00e7os Agro-florestais Cat. II':                                                                                                  { fill: '#c49020', label: 'Agroflorestal Cat. II' },
+  'Espa\u00e7os Agro-florestais Cat. III':                                                                                                 { fill: '#d4a830', label: 'Agroflorestal Cat. III' },
+  // ── Florestal / Natural ─────────────────────────────────────
+  'Espa\u00e7os Florestais':                                                                                                               { fill: '#2d6a4f', label: 'Florestal' },
+  'Espa\u00e7os Naturais':                                                                                                                 { fill: '#74c69d', label: 'Natural' },
+  'Espa\u00e7os Naturais - Linhas de \u00c1gua (10m para cada lado)':                                                                     { fill: '#4895ef', label: 'Linha de \u00c1gua' },
+  'Espa\u00e7os Naturais e Culturais - Cultural':                                                                                          { fill: '#7b2d8b', label: 'Natural/Cultural' },
+  'Espa\u00e7os Naturais e Culturais - Parque Natural da Arr\u00e1bida (PNA)':                                                            { fill: '#1a9850', label: 'Parque Arr\u00e1bida' },
+  'Espa\u00e7os Naturais e Culturais - Reserva Natural do Estu\u00e1rio do Sado (RNES)':                                                  { fill: '#006d77', label: 'Reserva Est. Sado' },
+  // ── \u00c1reas Protegidas PNA ─────────────────────────────────
+  'PNA - Prote\u00e7\u00e3o Complementar Tipo I':                                                                                          { fill: '#339933', label: 'PNA Compl. I' },
+  'PNA - Prote\u00e7\u00e3o Complementar Tipo II':                                                                                         { fill: '#55aa55', label: 'PNA Compl. II' },
+  'PNA - Prote\u00e7\u00e3o Parcial Tipo I':                                                                                               { fill: '#77bb77', label: 'PNA Parcial I' },
+  'PNA - Prote\u00e7\u00e3o Parcial Tipo II':                                                                                              { fill: '#99cc99', label: 'PNA Parcial II' },
+  // ── \u00c1reas Protegidas RNES ─────────────────────────────────
+  'RNES - Prote\u00e7\u00e3o Complementar Tipo I':                                                                                         { fill: '#0092a3', label: 'RNES Compl. I' },
+  'RNES - Prote\u00e7\u00e3o Complementar Tipo II':                                                                                        { fill: '#22b2cf', label: 'RNES Compl. II' },
+  'RNES - Prote\u00e7\u00e3o Parcial Tipo I':                                                                                              { fill: '#55c8de', label: 'RNES Parcial I' },
+  'RNES - Prote\u00e7\u00e3o Parcial Tipo II':                                                                                             { fill: '#88d8e8', label: 'RNES Parcial II' },
+  'RNES - Prote\u00e7\u00e3o Total':                                                                                                       { fill: '#003f5c', label: 'RNES Total' },
+  // ── Risco de Inunda\u00e7\u00e3o PGRI ──────────────────────────
+  'PGRI - \u00c1reas de Risco Potencial Significativo de Inunda\u00e7\u00e3o - Perigosidade Alta - Muito Alta': { fill: '#023e8a', label: 'Inund. Alta' },
+  'PGRI - \u00c1reas de Risco Potencial Significativo de Inunda\u00e7\u00e3o - Perigosidade M\u00e9dia':       { fill: '#0077b6', label: 'Inund. M\u00e9dia' },
+  'PGRI - \u00c1reas de Risco Potencial Significativo de Inunda\u00e7\u00e3o - Perigosidade Muito Baixa - Baixa': { fill: '#00b4d8', label: 'Inund. Baixa' },
+  // ── Infraestrutura / Outros ─────────────────────────────────
+  'Espa\u00e7os Canais':                                                                                                                   { fill: '#555555', label: 'Canais' },
+  'Aterro Controlado':                                                                                                                     { fill: '#666666', label: 'Aterro Controlado' },
+  'Unidades Operativas de Planeamento e Gest\u00e3o - \u00c1reas Apoiadas no Eixo Industrial da EN252':        { fill: '#886644', label: 'UOPG Eixo Industrial' },
+  'Unidades Operativas de Planeamento e Gest\u00e3o - Zona Poente':                                                                       { fill: '#997755', label: 'UOPG Zona Poente' },
+  ' ':                                                                                                                                     { fill: '#adb5bd', label: 'Compromissos' },
+};
+
 // Color palette for Moita zones (Categoria field — pdm_revisao AML layer 4)
 // 1st-generation PDM classification (pre-DR 15/2015). No scale restriction (minScale/maxScale both 0).
 export const MOITA_COLORS = {
@@ -285,6 +350,7 @@ export const MUNICIPALITIES = [
   { id: 'alcochete',     label: 'Alcochete',     center: [38.717, -8.917], zoom: 12 },
   { id: 'moita',         label: 'Moita',         center: [38.638, -8.990], zoom: 13 },
   { id: 'montijo',       label: 'Montijo',       center: [38.706, -8.975], zoom: 12 },
+  { id: 'palmela',       label: 'Palmela',       center: [38.556, -8.900], zoom: 11 },
   { id: 'grande-lisboa', label: 'Grande Lisboa', center: [38.756, -9.208], zoom: 10 },
 ];
 
@@ -307,6 +373,7 @@ export const OVERLAY_DEFS = [
   { id: 'ren-barreiro',     name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'barreiro',       server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-moita',        name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'moita',          server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-montijo',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'montijo',        server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-palmela',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'palmela',        server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-grande-lisboa', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'grande-lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
