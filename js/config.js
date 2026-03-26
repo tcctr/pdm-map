@@ -200,7 +200,8 @@ export const MUNICIPALITIES = [
   { id: 'almada',   label: 'Almada',        center: [38.675, -9.160], zoom: 13 },
   { id: 'lisboa',   label: 'Lisboa',        center: [38.717, -9.133], zoom: 13 },
   { id: 'vfxira',   label: 'V.F. de Xira',  center: [38.955, -8.990], zoom: 12 },
-  { id: 'mafra',    label: 'Mafra',         center: [38.965, -9.295], zoom: 12 },
+  { id: 'mafra',         label: 'Mafra',         center: [38.965, -9.295], zoom: 12 },
+  { id: 'grande-lisboa', label: 'Grande Lisboa', center: [38.756, -9.208], zoom: 10 },
 ];
 
 
@@ -216,7 +217,8 @@ export const OVERLAY_DEFS = [
   { id: 'ren-almada',   name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'almada',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-lisboa',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-vfxira',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'vfxira',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-mafra',   name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'mafra',   server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-mafra',          name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'mafra',          server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-grande-lisboa', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'grande-lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
   // ─── Riscos Naturais ────────────────────────────────────

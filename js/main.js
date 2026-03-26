@@ -111,7 +111,10 @@ function pickMunicipality(muni) {
   closeMuniDropdown();
   selectMunicipality(muni);
   const cfg = MUNICIPALITIES.find(m => m.id === muni);
-  if (cfg) map.panTo(cfg.center);
+  if (cfg) {
+    if (muni === 'grande-lisboa') map.setView(cfg.center, cfg.zoom);
+    else map.panTo(cfg.center);
+  }
 }
 
 // ============================================================
@@ -169,6 +172,8 @@ function updateZoningOverlayChip() {
     if (!mafraState)               setOverlayChip('loading', 'Solo\u2026');
     else if (mafraState === 'ok')  setOverlayChip('ok', 'Solo');
     else                           setOverlayChip('error', 'Solo: erro');
+  } else if (getActiveMunicipality() === 'grande-lisboa') {
+    setOverlayChip('ok', 'Solo');
   } else {
     const cascaisState = getChipLoadedState('chip-cascais')?.state;
     if (!cascaisState)              setOverlayChip('loading', 'Solo\u2026');

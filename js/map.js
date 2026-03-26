@@ -62,21 +62,22 @@ export function updateLayerVisibility() {
   _callbacks.onUpdateSintraChip?.();
 
   const zoomed = _map.getZoom() >= MIN_DATA_ZOOM;
+  const isGL = _activeMunicipality === 'grande-lisboa';
 
   // Cascais tile layer
-  const cascaisOn = _activeLayer === 'zoning' && _activeMunicipality === 'cascais';
+  const cascaisOn = _activeLayer === 'zoning' && (_activeMunicipality === 'cascais' || isGL);
   cascaisOn && zoomed ? _map.addLayer(_cascaisLayer) : _map.removeLayer(_cascaisLayer);
 
   // Oeiras tile layer
-  const oeirasOn = _activeLayer === 'zoning' && _activeMunicipality === 'oeiras';
+  const oeirasOn = _activeLayer === 'zoning' && (_activeMunicipality === 'oeiras' || isGL);
   oeirasOn && zoomed ? _map.addLayer(_oeirasLayer) : _map.removeLayer(_oeirasLayer);
 
   // Loures tile layer
-  const louresOn = _activeLayer === 'zoning' && _activeMunicipality === 'loures';
+  const louresOn = _activeLayer === 'zoning' && (_activeMunicipality === 'loures' || isGL);
   louresOn && zoomed ? _map.addLayer(_louresLayer) : _map.removeLayer(_louresLayer);
 
   // Amadora GeoJSON layer
-  const amadoraOn = _activeLayer === 'zoning' && _activeMunicipality === 'amadora';
+  const amadoraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'amadora' || isGL);
   amadoraOn && zoomed ? _map.addLayer(_amadoraLayer) : _map.removeLayer(_amadoraLayer);
 
   // chip-cascais
@@ -142,7 +143,7 @@ export function updateLayerVisibility() {
   }
 
   // Almada tile layer (maxScale:25000 — tiles go blank above zoom 14)
-  const almadaOn = _activeLayer === 'zoning' && _activeMunicipality === 'almada';
+  const almadaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'almada' || isGL);
   almadaOn && zoomed ? _map.addLayer(_almadaLayer) : _map.removeLayer(_almadaLayer);
 
   // chip-almada (tile layer — blank tiles above zoom 14, same pattern as Cascais)
@@ -162,7 +163,7 @@ export function updateLayerVisibility() {
   }
 
   // Lisboa GeoJSON layer
-  const lisboaOn = _activeLayer === 'zoning' && _activeMunicipality === 'lisboa';
+  const lisboaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'lisboa' || isGL);
   lisboaOn && zoomed ? _map.addLayer(_lisboaLayer) : _map.removeLayer(_lisboaLayer);
 
   // chip-lisboa (GeoJSON layer — no maxZoom cap)
@@ -180,7 +181,7 @@ export function updateLayerVisibility() {
   }
 
   // Vila Franca de Xira GeoJSON layer
-  const vfxiraOn = _activeLayer === 'zoning' && _activeMunicipality === 'vfxira';
+  const vfxiraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'vfxira' || isGL);
   vfxiraOn && zoomed ? _map.addLayer(_vfxiraLayer) : _map.removeLayer(_vfxiraLayer);
 
   // chip-vfxira (tile layer — maxZoom:15, same pattern as Cascais/Oeiras/Loures)
@@ -200,7 +201,7 @@ export function updateLayerVisibility() {
   }
 
   // Mafra GeoJSON layer
-  const mafraOn = _activeLayer === 'zoning' && _activeMunicipality === 'mafra';
+  const mafraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'mafra' || isGL);
   mafraOn && zoomed ? _map.addLayer(_mafraLayer) : _map.removeLayer(_mafraLayer);
 
   // chip-mafra (GeoJSON layer — no maxZoom cap)
@@ -215,6 +216,13 @@ export function updateLayerVisibility() {
         if (s) _callbacks.onSetChip?.('chip-mafra', s.state, s.text);
       }
     }
+  }
+
+  // chip-grande-lisboa — single chip replaces all individual chips when region view is active
+  const glEl = document.getElementById('chip-grande-lisboa');
+  if (glEl) {
+    glEl.style.display = isGL ? '' : 'none';
+    if (isGL) _callbacks.onSetChip?.('chip-grande-lisboa', 'ok', 'Grande Lisboa');
   }
 }
 
@@ -394,7 +402,7 @@ export function initMapHandlers({
 
   _map.on('click', e => {
     _callbacks.onCloseDetail?.();
-    if (_activeLayer === 'zoning' && _callbacks.onGetCascaisReady?.() && _map.hasLayer(_cascaisLayer)) {
+    if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetCascaisReady?.() && _map.hasLayer(_cascaisLayer)) {
       L.esri.identifyFeatures({ url: CASCAIS_BASE })
         .on(_map).at(e.latlng).layers('visible:2').tolerance(2)
         .run((err, fc) => {
@@ -404,7 +412,7 @@ export function initMapHandlers({
           const cfg = CASCAIS_COLORS[cat] || { fill: '#888888', label: cat };
           _callbacks.onShowDetail?.(p, cfg, cat);
         });
-    } else if (_activeLayer === 'zoning' && _callbacks.onGetOeirasReady?.() && _map.hasLayer(_oeirasLayer)) {
+    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetOeirasReady?.() && _map.hasLayer(_oeirasLayer)) {
       L.esri.identifyFeatures({ url: CASCAIS_BASE })
         .on(_map).at(e.latlng).layers('visible:3').tolerance(2)
         .run((err, fc) => {
@@ -414,7 +422,7 @@ export function initMapHandlers({
           const cfg = OEIRAS_COLORS[cat] || { fill: '#888888', label: cat };
           _callbacks.onShowDetail?.(p, cfg, cat);
         });
-    } else if (_activeLayer === 'zoning' && _callbacks.onGetLouresReady?.() && _map.hasLayer(_louresLayer)) {
+    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetLouresReady?.() && _map.hasLayer(_louresLayer)) {
       L.esri.identifyFeatures({ url: CASCAIS_BASE })
         .on(_map).at(e.latlng).layers('visible:6').tolerance(2)
         .run((err, fc) => {
@@ -424,7 +432,7 @@ export function initMapHandlers({
           const cfg = LOURES_COLORS[cat] || { fill: '#888888', label: cat };
           _callbacks.onShowDetail?.(p, cfg, cat);
         });
-    } else if (_activeLayer === 'zoning' && _callbacks.onGetAlmadaReady?.() && _map.hasLayer(_almadaLayer)) {
+    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetAlmadaReady?.() && _map.hasLayer(_almadaLayer)) {
       L.esri.identifyFeatures({ url: AML_PDM1_BASE })
         .on(_map).at(e.latlng).layers('all:2').tolerance(2)
         .run((err, fc) => {
@@ -434,7 +442,7 @@ export function initMapHandlers({
           const cfg = ALMADA_COLORS[cat] || { fill: '#888888', label: cat };
           _callbacks.onShowDetail?.(p, cfg, cat);
         });
-    } else if (_activeLayer === 'zoning' && _callbacks.onGetVfxiraReady?.() && _map.hasLayer(_vfxiraLayer)) {
+    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetVfxiraReady?.() && _map.hasLayer(_vfxiraLayer)) {
       L.esri.identifyFeatures({ url: CASCAIS_BASE })
         .on(_map).at(e.latlng).layers('visible:10').tolerance(2)
         .run((err, fc) => {

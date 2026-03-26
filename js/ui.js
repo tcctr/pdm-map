@@ -57,7 +57,7 @@ export function updateSintraChip() {
   const sintraStatus      = _getSintraStatus();
   const activeLayer       = _getActiveLayer();
   const activeMunicipality = _getActiveMunicipality();
-  const on = activeLayer === 'zoning' && activeMunicipality === 'sintra';
+  const on = activeLayer === 'zoning' && (activeMunicipality === 'sintra' || activeMunicipality === 'grande-lisboa');
 
   [_urbanLayer, _ruralLayer].forEach(l => on && zoomed ? _map.addLayer(l) : _map.removeLayer(l));
 
