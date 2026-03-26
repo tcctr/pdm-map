@@ -4,7 +4,7 @@
 
 import {
   SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS, ODIVELAS_WFS,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, LISBOA_COLORS, MAFRA_COLORS, ODIVELAS_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, LISBOA_COLORS, MAFRA_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -25,6 +25,7 @@ export let lisboaLayer  = null;
 export let vfxiraLayer    = null;
 export let mafraLayer     = null;
 export let odivelaLayer   = null;
+export let alcocheteLayer = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -56,6 +57,9 @@ export function getVfxiraReady()     { return _vfxiraReady; }
 let _mafraReady       = false;
 
 let _odivelaReady     = false;
+
+let _alcocheteReady   = false;
+export function getAlcocheteReady()  { return _alcocheteReady; }
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -666,6 +670,33 @@ async function loadOdivelas(attempt = 0) {
   _callbacks.onOdivelasLoaded?.('ok', 'Odivelas');
 }
 
+// ── Alcochete layer loader ────────────────────────────────────
+// AML PDM_I_GERACAO layer 2 — geometry blocked by server, tile rendering only.
+// layerDefs filter required: layer 2 covers 18 AML municipalities.
+// identifyFeatures must use 'all:2' (same quirk as Almada).
+
+function loadAlcochete(attempt = 0) {
+  alcocheteLayer.clearLayers();
+  _callbacks.onAlcocheteStatus?.('loading', 'Alcochete\u2026');
+  try {
+    const layer = L.esri.dynamicMapLayer({ url: AML_PDM1_BASE, layers: [2], opacity: 0.55, maxZoom: 14, layerDefs: { 2: "Concelho = 'ALCOCHETE'" } });
+    layer.addTo(alcocheteLayer);
+    layer.once('load', () => {
+      _alcocheteReady = true;
+      _callbacks.onAlcocheteLoaded?.('ok', 'Alcochete');
+    });
+    layer.once('loaderror', () => {
+      _callbacks.onAlcocheteStatus?.('error', 'Alcochete: erro');
+      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadAlcochete(attempt + 1), RETRY_DELAYS[attempt]);
+    });
+    _alcocheteReady = true;
+  } catch (e) {
+    console.error('Alcochete error:', e);
+    _callbacks.onAlcocheteStatus?.('error', 'Alcochete: indispon\u00edvel');
+    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadAlcochete(attempt + 1), RETRY_DELAYS[attempt]);
+  }
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -789,7 +820,8 @@ export function initLayers(map, callbacks) {
   lisboaLayer  = L.layerGroup().addTo(map);
   vfxiraLayer   = L.layerGroup().addTo(map);
   mafraLayer    = L.layerGroup().addTo(map);
-  odivelaLayer  = L.layerGroup().addTo(map);
+  odivelaLayer   = L.layerGroup().addTo(map);
+  alcocheteLayer = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -806,4 +838,5 @@ export function initLayers(map, callbacks) {
   loadVfxira();
   loadMafra();
   loadOdivelas();
+  loadAlcochete();
 }

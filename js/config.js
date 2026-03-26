@@ -163,6 +163,13 @@ export const ALMADA_COLORS = {
   'Urbanizado':    { fill: '#c1121f', label: 'Solo Urbanizado' },
 };
 
+// Color palette for Alcochete zones (Classe field — PDM_I_GERACAO AML layer 2, same classification as Almada)
+export const ALCOCHETE_COLORS = {
+  'Solo Rural':    { fill: '#1a9850', label: 'Solo Rural' },
+  'Urbaniz\u00e1vel': { fill: '#f4a261', label: 'Solo Urbaniz\u00e1vel' },
+  'Urbanizado':    { fill: '#c1121f', label: 'Solo Urbanizado' },
+};
+
 // Color palette for Mafra zones (Categoria field — DGT CRUS WFS, 2023 PDM)
 export const MAFRA_COLORS = {
   'Aglomerado Rural':                                         { fill: '#9e9e9e', label: 'Aglomerado Rural' },
@@ -227,12 +234,13 @@ export const MUNICIPALITIES = [
   { id: 'vfxira',   label: 'V.F. de Xira',  center: [38.955, -8.990], zoom: 12 },
   { id: 'mafra',         label: 'Mafra',         center: [38.965, -9.295], zoom: 12 },
   { id: 'odivelas',      label: 'Odivelas',      center: [38.793, -9.176], zoom: 13 },
+  { id: 'alcochete',     label: 'Alcochete',     center: [38.717, -8.917], zoom: 12 },
   { id: 'grande-lisboa', label: 'Grande Lisboa', center: [38.756, -9.208], zoom: 10 },
 ];
 
 
 // Overlay layer definitions — loaded lazily when toggled on
-// muni: 'sintra' | 'cascais' | 'oeiras' | 'loures' | 'amadora' | 'almada' | 'lisboa' | 'vfxira' | 'mafra' | 'odivelas' | 'both'  ('both' = all municipalities)
+// muni: 'sintra' | 'cascais' | 'oeiras' | 'loures' | 'amadora' | 'almada' | 'lisboa' | 'vfxira' | 'mafra' | 'odivelas' | 'alcochete' | 'both'  ('both' = all municipalities)
 export const OVERLAY_DEFS = [
   // ─── Reservas (REN/RAN) ─────────────────────────────────
   { id: 'ran',          name: 'RAN \u2014 Reserva Agr\u00edcola',   group: 'Reservas (REN/RAN)',                muni: 'both',    server: RAN_BASE,            layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: CONDICIONANTES_BASE, layerId: 264 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 }, sintraCachedFile: 'ran-sintra.geojson', cascaisCachedFile: 'ran-cascais.geojson' },
@@ -245,6 +253,7 @@ export const OVERLAY_DEFS = [
   { id: 'ren-vfxira',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'vfxira',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-mafra',          name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'mafra',          server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-odivelas',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'odivelas',       server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-alcochete',     name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'alcochete',      server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-grande-lisboa', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'grande-lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },
