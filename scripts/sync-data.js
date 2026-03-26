@@ -38,6 +38,10 @@ const PALMELA_BASE = 'https://sig.cm-palmela.pt/arcgis/rest/services/PMOTs/MapSe
 // PDM_PO_Classificacao_Solo/FeatureServer/27. Field: designacao (9 values); layer = granular name.
 const SEIXAL_BASE = 'https://sig.cm-seixal.pt/arcgis/rest/services/Hosted/PDM_PO_Classificacao_Solo/FeatureServer';
 
+// Sesimbra — DGT CRUS WFS (public). 126 features, GeoJSON output. INE code 1511.
+// Categoria_2021 (10 values, trim required) + Classe_2021 fallback for 'Não Atribuída'.
+const SESIMBRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1511_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Sesimbra_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+
 
 // ── Layer definitions ─────────────────────────────────────────
 const LAYERS = [
@@ -160,6 +164,13 @@ const LAYERS = [
     filename: 'seixal-zoning.geojson',
     baseUrl: `${SEIXAL_BASE}/27/query`,
     params: 'where=1%3D1&outFields=*&outSR=4326',
+    timeoutMs: 30000,
+  },
+  // Sesimbra — DGT CRUS WFS (OGC WFS; 126 features, single-page response)
+  {
+    filename: 'sesimbra-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: SESIMBRA_WFS,
     timeoutMs: 30000,
   },
 ];

@@ -34,6 +34,10 @@ export const MAFRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1109_1
 // style/click fall back to Classe_2021 ('Solo Urbano' / 'Solo Urbano (urbanizável – transitório)').
 export const MONTIJO_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1507_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Montijo_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
+// Sesimbra — DGT CRUS WFS (public). 126 features, GeoJSON output. INE code 1511.
+// Urban areas (Categoria_2021='Não Atribuída') styled via Classe_2021 fallback (same as Montijo).
+export const SESIMBRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1511_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Sesimbra_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+
 // Palmela zoning — sig.cm-palmela.pt ArcGIS REST (public). 1097 features, GeoJSON export.
 // Layer 17 (PDM Ordenamento polígonos) in PMOTs/MapServer. Field: tipo (43 values) for
 // coloring; design for granular designation (detail panel Descricao). maxRecordCount: 50000.
@@ -250,6 +254,24 @@ export const MONTIJO_COLORS = {
   'Solo Urbano (urbaniz\u00e1vel \u2013 transit\u00f3rio)':   { fill: '#f4845f', label: 'Urbaniz\u00e1vel' },
 };
 
+// Color palette for Sesimbra zones (Categoria_2021 field — DGT CRUS WFS 1511_1)
+// 10 distinct Categoria_2021 values after trim(). PDM origin: 1998-02-02 (1:25000).
+// 'Não Atribuída' (55 features: 54 Solo Urbano + 1 Solo Rústico) uses Classe_2021 fallback.
+// Trailing spaces on 'Espaço de Atividades Industriais ' and 'Espaço de Equipamentos e Infraestruturas ' — pre-trimmed.
+export const SESIMBRA_COLORS = {
+  'Espa\u00e7o de Uso Especial Equipamentos e Infraestruturas': { fill: '#4895ef', label: 'Equip. Espec.' },
+  'Espa\u00e7o de Equipamentos e Infraestruturas':              { fill: '#457b9d', label: 'Equipamentos e Infra.' },
+  'Espa\u00e7o Agr\u00edcola':                                  { fill: '#d4a017', label: 'Agr\u00edcola' },
+  'Espa\u00e7o Florestal':                                      { fill: '#2d6a4f', label: 'Florestal' },
+  'Espa\u00e7o de Uso Especial - Tur\u00edstico':               { fill: '#fb8500', label: 'Tur\u00edstico' },
+  'Espa\u00e7o de Atividades Industriais':                      { fill: '#884aaa', label: 'Industrial' },
+  'Espa\u00e7o de Atividades Econ\u00f3micas':                  { fill: '#9b5de5', label: 'Atividades Econ.' },
+  'Espa\u00e7o de Explora\u00e7\u00e3o de Recursos Energ\u00e9ticos e Geol\u00f3gicos': { fill: '#b8860b', label: 'Rec. Energ./Geol.' },
+  'Espa\u00e7o Natural e Paisag\u00edstico':                    { fill: '#74c69d', label: 'Natural e Paisag.' },
+  // Classe_2021 fallbacks for Categoria_2021 = 'Não Atribuída'
+  'Solo Urbano':                                                { fill: '#c1121f', label: 'Urbano' },
+};
+
 // Color palette for Seixal zones (designacao field — sig.cm-seixal.pt FeatureServer/27)
 // 9 distinct designacao values after trim(). Source data has trailing spaces/newlines on
 // 'Espaço Natural', 'Espaço de Exploração de Recursos Geológicos', 'Solo Urbano - Urbanizável'.
@@ -372,6 +394,7 @@ export const MUNICIPALITIES = [
   { id: 'montijo',       label: 'Montijo',       center: [38.706, -8.975], zoom: 12 },
   { id: 'palmela',       label: 'Palmela',       center: [38.556, -8.900], zoom: 11 },
   { id: 'seixal',        label: 'Seixal',        center: [38.625, -9.095], zoom: 12 },
+  { id: 'sesimbra',      label: 'Sesimbra',      center: [38.490, -9.095], zoom: 12 },
   { id: 'grande-lisboa', label: 'Grande Lisboa', center: [38.756, -9.208], zoom: 10 },
 ];
 
@@ -396,6 +419,7 @@ export const OVERLAY_DEFS = [
   { id: 'ren-montijo',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'montijo',        server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-palmela',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'palmela',        server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-seixal',       name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'seixal',         server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
+  { id: 'ren-sesimbra',     name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'sesimbra',       server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-grande-lisboa', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'grande-lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },

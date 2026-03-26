@@ -3,8 +3,8 @@
 // ============================================================
 
 import {
-  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS, MONTIJO_WFS, PALMELA_BASE, SEIXAL_BASE,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, BARREIRO_COLORS, LISBOA_COLORS, MAFRA_COLORS, MONTIJO_COLORS, PALMELA_COLORS, SEIXAL_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS, MONTIJO_WFS, SESIMBRA_WFS, PALMELA_BASE, SEIXAL_BASE,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, BARREIRO_COLORS, LISBOA_COLORS, MAFRA_COLORS, MONTIJO_COLORS, SESIMBRA_COLORS, PALMELA_COLORS, SEIXAL_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -31,6 +31,7 @@ export let moitaLayer     = null;
 export let montijoLayer   = null;
 export let palmelaLayer   = null;
 export let seixalLayer    = null;
+export let sesimbraLayer  = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -976,6 +977,100 @@ async function loadSeixal(attempt = 0) {
   _callbacks.onSeixalLoaded?.('ok', 'Seixal');
 }
 
+// ── Sesimbra layer loader ──────────────────────────────────────
+// DGT CRUS WFS SDISNITWFSCRUS_1511_1. 126 features, cache-first.
+// Categoria_2021 (after trim) → SESIMBRA_COLORS; fallback to Classe_2021 for 'Não Atribuída'.
+let _sesimbraReady = false;
+
+function getSesimbraStyle(props) {
+  const cat = (props.Categoria_2021 || '').trim();
+  if (cat && cat !== 'N\u00e3o Atribu\u00edda') {
+    const cfg = SESIMBRA_COLORS[cat];
+    if (cfg) return makeStyle(cfg.fill);
+  }
+  const cls = (props.Classe_2021 || '').trim();
+  const cfgCls = SESIMBRA_COLORS[cls];
+  if (cfgCls) return makeStyle(cfgCls.fill);
+  return makeStyle('#adb5bd');
+}
+
+async function fetchSesimbraFeatures() {
+  const res = await fetch(SESIMBRA_WFS, { signal: AbortSignal.timeout(60000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.features || [];
+}
+
+async function loadSesimbra(attempt = 0) {
+  _callbacks.onSesimbraStatus?.('loading', 'Sesimbra\u2026');
+
+  let features = null;
+
+  // 1. Try cached file
+  try {
+    const res = await fetch('/data/sesimbra-zoning.geojson', { signal: AbortSignal.timeout(15000) });
+    if (res.ok) {
+      const data = await res.json();
+      const f = data.features || [];
+      if (f.length > 0) features = f;
+      else console.warn('[cache] sesimbra-zoning.geojson returned 0 features \u2014 falling back to live');
+    } else {
+      console.warn(`[cache] sesimbra-zoning.geojson \u2192 HTTP ${res.status} \u2014 falling back to live`);
+    }
+  } catch (e) {
+    console.warn('[cache] sesimbra-zoning.geojson failed (' + e.message + ') \u2014 falling back to live');
+  }
+
+  // 2. Try DGT WFS live
+  if (!features) {
+    try {
+      features = await fetchSesimbraFeatures();
+      if (features.length > 0) {
+        liveFallbackCount++;
+        _callbacks.onFallback?.();
+      } else {
+        console.error('[live] Sesimbra WFS returned 0 features');
+        features = null;
+      }
+    } catch (e) {
+      console.error('[live] Sesimbra WFS failed:', e.message);
+    }
+  }
+
+  if (!features || features.length === 0) {
+    _callbacks.onSesimbraStatus?.('error', 'Sesimbra: erro');
+    if (attempt < RETRY_DELAYS.length) {
+      setTimeout(() => loadSesimbra(attempt + 1), RETRY_DELAYS[attempt]);
+    }
+    return;
+  }
+
+  L.geoJSON({ type: 'FeatureCollection', features }, {
+    renderer: _renderer,
+    style: f => getSesimbraStyle(f.properties),
+    onEachFeature(feature, layer) {
+      layer.on('click', e => {
+        L.DomEvent.stopPropagation(e);
+        const p   = feature.properties;
+        const cat = (p.Categoria_2021 || '').trim();
+        const cls = (p.Classe_2021 || '').trim();
+        const key = (cat && cat !== 'N\u00e3o Atribu\u00edda') ? cat : cls;
+        const cfg = SESIMBRA_COLORS[key] || { fill: '#adb5bd', label: key || 'N\u00e3o Atribu\u00edda' };
+        const displayProps = {
+          ...p,
+          Descricao: p.Designacao_no_plano,
+          area_ha:   p.AREA_HA,
+        };
+        _callbacks.onFeatureClick?.(displayProps, cfg, key + (cfg.label !== key ? ' \u2014 ' + cfg.label : ''));
+      });
+    },
+  }).addTo(sesimbraLayer);
+
+  _sesimbraReady = true;
+  _callbacks.onSesimbraLoaded?.('ok', 'Sesimbra');
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -1106,6 +1201,7 @@ export function initLayers(map, callbacks) {
   montijoLayer   = L.layerGroup().addTo(map);
   palmelaLayer   = L.layerGroup().addTo(map);
   seixalLayer    = L.layerGroup().addTo(map);
+  sesimbraLayer  = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -1128,4 +1224,5 @@ export function initLayers(map, callbacks) {
   loadMontijo();
   loadPalmela();
   loadSeixal();
+  loadSesimbra();
 }
