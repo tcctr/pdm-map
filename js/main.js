@@ -111,10 +111,7 @@ function pickMunicipality(muni) {
   closeMuniDropdown();
   selectMunicipality(muni);
   const cfg = MUNICIPALITIES.find(m => m.id === muni);
-  if (cfg) {
-    if (muni === 'grande-lisboa') map.setView(cfg.center, cfg.zoom);
-    else map.panTo(cfg.center);
-  }
+  if (cfg) map.setView(cfg.center, cfg.zoom);
 }
 
 // ============================================================
