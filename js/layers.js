@@ -711,12 +711,12 @@ function loadMoita(attempt = 0) {
 // Designacao_no_plano → Descricao in detail panel (original 1997 PDM category name).
 
 function getMontijoStyle(props) {
-  const cat = props.Categoria_2021 || '';
+  const cat = (props.Categoria_2021 || '').trim();
   if (cat && cat !== 'N\u00e3o Atribu\u00edda') {
     const cfg = MONTIJO_COLORS[cat];
     if (cfg) return makeStyle(cfg.fill);
   }
-  const cls = props.Classe_2021 || '';
+  const cls = (props.Classe_2021 || '').trim();
   const cfgCls = MONTIJO_COLORS[cls];
   if (cfgCls) return makeStyle(cfgCls.fill);
   return makeStyle('#adb5bd');
@@ -781,8 +781,8 @@ async function loadMontijo(attempt = 0) {
       layer.on('click', e => {
         L.DomEvent.stopPropagation(e);
         const p   = feature.properties;
-        const cat = p.Categoria_2021 || '';
-        const cls = p.Classe_2021 || '';
+        const cat = (p.Categoria_2021 || '').trim();
+        const cls = (p.Classe_2021 || '').trim();
         const key = (cat && cat !== 'N\u00e3o Atribu\u00edda') ? cat : cls;
         const cfg = MONTIJO_COLORS[key] || { fill: '#adb5bd', label: key || 'N\u00e3o Atribu\u00edda' };
         const displayProps = {
