@@ -186,24 +186,29 @@ export const MAFRA_COLORS = {
   'Espa\u00e7o de Uso Especial Equipamentos e Infraestruturas': { fill: '#0d47a1', label: 'Uso Esp. Equip. e Infra.' },
 };
 
-// Color palette for Odivelas zones (Categoria field — DGT CRUS WFS, DR 15/2015 classification)
+// Color palette for Odivelas zones (Categoria field — AML pdm_revisao layer 8)
 export const ODIVELAS_COLORS = {
-  'Espa\u00e7o Central':                                              { fill: '#c1121f', label: 'Central' },
-  'Espa\u00e7o Residencial':                                          { fill: '#f4845f', label: 'Residencial' },
-  'Espa\u00e7o Habitacional':                                         { fill: '#f4845f', label: 'Habitacional' },
-  'Espa\u00e7o de Atividades Econ\u00f3micas':                        { fill: '#9b5de5', label: 'Atividades Econ\u00f3micas' },
-  'Espa\u00e7o de Atividades Econ\u00f3micas e Log\u00edsticas':      { fill: '#7b2fff', label: 'At. Econ. e Log\u00edsticas' },
-  'Espa\u00e7o de Uso Especial Equipamentos e Infraestruturas':       { fill: '#4895ef', label: 'Equipamentos e Infra.' },
-  'Espa\u00e7o de Uso Especial Turismo e Lazer':                      { fill: '#43aa8b', label: 'Turismo e Lazer' },
-  'Espa\u00e7o de Uso Especial Turismo':                              { fill: '#43aa8b', label: 'Turismo' },
-  'Espa\u00e7o de Uso Especial Defesa e Seguran\u00e7a Nacional':     { fill: '#0d47a1', label: 'Defesa e Seguran\u00e7a' },
-  'Espa\u00e7o Verde':                                                { fill: '#52b788', label: 'Verde' },
-  'Espa\u00e7o Canal':                                                { fill: '#555555', label: 'Canal' },
-  'Espa\u00e7o Natural':                                              { fill: '#74c69d', label: 'Natural' },
-  'Espa\u00e7o Agr\u00edcola':                                        { fill: '#d4a017', label: 'Agr\u00edcola' },
-  'Espa\u00e7o Florestal':                                            { fill: '#2d6a4f', label: 'Florestal' },
-  'Espa\u00e7o de Explora\u00e7\u00e3o de Recursos Geol\u00f3gicos': { fill: '#6c757d', label: 'Recursos Geol\u00f3gicos' },
-  'N\u00e3o Atribu\u00edda':                                          { fill: '#adb5bd', label: 'N\u00e3o Atribu\u00edda' },
+  'Urbanizado - Central - N1':                                               { fill: '#c1121f', label: 'Urbanizado Central' },
+  'Urbanizado - Central - N2':                                               { fill: '#c1121f', label: 'Urbanizado Central' },
+  'Urbanizado - Residencial - N1':                                           { fill: '#f4845f', label: 'Urbanizado Residencial' },
+  'Urbanizado - Residencial - N2':                                           { fill: '#f4845f', label: 'Urbanizado Residencial' },
+  'Urbanizado - Residencial - N3':                                           { fill: '#f4845f', label: 'Urbanizado Residencial' },
+  'Urbanizado Actividades Economicas':                                       { fill: '#9b5de5', label: 'Ativ. Econ\u00f3micas' },
+  'Urbanizado Actividades Economicas Requalificar':                          { fill: '#9b5de5', label: 'Ativ. Econ. Requalificar' },
+  'Urbanizado Espaco de Uso Especial - Equipamentos e Infraestruturas':      { fill: '#4895ef', label: 'Equipamentos e Infra.' },
+  'Urbanizado Residencial Reconverter':                                      { fill: '#f4845f', label: 'Residencial Reconverter' },
+  'Urbanizado Verde':                                                        { fill: '#52b788', label: 'Verde Urbano' },
+  'Urbanizavel - Central - N1':                                              { fill: '#e05c5c', label: 'Urbaniz\u00e1vel Central' },
+  'Urbanizavel - Central - N2':                                              { fill: '#e05c5c', label: 'Urbaniz\u00e1vel Central' },
+  'Urbanizavel - Residencial - N1':                                          { fill: '#f4a261', label: 'Urbaniz\u00e1vel Residencial' },
+  'Urbanizavel - Residencial - N2':                                          { fill: '#f4a261', label: 'Urbaniz\u00e1vel Residencial' },
+  'Urbanizavel Actividades Economicas':                                      { fill: '#c77dff', label: 'Urbaniz\u00e1vel Ativ. Econ.' },
+  'Urbanizavel Verde':                                                       { fill: '#95d5b2', label: 'Urbaniz\u00e1vel Verde' },
+  'Aglomerado Rural':                                                        { fill: '#74c69d', label: 'Aglomerado Rural' },
+  'Agro - pastoril':                                                         { fill: '#d4a017', label: 'Agro-Pastoril' },
+  'Florestal Producao':                                                      { fill: '#2d6a4f', label: 'Florestal' },
+  'Naturalizado Proteccao ou Enquadramento':                                 { fill: '#1a9850', label: 'Natural/Prote\u00e7\u00e3o' },
+  'Equipamentos e Outras Estruturas':                                        { fill: '#adb5bd', label: 'Equipamentos' },
 };
 
 // Color palette for Vila Franca de Xira zones (Classe field — pdm_revisao AML layer 10)

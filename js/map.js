@@ -5,7 +5,7 @@
 import {
   MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM,
   CASCAIS_BASE, CASCAIS_COLORS, OEIRAS_COLORS, LOURES_COLORS, CONDICIONANTES_BASE,
-  AML_PDM1_BASE, ALMADA_COLORS, ALCOCHETE_COLORS, VFX_COLORS,
+  AML_PDM1_BASE, ALMADA_COLORS, ALCOCHETE_COLORS, ODIVELAS_COLORS, VFX_COLORS,
 } from './config.js';
 
 // ── Module-level state ───────────────────────────────────────
@@ -220,17 +220,19 @@ export function updateLayerVisibility() {
     }
   }
 
-  // Odivelas GeoJSON layer
+  // Odivelas tile layer (AML pdm_revisao layer 8 — no scale restriction)
   const odivelaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'odivelas' || isGL);
   odivelaOn && zoomed ? _map.addLayer(_odivelaLayer) : _map.removeLayer(_odivelaLayer);
 
-  // chip-odivelas (GeoJSON layer — no maxZoom cap)
+  // chip-odivelas (tile layer — pdm_revisao has no server maxScale, but maxZoom:15 used defensively)
   const odivelaEl = document.getElementById('chip-odivelas');
   if (odivelaEl) {
     odivelaEl.style.display = _activeMunicipality === 'odivelas' ? '' : 'none';
     if (_activeMunicipality === 'odivelas' && _activeLayer === 'zoning' && !odivelaEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-odivelas', 'warn', 'Odivelas: zoom');
+      } else if (_map.getZoom() > 15) {
+        _callbacks.onSetChip?.('chip-odivelas', 'warn', 'Odivelas: recuar zoom');
       } else {
         const s = _callbacks.onGetChipLoadedState?.('chip-odivelas');
         if (s) _callbacks.onSetChip?.('chip-odivelas', s.state, s.text);
@@ -400,7 +402,7 @@ export function initBasemapToggle(map) {
 export function initMapHandlers({
   ovlState,
   urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer,
-  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getAlcocheteReady, getVfxiraReady,
+  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady,
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
   onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet,
@@ -438,6 +440,7 @@ export function initMapHandlers({
     onGetLouresReady:    getLouresReady,
     onGetAlmadaReady:    getAlmadaReady,
     onGetAlcocheteReady: getAlcocheteReady,
+    onGetOdivelasReady:  getOdivelasReady,
     onGetVfxiraReady:    getVfxiraReady,
   };
 
@@ -493,6 +496,16 @@ export function initMapHandlers({
           const p   = fc.features[0].properties;
           const cat = p.Classe || '';
           const cfg = ALCOCHETE_COLORS[cat] || { fill: '#888888', label: cat };
+          _callbacks.onShowDetail?.(p, cfg, cat);
+        });
+    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetOdivelasReady?.() && _map.hasLayer(_odivelaLayer)) {
+      L.esri.identifyFeatures({ url: CASCAIS_BASE })
+        .on(_map).at(e.latlng).layers('visible:8').tolerance(2)
+        .run((err, fc) => {
+          if (err || !fc || !fc.features.length) return;
+          const p   = fc.features[0].properties;
+          const cat = p.Categoria || '';
+          const cfg = ODIVELAS_COLORS[cat] || { fill: '#888888', label: cat };
           _callbacks.onShowDetail?.(p, cfg, cat);
         });
     } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetVfxiraReady?.() && _map.hasLayer(_vfxiraLayer)) {

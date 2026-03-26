@@ -97,12 +97,14 @@ python3 -m http.server 8080
 - DGT publishes CRUS from the current 2023 PDM. 12 Categoria values including `Espaço Habitacional`, `Espaço Agrícola`, `Espaço Florestal`, `Aglomerado Rural`, `Área de Edificação Dispersa`, etc.
 - Descriptor field: `Designacao_PlantaOrdenamento` (mapped → `Descricao` for detail panel display)
 
-**Odivelas zoning (GeoJSON, cache-first with DGT WFS live fallback):**
-- `data/odivelas-zoning.geojson` → fallback `ODIVELAS_WFS` (DGT CRUS public OGC WFS, 222 features)
-- Field `Categoria` → `ODIVELAS_COLORS`. Rendered client-side like Lisboa/Mafra (not tiles).
-- `ODIVELAS_WFS` = `https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1116_1/WFService.aspx?...`
-- Odivelas' own ArcGIS server (`sig.cm-odivelas.pt`) is unreachable; AML pdm_revisao layer 8 blocks geometry export.
-- DGT publishes CRUS using the standard DR 15/2015 classification (same as Lisboa/Amadora). Descriptor field: `Designacao_PlantaOrdenamento` (mapped → `Descricao` for detail panel display)
+**Odivelas zoning (tile layer — AML pdm_revisao, always live):**
+- `CASCAIS_BASE/8` via `L.esri.dynamicMapLayer` with `maxZoom: 15` (same AML server as Cascais/VFXira)
+- AML server blocks geometry export — tile rendering only, no GeoJSON download
+- Click info via `identifyFeatures` using `'visible:8'` — field `Categoria` → `ODIVELAS_COLORS`
+- No `layerDefs` filter needed (layer 8 is single-municipality)
+- Layer has no scale restrictions (minScale/maxScale both 0) — tiles show at all zoom levels
+- `ODIVELAS_COLORS` has 21 Categoria values (AML classification, not DR 15/2015)
+- Odivelas' own ArcGIS server (`sig.cm-odivelas.pt`) is unreachable; DGT WFS 1116_1 returns HTTP 502
 
 **Overlay / Condicionantes layers — three servers:**
 - `RAN_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer` (Sintra RAN only — frequently offline)
@@ -130,7 +132,7 @@ Eleven `L.layerGroup()` instances, one per municipality. Only visible at zoom �
 | `lisboaLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
 | `vfxiraLayer` | dynamicMapLayer tiles | CASCAIS_BASE/10 |
 | `mafraLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
-| `odivelaLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
+| `odivelaLayer` | dynamicMapLayer tiles | CASCAIS_BASE/8 |
 | `alcocheteLayer` | dynamicMapLayer tiles | AML_PDM1_BASE/2 |
 
 ### Overlay layers (`OVERLAY_DEFS` array)
@@ -305,7 +307,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | Vila Franca de Xira | tiles (maxZoom:15) | zoom < MIN_DATA_ZOOM | "VF Xira: zoom" |
 | Vila Franca de Xira | tiles (maxZoom:15) | zoom > 15 | "VF Xira: recuar zoom" |
 | Mafra | GeoJSON | zoom < MIN_DATA_ZOOM | "Mafra: zoom" |
-| Odivelas | GeoJSON | zoom < MIN_DATA_ZOOM | "Odivelas: zoom" |
+| Odivelas | tiles (maxZoom:15) | zoom > 15 | "Odivelas: recuar zoom" |
 | Alcochete | tiles (maxZoom:14) | zoom < MIN_DATA_ZOOM | "Alcochete: zoom" |
 | Alcochete | tiles (maxZoom:14) | zoom > 14 | "Alcochete: recuar zoom" |
 
@@ -335,7 +337,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - `ren-sintra` removed — no unified queryable REN boundary layer exists on Sintra's server
 - Cascais condicionantes risk layers not yet integrated — available at `sig.aml.pt/.../PMAAC_Riscos_Actuais` (layers 60–65) but need testing
 - No DGT WFS published for Vila Franca de Xira — tile-only source
-- Odivelas' own ArcGIS server (`sig.cm-odivelas.pt`) is unreachable; AML pdm_revisao layer 8 blocks geometry export — DGT WFS used instead
+- Odivelas' own ArcGIS server (`sig.cm-odivelas.pt`) is unreachable; DGT WFS 1116_1 returns HTTP 502 — AML pdm_revisao layer 8 tile rendering used instead
 - Alcochete's own server (`sig.cm-alcochete.pt`) is unreachable; not on AML pdm_revisao; DGT WFS 1502 exists but has only granular 1997-era `Designacao_no_plano` field — AML PDM_I_GERACAO tiles used instead
 - Mafra's own ArcGIS server (`sig.cm-mafra.pt`) has TLS certificate issues
 - Grande Lisboa tile municipalities (Cascais, Oeiras, Loures, Almada, VFXira) are not clickable in region view — `identifyFeatures` is disabled to avoid querying the wrong layer

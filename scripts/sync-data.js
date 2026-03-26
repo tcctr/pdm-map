@@ -26,8 +26,6 @@ const LISBOA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1106_1/WFSer
 // Mafra — DGT CRUS WFS (public). 1709 features, GeoJSON output, no pagination needed.
 const MAFRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1109_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Mafra_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
-// Odivelas — DGT CRUS WFS (public). 222 features, GeoJSON output, no pagination needed.
-const ODIVELAS_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1116_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Odivelas_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
 // ── Layer definitions ─────────────────────────────────────────
 const LAYERS = [
@@ -130,13 +128,6 @@ const LAYERS = [
     type: 'wfs',
     wfsUrl: MAFRA_WFS,
     timeoutMs: 90000,
-  },
-  // Odivelas — DGT CRUS WFS (OGC WFS; 222 features, similar to Amadora)
-  {
-    filename: 'odivelas-zoning.geojson',
-    type: 'wfs',
-    wfsUrl: ODIVELAS_WFS,
-    timeoutMs: 30000,
   },
 ];
 

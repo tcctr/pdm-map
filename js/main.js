@@ -4,7 +4,7 @@
 
 import { OVERLAY_DEFS, MUNICIPALITIES } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
-import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getAlcocheteReady, getVfxiraReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer } from './layers.js';
+import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer } from './layers.js';
 import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel } from './ui.js';
 import { initMap, initMapHandlers, initBasemapToggle, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './map.js';
 
@@ -271,7 +271,7 @@ initUI({
 initMapHandlers({
   ovlState,
   urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer,
-  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getAlcocheteReady, getVfxiraReady,
+  overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady,
   onUpdateSintraChip:         updateSintraChip,
   onSetChip:                  setChip,
   onGetChipLoadedState:       getChipLoadedState,

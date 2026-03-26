@@ -3,7 +3,7 @@
 // ============================================================
 
 import {
-  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS, ODIVELAS_WFS,
+  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS,
   OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, LISBOA_COLORS, MAFRA_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
@@ -57,6 +57,7 @@ export function getVfxiraReady()     { return _vfxiraReady; }
 let _mafraReady       = false;
 
 let _odivelaReady     = false;
+export function getOdivelasReady()   { return _odivelaReady; }
 
 let _alcocheteReady   = false;
 export function getAlcocheteReady()  { return _alcocheteReady; }
@@ -587,87 +588,29 @@ async function loadMafra(attempt = 0) {
 }
 
 // ── Odivelas layer loader ─────────────────────────────────────
+// AML pdm_revisao layer 8 — geometry blocked by server, tile rendering only.
+// No scale restriction (minScale/maxScale both 0), no layerDefs needed (single-municipality layer).
 
-function getOdivelasStyle(props) {
-  const cat = props.Categoria || '';
-  const cfg = ODIVELAS_COLORS[cat];
-  if (cfg) return makeStyle(cfg.fill);
-  return makeStyle('#adb5bd');
-}
-
-async function fetchOdivelasFeatures() {
-  const res = await fetch(ODIVELAS_WFS, { signal: AbortSignal.timeout(30000) });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  return data.features || [];
-}
-
-async function loadOdivelas(attempt = 0) {
+function loadOdivelas(attempt = 0) {
+  odivelaLayer.clearLayers();
   _callbacks.onOdivelasStatus?.('loading', 'Odivelas\u2026');
-
-  let features = null;
-
-  // 1. Try cached file
   try {
-    const res = await fetch('/data/odivelas-zoning.geojson', { signal: AbortSignal.timeout(15000) });
-    if (res.ok) {
-      const data = await res.json();
-      const f = data.features || [];
-      if (f.length > 0) features = f;
-      else console.warn('[cache] odivelas-zoning.geojson returned 0 features — falling back to live');
-    } else {
-      console.warn(`[cache] odivelas-zoning.geojson \u2192 HTTP ${res.status} — falling back to live`);
-    }
+    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [8], opacity: 0.55, maxZoom: 15 });
+    layer.addTo(odivelaLayer);
+    layer.once('load', () => {
+      _odivelaReady = true;
+      _callbacks.onOdivelasLoaded?.('ok', 'Odivelas');
+    });
+    layer.once('loaderror', () => {
+      _callbacks.onOdivelasStatus?.('error', 'Odivelas: erro');
+      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadOdivelas(attempt + 1), RETRY_DELAYS[attempt]);
+    });
+    _odivelaReady = true;
   } catch (e) {
-    console.warn('[cache] odivelas-zoning.geojson failed (' + e.message + ') — falling back to live');
+    console.error('Odivelas error:', e);
+    _callbacks.onOdivelasStatus?.('error', 'Odivelas: indispon\u00edvel');
+    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadOdivelas(attempt + 1), RETRY_DELAYS[attempt]);
   }
-
-  // 2. Try DGT WFS live
-  if (!features) {
-    try {
-      features = await fetchOdivelasFeatures();
-      if (features.length > 0) {
-        liveFallbackCount++;
-        _callbacks.onFallback?.();
-      } else {
-        console.error('[live] Odivelas WFS returned 0 features');
-        features = null;
-      }
-    } catch (e) {
-      console.error('[live] Odivelas WFS failed:', e.message);
-    }
-  }
-
-  if (!features || features.length === 0) {
-    _callbacks.onOdivelasStatus?.('error', 'Odivelas: erro');
-    if (attempt < RETRY_DELAYS.length) {
-      setTimeout(() => loadOdivelas(attempt + 1), RETRY_DELAYS[attempt]);
-    }
-    return;
-  }
-
-  L.geoJSON({ type: 'FeatureCollection', features }, {
-    renderer: _renderer,
-    style: f => getOdivelasStyle(f.properties),
-    onEachFeature(feature, layer) {
-      layer.on('click', e => {
-        L.DomEvent.stopPropagation(e);
-        const p   = feature.properties;
-        const cat = p.Categoria || '';
-        const cfg = ODIVELAS_COLORS[cat] || { fill: '#adb5bd', label: cat };
-        const displayProps = {
-          ...p,
-          Descricao: p.Designacao_PlantaOrdenamento,
-          area_ha:   p.Area_Ha,
-        };
-        _callbacks.onFeatureClick?.(displayProps, cfg, cat + (cfg.label ? ' \u2014 ' + cfg.label : ''));
-      });
-    },
-  }).addTo(odivelaLayer);
-
-  _odivelaReady = true;
-  _callbacks.onOdivelasLoaded?.('ok', 'Odivelas');
 }
 
 // ── Alcochete layer loader ────────────────────────────────────
