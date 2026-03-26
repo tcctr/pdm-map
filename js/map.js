@@ -471,7 +471,41 @@ export function initMapHandlers({
 
   _map.on('click', e => {
     _callbacks.onCloseDetail?.();
-    if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetCascaisReady?.() && _map.hasLayer(_cascaisLayer)) {
+    if (_activeLayer === 'zoning' && _activeMunicipality === 'grande-lisboa') {
+      // Fire all tile identify queries in parallel; show first non-empty result
+      let shown = false;
+      const show = (p, cfg, key) => { if (!shown) { shown = true; _callbacks.onShowDetail?.(p, cfg, key); } };
+      // CASCAIS_BASE layers
+      const cascaisQueries = [
+        { layer: _cascaisLayer,  spec: 'visible:2',  colors: CASCAIS_COLORS,  field: 'Categoria' },
+        { layer: _oeirasLayer,   spec: 'visible:3',  colors: OEIRAS_COLORS,   field: 'Categoria' },
+        { layer: _louresLayer,   spec: 'visible:6',  colors: LOURES_COLORS,   field: 'Categoria' },
+        { layer: _odivelaLayer,  spec: 'visible:8',  colors: ODIVELAS_COLORS, field: 'Categoria' },
+        { layer: _vfxiraLayer,   spec: 'visible:10', colors: VFX_COLORS,      field: 'Classe'    },
+      ];
+      cascaisQueries.forEach(({ layer, spec, colors, field }) => {
+        if (!_map.hasLayer(layer)) return;
+        L.esri.identifyFeatures({ url: CASCAIS_BASE })
+          .on(_map).at(e.latlng).layers(spec).tolerance(2)
+          .run((err, fc) => {
+            if (err || !fc || !fc.features.length) return;
+            const p = fc.features[0].properties;
+            const key = p[field] || '';
+            show(p, colors[key] || { fill: '#888888', label: key }, key);
+          });
+      });
+      // AML_PDM1_BASE layer 2 — Almada, Barreiro, Alcochete (identical color maps)
+      if (_map.hasLayer(_almadaLayer) || _map.hasLayer(_barreiroLayer) || _map.hasLayer(_alcocheteLayer)) {
+        L.esri.identifyFeatures({ url: AML_PDM1_BASE })
+          .on(_map).at(e.latlng).layers('all:2').tolerance(2)
+          .run((err, fc) => {
+            if (err || !fc || !fc.features.length) return;
+            const p = fc.features[0].properties;
+            const key = p.Classe || '';
+            show(p, ALMADA_COLORS[key] || { fill: '#888888', label: key }, key);
+          });
+      }
+    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetCascaisReady?.() && _map.hasLayer(_cascaisLayer)) {
       L.esri.identifyFeatures({ url: CASCAIS_BASE })
         .on(_map).at(e.latlng).layers('visible:2').tolerance(2)
         .run((err, fc) => {

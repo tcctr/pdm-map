@@ -331,7 +331,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - `updateLayerVisibility` checks `isGL = _activeMunicipality === 'grande-lisboa'` and adds all twelve `xOn` conditions with `|| isGL`, making every layer group visible simultaneously.
 - `updateSintraChip` in `ui.js` extends its `on` check to include `grande-lisboa` so Sintra urban/rural layers are also added to the map. The Sintra chip itself is still hidden (only shown for `activeMunicipality === 'sintra'`).
 - `pickMunicipality` uses `map.setView(cfg.center, cfg.zoom)` instead of `panTo` so zoom resets to 10.
-- Tile `identifyFeatures` click handlers are guarded with `_activeMunicipality !== 'grande-lisboa'` — in region mode, clicking tile areas does nothing (no way to know which tile layer the user intended). GeoJSON polygon clicks (Sintra, Amadora, Lisboa, Mafra) still work via Leaflet's built-in feature events.
+- In Grande Lisboa mode, clicking fires all tile identify queries in parallel (6 queries: 5 CASCAIS_BASE layers + 1 AML_PDM1_BASE layer 2 covering Almada/Barreiro/Alcochete) and shows the first non-empty result. GeoJSON polygon clicks (Sintra, Amadora, Lisboa, Mafra) also work via Leaflet's built-in feature events. All 12 municipalities are clickable in region view.
 - `chip-grande-lisboa` shows 'ok' immediately; all per-municipality chips are hidden.
 - `updateZoningOverlayChip` shows `setOverlayChip('ok', 'Solo')` immediately.
 - Overlay panel: only **Qualificação do Solo**, **RAN** (`muni: 'both'`, uses `ran-cascais.geojson`), and **REN** (`ren-grande-lisboa`, uses `ren-cascais.geojson`). All Sintra-specific layers are filtered out by `buildOverlayPanel`.
@@ -351,7 +351,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - Alcochete's own server (`sig.cm-alcochete.pt`) is unreachable; not on AML pdm_revisao; DGT WFS 1502 exists but has only granular 1997-era `Designacao_no_plano` field — AML PDM_I_GERACAO tiles used instead
 - Barreiro's own server (`sig.cm-barreiro.pt`) is firewalled/unreachable; not on AML pdm_revisao; DGT WFS 1504 returns HTTP 502 — AML PDM_I_GERACAO tiles used instead
 - Mafra's own ArcGIS server (`sig.cm-mafra.pt`) has TLS certificate issues
-- Grande Lisboa tile municipalities (Cascais, Oeiras, Loures, Almada, Barreiro, VFXira, Odivelas, Alcochete) are not clickable in region view — `identifyFeatures` is disabled to avoid querying the wrong layer
+- Grande Lisboa tile clicks fire 6 parallel identify queries and show the first result — there is no guarantee of which municipality "wins" near borders, but in practice each AML layer only has features for its own territory
 
 ---
 
