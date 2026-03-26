@@ -4,7 +4,7 @@
 
 import { OVERLAY_DEFS, MUNICIPALITIES } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
-import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getVfxiraReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer, mafraLayer } from './layers.js';
+import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getVfxiraReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer } from './layers.js';
 import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel } from './ui.js';
 import { initMap, initMapHandlers, initBasemapToggle, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './map.js';
 
@@ -172,6 +172,11 @@ function updateZoningOverlayChip() {
     if (!mafraState)               setOverlayChip('loading', 'Solo\u2026');
     else if (mafraState === 'ok')  setOverlayChip('ok', 'Solo');
     else                           setOverlayChip('error', 'Solo: erro');
+  } else if (getActiveMunicipality() === 'odivelas') {
+    const odivelaState = getChipLoadedState('chip-odivelas')?.state;
+    if (!odivelaState)               setOverlayChip('loading', 'Solo\u2026');
+    else if (odivelaState === 'ok')  setOverlayChip('ok', 'Solo');
+    else                             setOverlayChip('error', 'Solo: erro');
   } else if (getActiveMunicipality() === 'grande-lisboa') {
     setOverlayChip('ok', 'Solo');
   } else {
@@ -238,6 +243,8 @@ initLayers(map, {
   onVfxiraLoaded:        (state, text) => { setChipLoaded('chip-vfxira', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
   onMafraStatus:         (state, text) => setChip('chip-mafra', state, text),
   onMafraLoaded:         (state, text) => { setChipLoaded('chip-mafra', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
+  onOdivelasStatus:      (state, text) => setChip('chip-odivelas', state, text),
+  onOdivelasLoaded:      (state, text) => { setChipLoaded('chip-odivelas', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
   onOverlayStatus:       (id, state, text) => { if (getActiveLayer() === id) setOverlayChip(state, text); },
   onFeatureClick:        (props, cfg, label) => showDetail(props, cfg, label),
   onOverlayFeatureClick: (def, props) => showOverlayDetail(def, props),
@@ -256,7 +263,7 @@ initUI({
 
 initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer, mafraLayer,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer,
   overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getVfxiraReady,
   onUpdateSintraChip:         updateSintraChip,
   onSetChip:                  setChip,

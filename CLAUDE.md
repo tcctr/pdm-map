@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for nine municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Lisboa, Vila Franca de Xira, Mafra), plus a **Grande Lisboa** region view that renders all nine simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
+**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for ten municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Lisboa, Vila Franca de Xira, Mafra, Odivelas), plus a **Grande Lisboa** region view that renders all ten simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
 
 ## Architecture
 
@@ -91,6 +91,13 @@ python3 -m http.server 8080
 - DGT publishes CRUS from the current 2023 PDM. 12 Categoria values including `Espaço Habitacional`, `Espaço Agrícola`, `Espaço Florestal`, `Aglomerado Rural`, `Área de Edificação Dispersa`, etc.
 - Descriptor field: `Designacao_PlantaOrdenamento` (mapped → `Descricao` for detail panel display)
 
+**Odivelas zoning (GeoJSON, cache-first with DGT WFS live fallback):**
+- `data/odivelas-zoning.geojson` → fallback `ODIVELAS_WFS` (DGT CRUS public OGC WFS, 222 features)
+- Field `Categoria` → `ODIVELAS_COLORS`. Rendered client-side like Lisboa/Mafra (not tiles).
+- `ODIVELAS_WFS` = `https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1116_1/WFService.aspx?...`
+- Odivelas' own ArcGIS server (`sig.cm-odivelas.pt`) is unreachable; AML pdm_revisao layer 8 blocks geometry export.
+- DGT publishes CRUS using the standard DR 15/2015 classification (same as Lisboa/Amadora). Descriptor field: `Designacao_PlantaOrdenamento` (mapped → `Descricao` for detail panel display)
+
 **Overlay / Condicionantes layers — three servers:**
 - `RAN_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer` (Sintra RAN only — frequently offline)
 - `REN_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer` (Sintra REN + risk layers)
@@ -103,7 +110,7 @@ python3 -m http.server 8080
 ## Layer System
 
 ### Base zoning layers (always on by default)
-Nine `L.layerGroup()` instances, one per municipality. Only visible at zoom ≥ `MIN_DATA_ZOOM` (1) and only when that municipality is active (or when Grande Lisboa is active, in which case all nine show simultaneously).
+Ten `L.layerGroup()` instances, one per municipality. Only visible at zoom ≥ `MIN_DATA_ZOOM` (1) and only when that municipality is active (or when Grande Lisboa is active, in which case all ten show simultaneously).
 
 | Layer | Type | Source |
 |-------|------|--------|
@@ -117,6 +124,7 @@ Nine `L.layerGroup()` instances, one per municipality. Only visible at zoom ≥ 
 | `lisboaLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
 | `vfxiraLayer` | dynamicMapLayer tiles | CASCAIS_BASE/10 |
 | `mafraLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
+| `odivelaLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
 
 ### Overlay layers (`OVERLAY_DEFS` array)
 Radio-button selection — only one layer active at a time. Selecting any overlay hides the zoning. Selecting "Qualificação do Solo" restores it. Layers are **lazy-loaded** on first selection and cached in `ovlState`.
@@ -142,6 +150,7 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 | `ren-lisboa` | REN — Reserva Ecológica | lisboa | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-vfxira` | REN — Reserva Ecológica | vfxira | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-mafra` | REN — Reserva Ecológica | mafra | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
+| `ren-odivelas` | REN — Reserva Ecológica | odivelas | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `ren-grande-lisboa` | REN — Reserva Ecológica | grande-lisboa | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
 | `faixa` | Faixa Costeira | sintra | REN_BASE | 2 | `faixa.geojson` | blue fill |
 | `praias` | Praias | sintra | REN_BASE | 3 | `praias.geojson` | yellow fill |
@@ -180,7 +189,7 @@ Amadora, Lisboa, and Mafra use custom loaders (`loadAmadora()`, `loadLisboa()`, 
 
 **Fallback tracking:** `liveFallbackCount` increments each time a layer falls back to live. The `#cache-date` indicator shows `"Dados: DD/MM/YYYY (alguns em direto)"` if any fallback occurred.
 
-**Cached files** live in `data/` at the repo root (served at `/data/` by Vercel). Currently cached: `sintra-urban`, `sintra-rural`, `ran-cascais`, `ren-cascais`, `amadora-zoning`, `lisboa-zoning`, `mafra-zoning`, `patrimonio`, `zep`, `perigosos`.
+**Cached files** live in `data/` at the repo root (served at `/data/` by Vercel). Currently cached: `sintra-urban`, `sintra-rural`, `ran-cascais`, `ren-cascais`, `amadora-zoning`, `lisboa-zoning`, `mafra-zoning`, `odivelas-zoning`, `patrimonio`, `zep`, `perigosos`.
 
 ---
 
@@ -288,6 +297,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | Vila Franca de Xira | tiles (maxZoom:15) | zoom < MIN_DATA_ZOOM | "VF Xira: zoom" |
 | Vila Franca de Xira | tiles (maxZoom:15) | zoom > 15 | "VF Xira: recuar zoom" |
 | Mafra | GeoJSON | zoom < MIN_DATA_ZOOM | "Mafra: zoom" |
+| Odivelas | GeoJSON | zoom < MIN_DATA_ZOOM | "Odivelas: zoom" |
 
 ---
 
@@ -296,7 +306,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 `grande-lisboa` is a special entry in `MUNICIPALITIES` (`id: 'grande-lisboa'`, `center: [38.756, -9.208]`, `zoom: 10`). It is not a real municipality — it is a region overlay mode.
 
 **How it works:**
-- `updateLayerVisibility` checks `isGL = _activeMunicipality === 'grande-lisboa'` and adds all nine `xOn` conditions with `|| isGL`, making every layer group visible simultaneously.
+- `updateLayerVisibility` checks `isGL = _activeMunicipality === 'grande-lisboa'` and adds all ten `xOn` conditions with `|| isGL`, making every layer group visible simultaneously.
 - `updateSintraChip` in `ui.js` extends its `on` check to include `grande-lisboa` so Sintra urban/rural layers are also added to the map. The Sintra chip itself is still hidden (only shown for `activeMunicipality === 'sintra'`).
 - `pickMunicipality` uses `map.setView(cfg.center, cfg.zoom)` instead of `panTo` so zoom resets to 10.
 - Tile `identifyFeatures` click handlers are guarded with `_activeMunicipality !== 'grande-lisboa'` — in region mode, clicking tile areas does nothing (no way to know which of five tile layers the user intended). GeoJSON polygon clicks (Sintra, Amadora, Lisboa, Mafra) still work via Leaflet's built-in feature events.
@@ -315,6 +325,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - `ren-sintra` removed — no unified queryable REN boundary layer exists on Sintra's server
 - Cascais condicionantes risk layers not yet integrated — available at `sig.aml.pt/.../PMAAC_Riscos_Actuais` (layers 60–65) but need testing
 - No DGT WFS published for Vila Franca de Xira — tile-only source
+- Odivelas' own ArcGIS server (`sig.cm-odivelas.pt`) is unreachable; AML pdm_revisao layer 8 blocks geometry export — DGT WFS used instead
 - Mafra's own ArcGIS server (`sig.cm-mafra.pt`) has TLS certificate issues
 - Grande Lisboa tile municipalities (Cascais, Oeiras, Loures, Almada, VFXira) are not clickable in region view — `identifyFeatures` is disabled to avoid querying the wrong layer
 

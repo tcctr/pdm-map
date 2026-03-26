@@ -3,8 +3,8 @@
 // ============================================================
 
 import {
-  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, LISBOA_COLORS, MAFRA_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS, ODIVELAS_WFS,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, LISBOA_COLORS, MAFRA_COLORS, ODIVELAS_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -22,8 +22,9 @@ export let louresLayer  = null;
 export let amadoraLayer = null;
 export let almadaLayer  = null;
 export let lisboaLayer  = null;
-export let vfxiraLayer  = null;
-export let mafraLayer   = null;
+export let vfxiraLayer    = null;
+export let mafraLayer     = null;
+export let odivelaLayer   = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -53,6 +54,8 @@ let _vfxiraReady      = false;
 export function getVfxiraReady()     { return _vfxiraReady; }
 
 let _mafraReady       = false;
+
+let _odivelaReady     = false;
 
 let liveFallbackCount = 0;
 export function getLiveFallbackCount() { return liveFallbackCount; }
@@ -579,6 +582,90 @@ async function loadMafra(attempt = 0) {
   _callbacks.onMafraLoaded?.('ok', 'Mafra');
 }
 
+// ── Odivelas layer loader ─────────────────────────────────────
+
+function getOdivelasStyle(props) {
+  const cat = props.Categoria || '';
+  const cfg = ODIVELAS_COLORS[cat];
+  if (cfg) return makeStyle(cfg.fill);
+  return makeStyle('#adb5bd');
+}
+
+async function fetchOdivelasFeatures() {
+  const res = await fetch(ODIVELAS_WFS, { signal: AbortSignal.timeout(30000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.features || [];
+}
+
+async function loadOdivelas(attempt = 0) {
+  _callbacks.onOdivelasStatus?.('loading', 'Odivelas\u2026');
+
+  let features = null;
+
+  // 1. Try cached file
+  try {
+    const res = await fetch('/data/odivelas-zoning.geojson', { signal: AbortSignal.timeout(15000) });
+    if (res.ok) {
+      const data = await res.json();
+      const f = data.features || [];
+      if (f.length > 0) features = f;
+      else console.warn('[cache] odivelas-zoning.geojson returned 0 features — falling back to live');
+    } else {
+      console.warn(`[cache] odivelas-zoning.geojson \u2192 HTTP ${res.status} — falling back to live`);
+    }
+  } catch (e) {
+    console.warn('[cache] odivelas-zoning.geojson failed (' + e.message + ') — falling back to live');
+  }
+
+  // 2. Try DGT WFS live
+  if (!features) {
+    try {
+      features = await fetchOdivelasFeatures();
+      if (features.length > 0) {
+        liveFallbackCount++;
+        _callbacks.onFallback?.();
+      } else {
+        console.error('[live] Odivelas WFS returned 0 features');
+        features = null;
+      }
+    } catch (e) {
+      console.error('[live] Odivelas WFS failed:', e.message);
+    }
+  }
+
+  if (!features || features.length === 0) {
+    _callbacks.onOdivelasStatus?.('error', 'Odivelas: erro');
+    if (attempt < RETRY_DELAYS.length) {
+      setTimeout(() => loadOdivelas(attempt + 1), RETRY_DELAYS[attempt]);
+    }
+    return;
+  }
+
+  L.geoJSON({ type: 'FeatureCollection', features }, {
+    renderer: _renderer,
+    style: f => getOdivelasStyle(f.properties),
+    onEachFeature(feature, layer) {
+      layer.on('click', e => {
+        L.DomEvent.stopPropagation(e);
+        const p   = feature.properties;
+        const cat = p.Categoria || '';
+        const cfg = ODIVELAS_COLORS[cat] || { fill: '#adb5bd', label: cat };
+        const displayProps = {
+          ...p,
+          Descricao: p.Designacao_PlantaOrdenamento,
+          area_ha:   p.Area_Ha,
+        };
+        _callbacks.onFeatureClick?.(displayProps, cfg, cat + (cfg.label ? ' \u2014 ' + cfg.label : ''));
+      });
+    },
+  }).addTo(odivelaLayer);
+
+  _odivelaReady = true;
+  _callbacks.onOdivelasLoaded?.('ok', 'Odivelas');
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -700,8 +787,9 @@ export function initLayers(map, callbacks) {
   amadoraLayer = L.layerGroup().addTo(map);
   almadaLayer  = L.layerGroup().addTo(map);
   lisboaLayer  = L.layerGroup().addTo(map);
-  vfxiraLayer  = L.layerGroup().addTo(map);
-  mafraLayer   = L.layerGroup().addTo(map);
+  vfxiraLayer   = L.layerGroup().addTo(map);
+  mafraLayer    = L.layerGroup().addTo(map);
+  odivelaLayer  = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -717,4 +805,5 @@ export function initLayers(map, callbacks) {
   loadLisboa();
   loadVfxira();
   loadMafra();
+  loadOdivelas();
 }

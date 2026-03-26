@@ -67,6 +67,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
     if (name.includes('lisboa'))  return 'lisboa';
     if (name.includes('vila franca de xira') || name.includes('v.f. de xira')) return 'vfxira';
     if (name.includes('mafra')) return 'mafra';
+    if (name.includes('odivelas')) return 'odivelas';
     return null;
   }
 
@@ -82,7 +83,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
 
     const muni = detectMunicipality(item.display_name);
     if (muni) onMunicipalityDetected?.(muni);
-    const zoom = muni === 'cascais' || muni === 'oeiras' || muni === 'loures' || muni === 'amadora' || muni === 'almada' || muni === 'lisboa' || muni === 'vfxira' || muni === 'mafra' ? 15 : 17;
+    const zoom = muni === 'cascais' || muni === 'oeiras' || muni === 'loures' || muni === 'amadora' || muni === 'almada' || muni === 'lisboa' || muni === 'vfxira' || muni === 'mafra' || muni === 'odivelas' ? 15 : 17;
 
     const lat = parseFloat(item.lat);
     const lng = parseFloat(item.lon);
@@ -175,6 +176,7 @@ export async function reverseGeocode(lat, lng) {
     if (place.includes('lisboa'))  return 'lisboa';
     if (place.includes('vila franca de xira')) return 'vfxira';
     if (place.includes('mafra')) return 'mafra';
+    if (place.includes('odivelas')) return 'odivelas';
     return null;
   } catch {
     return null;
