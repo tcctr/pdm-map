@@ -265,7 +265,7 @@
 
 <script>
 (function () {
-  const ACCESS_CODE = 'MAPEAR2025';
+  const ACCESS_CODES = ['MAPEAR-1QV!', 'MAPEAR-2RK#', 'MAPEAR-3XP@', 'MAPEAR-4TM$', 'MAPEAR-5BN%'];
   const gate   = document.getElementById('gate');
   const input  = document.getElementById('gate-input');
   const btn    = document.getElementById('gate-btn');
@@ -283,7 +283,7 @@
   }
 
   function attempt() {
-    if (input.value.trim().toUpperCase() === ACCESS_CODE) {
+    if (ACCESS_CODES.includes(input.value.trim())) {
       grant();
     } else {
       errMsg.classList.add('visible');
