@@ -42,6 +42,10 @@ const SEIXAL_BASE = 'https://sig.cm-seixal.pt/arcgis/rest/services/Hosted/PDM_PO
 // Categoria_2021 (10 values, trim required) + Classe_2021 fallback for 'Não Atribuída'.
 const SESIMBRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1511_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Sesimbra_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
+// Setúbal — DGT CRUS WFS (public). 792 features, GeoJSON output. INE code 1512.
+// PDM published 2025-01-28. Field: Categoria (17 values). Uses WFS 2.0 (typeNames, not typeName).
+const SETUBAL_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1512_1/WFService.aspx?service=WFS&version=2.0.0&request=GetFeature&typeNames=gmgml:CRUS_Setubal_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+
 
 // ── Layer definitions ─────────────────────────────────────────
 const LAYERS = [
@@ -172,6 +176,13 @@ const LAYERS = [
     type: 'wfs',
     wfsUrl: SESIMBRA_WFS,
     timeoutMs: 30000,
+  },
+  // Setúbal — DGT CRUS WFS (OGC WFS; 792 features, single-page response)
+  {
+    filename: 'setubal-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: SETUBAL_WFS,
+    timeoutMs: 60000,
   },
 ];
 

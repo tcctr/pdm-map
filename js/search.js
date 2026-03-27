@@ -75,6 +75,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
     if (name.includes('palmela')) return 'palmela';
     if (name.includes('seixal')) return 'seixal';
     if (name.includes('sesimbra')) return 'sesimbra';
+    if (name.includes('set\u00fabal') || name.includes('setubal')) return 'setubal';
     return null;
   }
 
@@ -90,7 +91,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
 
     const muni = detectMunicipality(item.display_name);
     if (muni) onMunicipalityDetected?.(muni);
-    const zoom = muni === 'cascais' || muni === 'oeiras' || muni === 'loures' || muni === 'amadora' || muni === 'almada' || muni === 'barreiro' || muni === 'lisboa' || muni === 'vfxira' || muni === 'mafra' || muni === 'odivelas' || muni === 'alcochete' || muni === 'moita' || muni === 'montijo' || muni === 'palmela' || muni === 'seixal' || muni === 'sesimbra' ? 15 : 17;
+    const zoom = muni === 'cascais' || muni === 'oeiras' || muni === 'loures' || muni === 'amadora' || muni === 'almada' || muni === 'barreiro' || muni === 'lisboa' || muni === 'vfxira' || muni === 'mafra' || muni === 'odivelas' || muni === 'alcochete' || muni === 'moita' || muni === 'montijo' || muni === 'palmela' || muni === 'seixal' || muni === 'sesimbra' || muni === 'setubal' ? 15 : 17;
 
     const lat = parseFloat(item.lat);
     const lng = parseFloat(item.lon);
@@ -191,6 +192,7 @@ export async function reverseGeocode(lat, lng) {
     if (place.includes('palmela')) return 'palmela';
     if (place.includes('seixal'))   return 'seixal';
     if (place.includes('sesimbra')) return 'sesimbra';
+    if (place.includes('set\u00fabal') || place.includes('setubal')) return 'setubal';
     return null;
   } catch {
     return null;

@@ -4,7 +4,7 @@
 
 import { OVERLAY_DEFS, MUNICIPALITIES } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
-import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer, seixalLayer, sesimbraLayer } from './layers.js';
+import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer, seixalLayer, sesimbraLayer, setubalLayer } from './layers.js';
 import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel } from './ui.js';
 import { initMap, initMapHandlers, initBasemapToggle, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './map.js';
 
@@ -209,6 +209,11 @@ function updateZoningOverlayChip() {
     if (!sesimbraState)               setOverlayChip('loading', 'Solo\u2026');
     else if (sesimbraState === 'ok')  setOverlayChip('ok', 'Solo');
     else                              setOverlayChip('error', 'Solo: erro');
+  } else if (getActiveMunicipality() === 'setubal') {
+    const setubalState = getChipLoadedState('chip-setubal')?.state;
+    if (!setubalState)               setOverlayChip('loading', 'Solo\u2026');
+    else if (setubalState === 'ok')  setOverlayChip('ok', 'Solo');
+    else                             setOverlayChip('error', 'Solo: erro');
   } else if (getActiveMunicipality() === 'grande-lisboa') {
     setOverlayChip('ok', 'Solo');
   } else {
@@ -291,6 +296,8 @@ initLayers(map, {
   onSeixalLoaded:        (state, text) => { setChipLoaded('chip-seixal', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
   onSesimbraStatus:      (state, text) => setChip('chip-sesimbra', state, text),
   onSesimbraLoaded:      (state, text) => { setChipLoaded('chip-sesimbra', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
+  onSetubalStatus:       (state, text) => setChip('chip-setubal', state, text),
+  onSetubalLoaded:       (state, text) => { setChipLoaded('chip-setubal', state, text); updateLayerVisibility(); updateZoningOverlayChip(); },
   onOverlayStatus:       (id, state, text) => { if (getActiveLayer() === id) setOverlayChip(state, text); },
   onFeatureClick:        (props, cfg, label) => showDetail(props, cfg, label),
   onOverlayFeatureClick: (def, props) => showOverlayDetail(def, props),
@@ -309,7 +316,7 @@ initUI({
 
 initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer, seixalLayer, sesimbraLayer,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer, seixalLayer, sesimbraLayer, setubalLayer,
   overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady,
   onUpdateSintraChip:         updateSintraChip,
   onSetChip:                  setChip,

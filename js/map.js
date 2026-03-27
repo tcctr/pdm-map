@@ -30,6 +30,7 @@ let _montijoLayer   = null;
 let _palmelaLayer   = null;
 let _seixalLayer    = null;
 let _sesimbraLayer  = null;
+let _setubalLayer   = null;
 let _callbacks      = {};
 
 let _activeLayer        = 'zoning';
@@ -378,6 +379,24 @@ export function updateLayerVisibility() {
     }
   }
 
+  // Setúbal GeoJSON layer
+  const setubalOn = _activeLayer === 'zoning' && (_activeMunicipality === 'setubal' || isGL);
+  setubalOn && zoomed ? _map.addLayer(_setubalLayer) : _map.removeLayer(_setubalLayer);
+
+  // chip-setubal (GeoJSON layer — no maxZoom cap)
+  const setubalEl = document.getElementById('chip-setubal');
+  if (setubalEl) {
+    setubalEl.style.display = _activeMunicipality === 'setubal' ? '' : 'none';
+    if (_activeMunicipality === 'setubal' && _activeLayer === 'zoning' && !setubalEl.classList.contains('chip-loading')) {
+      if (!zoomed) {
+        _callbacks.onSetChip?.('chip-setubal', 'warn', 'Set\u00fabal: zoom');
+      } else {
+        const s = _callbacks.onGetChipLoadedState?.('chip-setubal');
+        if (s) _callbacks.onSetChip?.('chip-setubal', s.state, s.text);
+      }
+    }
+  }
+
   // chip-grande-lisboa — single chip replaces all individual chips when region view is active
   const glEl = document.getElementById('chip-grande-lisboa');
   if (glEl) {
@@ -426,14 +445,14 @@ export function handleLayerSelect(value) {
     }
     updateLayerVisibility();
   } else if (value === 'none') {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer, _montijoLayer, _palmelaLayer, _seixalLayer, _sesimbraLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer, _montijoLayer, _palmelaLayer, _seixalLayer, _sesimbraLayer, _setubalLayer].forEach(l => _map.removeLayer(l));
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
       if (_ovlState[def.id].leafletLayer) _map.removeLayer(_ovlState[def.id].leafletLayer);
     }
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer, _montijoLayer, _palmelaLayer, _seixalLayer, _sesimbraLayer].forEach(l => _map.removeLayer(l));
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer, _montijoLayer, _palmelaLayer, _seixalLayer, _sesimbraLayer, _setubalLayer].forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {
@@ -519,7 +538,7 @@ export function initBasemapToggle(map) {
 
 export function initMapHandlers({
   ovlState,
-  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer, seixalLayer, sesimbraLayer,
+  urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer, seixalLayer, sesimbraLayer, setubalLayer,
   overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady,
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
@@ -545,6 +564,7 @@ export function initMapHandlers({
   _palmelaLayer   = palmelaLayer;
   _seixalLayer    = seixalLayer;
   _sesimbraLayer  = sesimbraLayer;
+  _setubalLayer   = setubalLayer;
   _callbacks = {
     onUpdateSintraChip,
     onSetChip,

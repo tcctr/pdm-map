@@ -3,8 +3,8 @@
 // ============================================================
 
 import {
-  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS, MONTIJO_WFS, SESIMBRA_WFS, PALMELA_BASE, SEIXAL_BASE,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, BARREIRO_COLORS, LISBOA_COLORS, MAFRA_COLORS, MONTIJO_COLORS, SESIMBRA_COLORS, PALMELA_COLORS, SEIXAL_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS, MONTIJO_WFS, SESIMBRA_WFS, SETUBAL_WFS, PALMELA_BASE, SEIXAL_BASE,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, BARREIRO_COLORS, LISBOA_COLORS, MAFRA_COLORS, MONTIJO_COLORS, SESIMBRA_COLORS, SETUBAL_COLORS, PALMELA_COLORS, SEIXAL_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -32,6 +32,7 @@ export let montijoLayer   = null;
 export let palmelaLayer   = null;
 export let seixalLayer    = null;
 export let sesimbraLayer  = null;
+export let setubalLayer   = null;
 
 // Exported overlay state — same object reference shared with index.html.
 export const ovlState = {};
@@ -1071,6 +1072,88 @@ async function loadSesimbra(attempt = 0) {
   _callbacks.onSesimbraLoaded?.('ok', 'Sesimbra');
 }
 
+// ── Setúbal layer loader ──────────────────────────────────────
+// DGT CRUS WFS SDISNITWFSCRUS_1512_1. 792 features, cache-first.
+// Categoria (17 values) → SETUBAL_COLORS. No 'Não Atribuída' fallback needed.
+let _setubalReady = false;
+
+function getSetubalStyle(props) {
+  const cat = props.Categoria || '';
+  const cfg = SETUBAL_COLORS[cat];
+  return makeStyle(cfg ? cfg.fill : '#adb5bd');
+}
+
+async function fetchSetubalFeatures() {
+  const res = await fetch(SETUBAL_WFS, { signal: AbortSignal.timeout(60000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.features || [];
+}
+
+async function loadSetubal(attempt = 0) {
+  _callbacks.onSetubalStatus?.('loading', 'Set\u00fabal\u2026');
+
+  let features = null;
+
+  // 1. Try cached file
+  try {
+    const res = await fetch('/data/setubal-zoning.geojson', { signal: AbortSignal.timeout(15000) });
+    if (res.ok) {
+      const data = await res.json();
+      const f = data.features || [];
+      if (f.length > 0) features = f;
+      else console.warn('[cache] setubal-zoning.geojson returned 0 features \u2014 falling back to live');
+    } else {
+      console.warn(`[cache] setubal-zoning.geojson \u2192 HTTP ${res.status} \u2014 falling back to live`);
+    }
+  } catch (e) {
+    console.warn('[cache] setubal-zoning.geojson failed (' + e.message + ') \u2014 falling back to live');
+  }
+
+  // 2. Try DGT WFS live
+  if (!features) {
+    try {
+      features = await fetchSetubalFeatures();
+      if (features.length > 0) {
+        liveFallbackCount++;
+        _callbacks.onFallback?.();
+      } else {
+        console.error('[live] Set\u00fabal WFS returned 0 features');
+        features = null;
+      }
+    } catch (e) {
+      console.error('[live] Set\u00fabal WFS failed:', e.message);
+    }
+  }
+
+  if (!features || features.length === 0) {
+    _callbacks.onSetubalStatus?.('error', 'Set\u00fabal: erro');
+    if (attempt < RETRY_DELAYS.length) {
+      setTimeout(() => loadSetubal(attempt + 1), RETRY_DELAYS[attempt]);
+    }
+    return;
+  }
+
+  L.geoJSON({ type: 'FeatureCollection', features }, {
+    renderer: _renderer,
+    style: f => getSetubalStyle(f.properties),
+    onEachFeature(feature, layer) {
+      layer.on('click', e => {
+        L.DomEvent.stopPropagation(e);
+        const p   = feature.properties;
+        const cat = p.Categoria || '';
+        const cfg = SETUBAL_COLORS[cat] || { fill: '#adb5bd', label: cat || 'N\u00e3o Atribu\u00edda' };
+        const displayProps = { ...p, Descricao: p.Designacao_PlantaOrdenamento || '' };
+        _callbacks.onFeatureClick?.(displayProps, cfg, cat + (cfg.label !== cat ? ' \u2014 ' + cfg.label : ''));
+      });
+    },
+  }).addTo(setubalLayer);
+
+  _setubalReady = true;
+  _callbacks.onSetubalLoaded?.('ok', 'Set\u00fabal');
+}
+
 // ── Overlay loader (exported — called from index.html on layer select) ──
 
 export async function loadOverlay(id, activeMunicipality) {
@@ -1202,6 +1285,7 @@ export function initLayers(map, callbacks) {
   palmelaLayer   = L.layerGroup().addTo(map);
   seixalLayer    = L.layerGroup().addTo(map);
   sesimbraLayer  = L.layerGroup().addTo(map);
+  setubalLayer   = L.layerGroup().addTo(map);
 
   for (const def of OVERLAY_DEFS) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
@@ -1225,4 +1309,5 @@ export function initLayers(map, callbacks) {
   loadPalmela();
   loadSeixal();
   loadSesimbra();
+  loadSetubal();
 }
