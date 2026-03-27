@@ -401,7 +401,7 @@ export function updateLayerVisibility() {
   const glEl = document.getElementById('chip-grande-lisboa');
   if (glEl) {
     glEl.style.display = isGL ? '' : 'none';
-    if (isGL) _callbacks.onSetChip?.('chip-grande-lisboa', 'ok', 'Grande Lisboa');
+    if (isGL) _callbacks.onSetChip?.('chip-grande-lisboa', 'ok', 'AML');
   }
 }
 

@@ -424,7 +424,7 @@ export const MUNICIPALITIES = [
   { id: 'seixal',        label: 'Seixal',        center: [38.625, -9.095], zoom: 12 },
   { id: 'sesimbra',      label: 'Sesimbra',      center: [38.490, -9.095], zoom: 12 },
   { id: 'setubal',       label: 'Set\u00fabal',       center: [38.518, -8.894], zoom: 11 },
-  { id: 'grande-lisboa', label: 'Grande Lisboa', center: [38.756, -9.208], zoom: 10 },
+  { id: 'grande-lisboa', label: 'AML', center: [38.756, -9.208], zoom: 10 },
 ];
 
 
