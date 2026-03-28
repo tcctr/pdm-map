@@ -1177,6 +1177,7 @@ export async function loadOverlay(id, activeMunicipality) {
         version: '1.3.0',
         opacity: def.opacity ?? 0.8,
         attribution: '',
+        bounds: L.latLngBounds([38.28, -9.55], [39.20, -8.50]),
       });
       wmsLayer.addTo(leafletLayer);
       st.leafletLayer = leafletLayer;
