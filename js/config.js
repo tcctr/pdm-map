@@ -60,7 +60,7 @@ export const SEIXAL_BASE = 'https://sig.cm-seixal.pt/arcgis/rest/services/Hosted
 export const ODIVELAS_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1116_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Odivelas_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
 // Cadastro Predial — DGT public WMS (INSPIRE CP.CadastralParcel)
-export const CADASTRO_WMS_URL = 'https://www.dgterritorio.gov.pt/maps/cadastro/wms';
+export const CADASTRO_WMS_URL = 'https://snicws.dgterritorio.gov.pt/geoserver/inspire/ows';
 
 export const MIN_DATA_ZOOM = 1;
 export const RETRY_DELAYS = [15000, 30000, 60000]; // 15 s, 30 s, 1 min
@@ -435,7 +435,7 @@ export const MUNICIPALITIES = [
 // muni: 'sintra' | 'cascais' | 'oeiras' | 'loures' | 'amadora' | 'almada' | 'barreiro' | 'lisboa' | 'vfxira' | 'mafra' | 'odivelas' | 'alcochete' | 'setubal' | 'both'  ('both' = all municipalities)
 export const OVERLAY_DEFS = [
   // ─── Cadastro Predial ────────────────────────────────────
-  { id: 'cadastro', name: 'Cadastro Predial', group: 'Cadastro', muni: 'both', color: '#f4a261', categorized: 'wms', wmsUrl: CADASTRO_WMS_URL, wmsLayers: 'CP.CadastralParcel', wmsFormat: 'image/png', opacity: 0.8 },
+  { id: 'cadastro', name: 'Cadastro Predial', group: 'Cadastro', muni: 'both', color: '#f4a261', categorized: 'wms', wmsUrl: CADASTRO_WMS_URL, wmsLayers: 'cp:CP.CadastralParcel', wmsFormat: 'image/png', opacity: 0.8 },
   // ─── Reservas (REN/RAN) ─────────────────────────────────
   { id: 'ran',          name: 'RAN \u2014 Reserva Agr\u00edcola',   group: 'Reservas (REN/RAN)',                muni: 'both',    server: RAN_BASE,            layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: CONDICIONANTES_BASE, layerId: 264 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 }, sintraCachedFile: 'ran-sintra.geojson', cascaisCachedFile: 'ran-cascais.geojson' },
   { id: 'ren-cascais',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'cascais', server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
