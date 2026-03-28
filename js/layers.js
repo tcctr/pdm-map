@@ -1171,8 +1171,10 @@ export async function loadOverlay(id, activeMunicipality) {
       // Standard OGC WMS tile layer — fails silently per-tile, no error surfaced to user
       const wmsLayer = L.tileLayer.wms(def.wmsUrl, {
         layers: def.wmsLayers,
+        styles: '',
         format: def.wmsFormat || 'image/png',
         transparent: true,
+        version: '1.3.0',
         opacity: def.opacity ?? 0.8,
         attribution: '',
       });
