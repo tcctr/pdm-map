@@ -15,6 +15,7 @@ No build step, no bundler. Pure ES modules loaded directly by the browser.
 - `js/map.js` — Leaflet map init, base layers, municipality switching, layer visibility, map event handlers
 - `js/layers.js` — `loadLayerData`, `fetchAllFeatures`, overlay lazy-loading, retry logic
 - `js/ui.js` — detail panel, chips, layers sheet, cache date indicator, swipe gestures
+- `js/zoneRules.js` — `ZONE_RULES` — per-municipality zone building parameters (currently Cascais only)
 - `js/search.js` — Nominatim address search and reverse geocode
 - `js/main.js` — entry point, wires all modules together, GPS tracking, event listeners
 - `css/style.css` — all styles
@@ -346,7 +347,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | `selectMunicipality(muni)` | `map.js` | Switches municipality, resets overlay cache, rebuilds overlay panel — does NOT pan |
 | `updateCacheDateIndicator()` | `ui.js` | Updates `#cache-date` badge; appends "(alguns em direto)" if any fallback occurred |
 | `updateSintraChip()` | `ui.js` | Updates Sintra status chip based on load state + zoom |
-| `showDetail(props, colorCfg, codeLabel)` | `ui.js` | Opens detail panel; shifts layers button, locate button, AND basemap button up to stay visible |
+| `showDetail(props, colorCfg, codeLabel)` | `ui.js` | Opens detail panel; looks up `ZONE_RULES` by active municipality + `codeLabel` and renders Parâmetros Urbanísticos grid if data exists; shifts buttons up |
 | `closeDetail()` | `ui.js` | Closes detail panel; restores layers button, locate button, and basemap button position |
 | `showOverlayDetail(def, props)` | `ui.js` | Adapts overlay properties for `showDetail` |
 | `buildOverlayPanel()` | `ui.js` | Generates the layers radio list HTML from `OVERLAY_DEFS`, filtered by active municipality |
@@ -357,6 +358,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 
 ## UI Structure
 
+- **Access gate** (`#gate`): full-screen overlay shown on first visit. User must enter one of five valid access codes (`ACCESS_CODES` array in `index.html`). On success, `localStorage.setItem('access', 'granted')` is called and the gate fades out. On subsequent visits the gate is hidden immediately (no flicker). Invalid code triggers a shake animation on the input. Logic is a self-contained inline `<script>` in `index.html` (runs before the ES module so the gate is enforced even if the module fails to load).
 - **App name / title:** Mapear (`<title>Mapear</title>`)
 - **Favicon:** `favicon.svg` — coral red (`#e63946`) map pin with white inner circle; linked via `<link rel="icon" type="image/svg+xml">`
 - **Top bar** (`#topbar`): municipality picker dropdown + address search (Nominatim)
