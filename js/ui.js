@@ -3,6 +3,20 @@
 // ============================================================
 
 import { OVERLAY_DEFS, FIRE_COLORS, MIN_DATA_ZOOM } from './config.js';
+import { ZONE_RULES } from './zoneRules.js';
+
+// Maps activeMunicipality ID → ZONE_RULES top-level key
+const MUNI_RULES_KEY = { cascais: 'Cascais' };
+
+const PARAM_DISPLAY = [
+  { key: 'altFachada',        label: 'Alt. Fachada' },
+  { key: 'utilizacao',        label: 'I. Edific.' },
+  { key: 'ocupacao',          label: 'I. Ocupação' },
+  { key: 'impermeabilizacao', label: 'Impermeab.' },
+  { key: 'pisos',             label: 'Pisos máx.' },
+  { key: 'cercea',            label: 'Cércea' },
+  { key: 'loteMin',           label: 'Lote mín.' },
+];
 
 // ── Module-level state (set by initUI) ──────────────────────
 let _map                       = null;
@@ -114,6 +128,26 @@ export function showDetail(props, colorCfg, codeLabel) {
   //   { label: 'Guião',       url: props.Guiao,        page: props.Pag_Guiao },
   //   { label: 'Relatório',   url: props.Relatorio,    page: props.Pag_relatorio },
   // ].filter(d => d.url);
+
+  // ── Zone rules block ──
+  const muniKey  = MUNI_RULES_KEY[_getActiveMunicipality?.()];
+  const rule     = muniKey && ZONE_RULES[muniKey]?.[codeLabel];
+  if (rule) {
+    const params = PARAM_DISPLAY.filter(p => rule[p.key] != null);
+    if (params.length) {
+      const cells = params.map(p =>
+        `<div class="detail-param">
+          <div class="detail-param-value">${rule[p.key]}</div>
+          <div class="detail-param-label">${p.label}</div>
+        </div>`
+      ).join('');
+      html += `<div class="detail-params">
+        <div class="detail-params-title">Parâmetros Urbanísticos</div>
+        <div class="detail-params-grid">${cells}</div>
+        <div class="detail-params-source">${rule.source}</div>
+      </div>`;
+    }
+  }
 
   rowsEl.innerHTML = html;
   panel.classList.add('open');
