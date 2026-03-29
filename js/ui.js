@@ -138,7 +138,8 @@ export function showDetail(props, colorCfg, codeLabel) {
 
   // ── Zone rules block ──
   const muniKey  = MUNI_RULES_KEY[_getActiveMunicipality?.()];
-  const rule     = muniKey && ZONE_RULES[muniKey]?.[codeLabel];
+  const rawKey   = codeLabel.split(' \u2014 ')[0].trim();
+  const rule     = muniKey && ZONE_RULES[muniKey]?.[rawKey];
   if (rule) {
     const params = PARAM_DISPLAY.filter(p => rule[p.key] != null);
     const cells = params.map(p =>
