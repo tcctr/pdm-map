@@ -522,6 +522,13 @@ html, body {
   color: rgba(255,255,255,0.38);
   margin-top: 2px;
 }
+.detail-params-na {
+  font-size: 11px;
+  color: rgba(255,255,255,0.38);
+  font-style: italic;
+  margin: 6px 0 4px;
+  line-height: 1.4;
+}
 .detail-params-source {
   font-size: 10px;
   color: rgba(255,255,255,0.22);

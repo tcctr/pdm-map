@@ -17,11 +17,12 @@ const MUNI_RULES_KEY = {
 const PARAM_DISPLAY = [
   { key: 'altFachada',        label: 'Alt. Fachada' },
   { key: 'utilizacao',        label: 'I. Edific.' },
-  { key: 'ocupacao',          label: 'I. Ocupação' },
+  { key: 'ocupacao',          label: 'I. Ocupa\u00e7\u00e3o' },
   { key: 'impermeabilizacao', label: 'Impermeab.' },
-  { key: 'pisos',             label: 'Pisos máx.' },
-  { key: 'cercea',            label: 'Cércea' },
-  { key: 'loteMin',           label: 'Lote mín.' },
+  { key: 'permeabilidadeMin', label: 'Permeab. m\u00edn.' },
+  { key: 'pisos',             label: 'Pisos m\u00e1x.' },
+  { key: 'cercea',            label: 'C\u00e9rcea' },
+  { key: 'loteMin',           label: 'Lote m\u00edn.' },
 ];
 
 // ── Module-level state (set by initUI) ──────────────────────
@@ -140,19 +141,19 @@ export function showDetail(props, colorCfg, codeLabel) {
   const rule     = muniKey && ZONE_RULES[muniKey]?.[codeLabel];
   if (rule) {
     const params = PARAM_DISPLAY.filter(p => rule[p.key] != null);
-    if (params.length) {
-      const cells = params.map(p =>
-        `<div class="detail-param">
-          <div class="detail-param-value">${rule[p.key]}</div>
-          <div class="detail-param-label">${p.label}</div>
-        </div>`
-      ).join('');
-      html += `<div class="detail-params">
-        <div class="detail-params-title">Parâmetros Urbanísticos</div>
-        <div class="detail-params-grid">${cells}</div>
-        <div class="detail-params-source">${rule.source}</div>
-      </div>`;
-    }
+    const cells = params.map(p =>
+      `<div class="detail-param">
+        <div class="detail-param-value">${rule[p.key]}</div>
+        <div class="detail-param-label">${p.label}</div>
+      </div>`
+    ).join('');
+    html += `<div class="detail-params">
+      <div class="detail-params-title">Par\u00e2metros Urban\u00edsticos</div>
+      ${params.length
+        ? `<div class="detail-params-grid">${cells}</div>`
+        : `<div class="detail-params-na">Par\u00e2metros definidos pelo plano espec\u00edfico em vigor ou pela regra da c\u00e9rcea dominante.</div>`}
+      <div class="detail-params-source">${rule.source}</div>
+    </div>`;
   }
 
   rowsEl.innerHTML = html;

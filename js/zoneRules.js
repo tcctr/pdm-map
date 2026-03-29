@@ -263,8 +263,8 @@ export const ZONE_RULES = {
 
     "UC": {
       label: "Espaços Centrais",
-      ios: null,
-      edificabilidade: null,     // Governed by valor modal of street front (Art. 98)
+      ocupacao: null,
+      utilizacao: null,     // Governed by valor modal of street front (Art. 98)
       altFachada: null,          // Governed by valor modal of street front (Art. 67, 98)
       impermeabilizacao: null,
       permeabilidadeMin: null,
@@ -274,8 +274,8 @@ export const ZONE_RULES = {
 
     "UHD": {
       label: "Espaços Habitacionais 1 (Plurifamiliar)",
-      ios: null,
-      edificabilidade: null,     // Governed by valor modal (Art. 99)
+      ocupacao: null,
+      utilizacao: null,     // Governed by valor modal (Art. 99)
       altFachada: null,          // Governed by valor modal (Art. 67, 99)
       impermeabilizacao: null,
       permeabilidadeMin: "0.30", // Mínimo de permeabilidade do logradouro (Art. 99)
@@ -285,8 +285,8 @@ export const ZONE_RULES = {
 
     "UHC": {
       label: "Espaços Habitacionais 2 (Unifamiliar/Baixa Densidade Relativa)",
-      ios: null,
-      edificabilidade: null,     // Governed by valor modal (Art. 99)
+      ocupacao: null,
+      utilizacao: null,     // Governed by valor modal (Art. 99)
       altFachada: null,          // Governed by valor modal (Art. 67, 99)
       impermeabilizacao: null,
       permeabilidadeMin: "0.30", // Mínimo de permeabilidade do logradouro (Art. 99)
@@ -296,8 +296,8 @@ export const ZONE_RULES = {
 
     "UBD": {
       label: "Espaços Urbanos de Baixa Densidade",
-      ios: null,
-      edificabilidade: "0.20",   // Iu máximo (Art. 100)
+      ocupacao: null,
+      utilizacao: "0.20",   // Iu máximo (Art. 100)
       altFachada: "7m",          // H máx. normal; pontualmente 9m com base em valor modal (Art. 100)
       altFachadaMax: "9m",       // Pontual — apenas onde valor modal o suporta (Art. 100)
       impermeabilizacao: null,
@@ -310,8 +310,8 @@ export const ZONE_RULES = {
 
     "UAE": {
       label: "Espaços de Atividades Económicas",
-      ios: null,
-      edificabilidade: "0.60",   // Iu máximo (Art. 101)
+      ocupacao: null,
+      utilizacao: "0.60",   // Iu máximo (Art. 101)
       altFachada: "11m",         // H máximo absoluto (Art. 101); maquinaria especial: excepção justificada
       impermeabilizacao: null,
       permeabilidadeMin: "0.30", // Mínimo de permeabilidade (Art. 101)
@@ -322,8 +322,8 @@ export const ZONE_RULES = {
 
     "UT": {
       label: "Espaços Turísticos (Uso Especial)",
-      ios: null,
-      edificabilidade: "0.20",   // Iu máximo (Art. 102)
+      ocupacao: null,
+      utilizacao: "0.20",   // Iu máximo (Art. 102)
       altFachada: "11m",         // H normal; pontualmente 15m com base em valor modal (Art. 102)
       altFachadaMax: "15m",      // Pontual — apenas onde valor modal o suporta (Art. 102)
       impermeabilizacao: null,
@@ -334,8 +334,8 @@ export const ZONE_RULES = {
 
     "UE": {
       label: "Espaços de Equipamentos (Uso Especial)",
-      ios: null,
-      edificabilidade: "0.30",   // Iu máximo para equipamentos privados (Art. 103); público: ilimitado
+      ocupacao: null,
+      utilizacao: "0.30",   // Iu máximo para equipamentos privados (Art. 103); público: ilimitado
       altFachada: "11m",         // H máx. para equipamentos privados (Art. 103)
       impermeabilizacao: null,
       permeabilidadeMin: "0.30", // Mínimo de permeabilidade (privado, Art. 103)
@@ -345,8 +345,8 @@ export const ZONE_RULES = {
 
     "UI": {
       label: "Espaços de Infraestruturas Estruturantes (Uso Especial)",
-      ios: null,
-      edificabilidade: null,     // Public interest only — no fixed limit (Art. 104)
+      ocupacao: null,
+      utilizacao: null,     // Public interest only — no fixed limit (Art. 104)
       altFachada: null,
       impermeabilizacao: null,
       nota: "Apenas intervenções de natureza pública. Edificabilidade e altura determinadas pela medida exata do interesse público (Art. 104).",
@@ -355,8 +355,8 @@ export const ZONE_RULES = {
 
     "UV": {
       label: "Espaços Verdes Urbanos",
-      ios: null,
-      edificabilidade: "0",      // Nova construção não admitida (Art. 77–79)
+      ocupacao: null,
+      utilizacao: "0",      // Nova construção não admitida (Art. 77–79)
       altFachada: null,
       impermeabilizacao: null,
       nota: "Nova construção não admitida. Apenas instalações de apoio ao uso coletivo, equipamentos de lazer e comércio de apoio podem ser autorizados. Uso coletivo obrigatório.",
@@ -367,8 +367,8 @@ export const ZONE_RULES = {
 
     "N": {
       label: "Espaços Naturais 1",
-      ios: null,
-      edificabilidade: "0",      // Edificação proibida (Art. 47–48, 90)
+      ocupacao: null,
+      utilizacao: "0",      // Edificação proibida (Art. 47–48, 90)
       altFachada: null,
       impermeabilizacao: null,
       nota: "Edificação proibida. Apenas conservação da natureza e centros de interpretação ambiental permitidos (Art. 47–48, 90).",
@@ -377,8 +377,8 @@ export const ZONE_RULES = {
 
     "NF": {
       label: "Espaços Naturais 2",
-      ios: null,
-      edificabilidade: "0",      // Edificação proibida (Art. 47–48, 90)
+      ocupacao: null,
+      utilizacao: "0",      // Edificação proibida (Art. 47–48, 90)
       altFachada: null,
       impermeabilizacao: null,
       nota: "Edificação proibida. Admite criação de bosques autóctones e uso florestal/agrícola extensivo. (Art. 47–48, 90).",
@@ -387,8 +387,8 @@ export const ZONE_RULES = {
 
     "NA": {
       label: "Espaços Naturais 3",
-      ios: null,
-      edificabilidade: "0",      // Edificação proibida (Art. 47–48, 90)
+      ocupacao: null,
+      utilizacao: "0",      // Edificação proibida (Art. 47–48, 90)
       altFachada: null,
       impermeabilizacao: null,
       nota: "Edificação proibida. Admite uso agro-silvopastoril extensivo (Art. 47–48, 90).",
@@ -397,8 +397,8 @@ export const ZONE_RULES = {
 
     "F": {
       label: "Espaços Florestais 1",
-      ios: null,
-      edificabilidade: "0",      // Edificação não admitida (Art. 49–50, 91)
+      ocupacao: null,
+      utilizacao: "0",      // Edificação não admitida (Art. 49–50, 91)
       altFachada: null,
       impermeabilizacao: null,
       nota: "Edificação não admitida. Uso turístico pode ser autorizado via Art. 46 + 97 (Espaços de Ocupação Turística em solo rústico) mediante condições específicas.",
@@ -407,8 +407,8 @@ export const ZONE_RULES = {
 
     "FA": {
       label: "Espaços Florestais 2",
-      ios: null,
-      edificabilidade: "0.02",   // Iu máximo (Art. 49–50, 91)
+      ocupacao: null,
+      utilizacao: "0.02",   // Iu máximo (Art. 49–50, 91)
       altFachada: "5m",          // H máximo (Art. 91)
       impermeabilizacao: null,
       implantacaoMax: "750m²",   // ∑ Área de implantação máxima (Art. 91)
@@ -420,8 +420,8 @@ export const ZONE_RULES = {
 
     "A": {
       label: "Espaços Agrícolas",
-      ios: null,
-      edificabilidade: "0.02",   // Iu máximo (Art. 51–52, 92)
+      ocupacao: null,
+      utilizacao: "0.02",   // Iu máximo (Art. 51–52, 92)
       altFachada: "5m",          // H máximo (Art. 92)
       impermeabilizacao: null,
       implantacaoMax: "1200m²",  // ∑ Área de implantação máxima (Art. 92)
@@ -433,8 +433,8 @@ export const ZONE_RULES = {
 
     "EI": {
       label: "Espaços de Equipamentos e Infraestruturas (Rústico)",
-      ios: null,
-      edificabilidade: "0.30",   // Iu máximo para privados (Art. 61–62, 96); público: ilimitado
+      ocupacao: null,
+      utilizacao: "0.30",   // Iu máximo para privados (Art. 61–62, 96); público: ilimitado
       altFachada: "9m",          // H máx. para privados (Art. 96)
       impermeabilizacao: null,
       permeabilidadeMin: "0.30", // Mínimo de permeabilidade (Art. 96)
@@ -444,8 +444,8 @@ export const ZONE_RULES = {
 
     "OT": {
       label: "Espaços de Ocupação Turística (Rústico)",
-      ios: null,
-      edificabilidade: "0.05",   // Iu máximo (Art. 59–60, 95)
+      ocupacao: null,
+      utilizacao: "0.05",   // Iu máximo (Art. 59–60, 95)
       altFachada: "5m",          // H máximo (Art. 95)
       impermeabilizacao: null,
       permeabilidadeMin: "0.90", // Mínimo de permeabilidade (Art. 95)
@@ -456,8 +456,8 @@ export const ZONE_RULES = {
 
     "I": {
       label: "Espaços de Atividades Industriais (Rústico)",
-      ios: null,
-      edificabilidade: "0.60",   // Iu máximo (Art. 57–58, 94)
+      ocupacao: null,
+      utilizacao: "0.60",   // Iu máximo (Art. 57–58, 94)
       altFachada: "9m",          // H máximo (Art. 94)
       impermeabilizacao: null,
       permeabilidadeMin: "0.30", // Mínimo de permeabilidade (Art. 94)
@@ -467,8 +467,8 @@ export const ZONE_RULES = {
 
     "ER": {
       label: "Espaços de Exploração de Recursos Geológicos",
-      ios: null,
-      edificabilidade: "0",      // Edificação não admitida, exceto anexos de pedreira (Art. 53–54, 93)
+      ocupacao: null,
+      utilizacao: "0",      // Edificação não admitida, exceto anexos de pedreira (Art. 53–54, 93)
       altFachada: null,
       impermeabilizacao: null,
       nota: "Edificação não admitida, exceto instalações de apoio direto a pedreiras existentes. Recuperação paisagística obrigatória após extração (Art. 53–54, 93).",
@@ -477,8 +477,8 @@ export const ZONE_RULES = {
 
     "AR": {
       label: "Aglomerado Rural (legado)",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Código legado não presente no PDM 2020 em vigor. O PDM atual não define uma categoria 'Aglomerado Rural' autónoma no solo rústico — os aglomerados foram reclassificados como solo urbano ou integrados nos Espaços Agrícolas. Consultar a Planta de Ordenamento.",
@@ -521,8 +521,8 @@ export const ZONE_RULES = {
 
     "Espaço Central": {
       label: "Espaços Centrais",
-      ios: null,
-      edificabilidade: null,     // UOPG-level IUS only (see file header); Art. 30
+      ocupacao: null,
+      utilizacao: null,     // UOPG-level IUS only (see file header); Art. 30
       altFachada: null,          // Governed by Art. 66 valor modal
       impermeabilizacao: null,
       nota: "Parâmetros ao nível do lote não estão definidos no PDM. Edificabilidade regida pelo IUS da UOPG correspondente (0,40–0,65). Altura por Art. 66 (imagem urbana — valor modal dos quarteirões envolventes).",
@@ -531,8 +531,8 @@ export const ZONE_RULES = {
 
     "Espaço Residencial": {
       label: "Espaços Habitacionais",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Parâmetros ao nível do lote não estão definidos no PDM. Edificabilidade regida pelo IUS da UOPG (0,40–0,79 consoante sub-UOPG). Altura por Art. 66 valor modal.",
@@ -541,8 +541,8 @@ export const ZONE_RULES = {
 
     "Espaço de Actividades Económicas": {
       label: "Espaços de Atividades Económicas",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Parâmetros ao nível do lote não estão definidos no PDM. IUS da UOPG aplica-se. Altura por Art. 66 valor modal.",
@@ -551,8 +551,8 @@ export const ZONE_RULES = {
 
     "Espaço de Atividades Económicas": {
       label: "Espaços de Atividades Económicas",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Parâmetros ao nível do lote não estão definidos no PDM. IUS da UOPG aplica-se. Altura por Art. 66 valor modal.",
@@ -561,8 +561,8 @@ export const ZONE_RULES = {
 
     "Espaço de Equipamento": {
       label: "Espaços de Uso Especial — Equipamentos",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Parâmetros ao nível do lote não estão definidos no PDM.",
@@ -571,8 +571,8 @@ export const ZONE_RULES = {
 
     "Espaço de Uso Especial - Equipamentos": {
       label: "Espaços de Uso Especial — Equipamentos",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Parâmetros ao nível do lote não estão definidos no PDM.",
@@ -581,8 +581,8 @@ export const ZONE_RULES = {
 
     "Espaço de Ocupação Turística": {
       label: "Espaços de Uso Especial — Turismo",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Parâmetros ao nível do lote não estão definidos no PDM.",
@@ -591,8 +591,8 @@ export const ZONE_RULES = {
 
     "Espaço de Uso Especial - Turismo": {
       label: "Espaços de Uso Especial — Turismo",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Parâmetros ao nível do lote não estão definidos no PDM.",
@@ -601,8 +601,8 @@ export const ZONE_RULES = {
 
     "Espaço Verde": {
       label: "Espaços Verdes",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Parâmetros ao nível do lote não estão definidos no PDM.",
@@ -611,8 +611,8 @@ export const ZONE_RULES = {
 
     "Espaço Natural": {
       label: "Espaços Naturais e Paisagísticos",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Solo rústico. Sem loteamento, sem obras de urbanização, sem novas edificações. Ampliação de edificações existentes ≤ 50% da área de implantação original. Equipamentos e infraestruturas públicas admitidos (Art. 41).",
@@ -621,8 +621,8 @@ export const ZONE_RULES = {
 
     "Solo Rural": {
       label: "Espaços Agrícolas / Naturais (Solo Rústico)",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Solo rústico — sujeito a RAN, REN, regime florestal e habitats comunitários. Apenas usos compatíveis com a função agrícola, investigação e turismo/lazer (Art. 40–41).",
@@ -631,8 +631,8 @@ export const ZONE_RULES = {
 
     "Solo urbanizável sem categoria associada": {
       label: "Solo Urbanizável s/ Categoria (Revogado)",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Categoria revogada na consolidação de 2022 (Art. 36 revogado). Parcelas nesta categoria são agora tratadas ao abrigo do sub-plano aplicável ou do regime geral do PDM.",
@@ -641,8 +641,8 @@ export const ZONE_RULES = {
 
     "Espaço de Uso Especial": {
       label: "Espaços de Uso Especial",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Parâmetros ao nível do lote não estão definidos no PDM. Regime depende do sub-tipo (equipamentos, turismo, defesa).",
@@ -651,8 +651,8 @@ export const ZONE_RULES = {
 
     "Espaço de Uso Especial Proposto": {
       label: "Espaços de Uso Especial (Proposto)",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Zona proposta — regime a definir por sub-plano. Parâmetros ao nível do lote não definidos no PDM.",
@@ -661,8 +661,8 @@ export const ZONE_RULES = {
 
     "Espaço Canal": {
       label: "Espaço Canal (Infraestruturas)",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Corredor de infraestruturas. Sem vocação edificatória própria.",
@@ -671,8 +671,8 @@ export const ZONE_RULES = {
 
     "PMOT em vigor": {
       label: "PMOT em vigor",
-      ios: null,
-      edificabilidade: null,
+      ocupacao: null,
+      utilizacao: null,
       altFachada: null,
       impermeabilizacao: null,
       nota: "Área abrangida por Plano de Urbanização ou Plano de Pormenor em vigor que prevalece sobre o PDM. Consultar o plano específico aplicável.",
