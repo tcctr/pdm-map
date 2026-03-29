@@ -6,7 +6,13 @@ import { OVERLAY_DEFS, FIRE_COLORS, MIN_DATA_ZOOM } from './config.js';
 import { ZONE_RULES } from './zoneRules.js';
 
 // Maps activeMunicipality ID → ZONE_RULES top-level key
-const MUNI_RULES_KEY = { cascais: 'Cascais' };
+const MUNI_RULES_KEY = {
+  cascais: 'Cascais',
+  sintra:  'Sintra',
+  oeiras:  'Oeiras',
+  amadora: 'Amadora',
+  lisboa:  'Lisboa',
+};
 
 const PARAM_DISPLAY = [
   { key: 'altFachada',        label: 'Alt. Fachada' },
