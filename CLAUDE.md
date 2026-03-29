@@ -176,10 +176,11 @@ python3 -m http.server 8080
 - `ODIVELAS_COLORS` has 21 Categoria values (AML classification, not DR 15/2015)
 - Odivelas' own ArcGIS server (`sig.cm-odivelas.pt`) is unreachable; DGT WFS 1116_1 returns HTTP 502
 
-**Overlay / Condicionantes layers — three servers:**
+**Overlay / Condicionantes layers — four servers:**
 - `RAN_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer` (Sintra RAN only — frequently offline)
 - `REN_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer` (Sintra REN + risk layers)
 - `CONDICIONANTES_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer`
+- `CADASTRO_WMS_URL` = `https://snicws.dgterritorio.gov.pt/geoserver/inspire/ows` (DGT SNIC INSPIRE GeoServer — national cadastral parcels, OGC WMS 1.3.0)
 
 > **Known outage:** `WMS_SRUP_REN_RAN` (`RAN_BASE`) is frequently down on Sintra's server — only `ran-sintra` now depends on it.
 
@@ -256,6 +257,7 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 | `patrimonio` | Bens Imóveis Classificados | sintra | CONDICIONANTES_BASE | 299 | `patrimonio.geojson` | purple fill |
 | `zep` | Zona Especial de Proteção | sintra | CONDICIONANTES_BASE | 302 | `zep.geojson` | violet fill |
 | `perigosos` | Equipamentos Perigosos | sintra | CONDICIONANTES_BASE | 368 | `perigosos.geojson` | gray fill |
+| `cadastro` | Cadastro Predial | both | CADASTRO_WMS_URL (SNIC GeoServer) | `cadastralparcel` | — (always live WMS) | `L.tileLayer.wms` v1.3.0; bounds clipped to AML `[38.55,-9.55]→[39.00,-8.68]`; click → WMS GetFeatureInfo |
 
 **Notes:**
 - `ren-sintra` was removed — no unified queryable REN boundary layer exists on Sintra's server.

@@ -500,11 +500,13 @@ export function initBasemapToggle(map) {
     if (isSatellite) {
       map.removeLayer(satelliteLayer);
       _baseLayer.addTo(map);
+      _baseLayer.bringToBack();
       isSatellite = false;
       btn.innerHTML = iconSatellite;
     } else {
       map.removeLayer(_baseLayer);
       satelliteLayer.addTo(map);
+      satelliteLayer.bringToBack();
       isSatellite = true;
       btn.innerHTML = iconMap;
     }
@@ -719,6 +721,26 @@ export function initMapHandlers({
           const cfg = MOITA_COLORS[cat] || { fill: '#888888', label: cat };
           _callbacks.onShowDetail?.(p, cfg, cat);
         });
+    } else if (_activeLayer === 'cadastro') {
+      const def = OVERLAY_DEFS.find(d => d.id === 'cadastro');
+      if (!def || !_ovlState?.['cadastro']?.loaded) return;
+      const mapSize = _map.getSize();
+      const bounds  = _map.getBounds();
+      const pt      = _map.latLngToContainerPoint(e.latlng);
+      const bbox    = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
+      const url     = `${def.wmsUrl}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo` +
+        `&LAYERS=cadastralparcel&QUERY_LAYERS=cadastralparcel` +
+        `&INFO_FORMAT=application%2Fjson&FEATURE_COUNT=1` +
+        `&WIDTH=${mapSize.x}&HEIGHT=${mapSize.y}` +
+        `&CRS=EPSG%3A4326&BBOX=${bbox}` +
+        `&I=${Math.round(pt.x)}&J=${Math.round(pt.y)}&STYLES=`;
+      fetch(url)
+        .then(r => r.json())
+        .then(fc => {
+          if (!fc?.features?.length) return;
+          _callbacks.onShowOverlayDetail?.(def, fc.features[0].properties);
+        })
+        .catch(() => {});
     } else if (_activeLayer === 'incendio') {
       const def = OVERLAY_DEFS.find(d => d.id === 'incendio');
       L.esri.identifyFeatures({ url: CONDICIONANTES_BASE })

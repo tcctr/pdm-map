@@ -1167,6 +1167,30 @@ export async function loadOverlay(id, activeMunicipality) {
   try {
     const leafletLayer = L.layerGroup();
 
+    if (def.categorized === 'wms') {
+      // Standard OGC WMS tile layer — fails silently per-tile, no error surfaced to user
+      const wmsLayer = L.tileLayer.wms(def.wmsUrl, {
+        layers: def.wmsLayers,
+        styles: '',
+        format: def.wmsFormat || 'image/png',
+        transparent: true,
+        version: '1.3.0',
+        opacity: def.opacity ?? 0.8,
+        attribution: '',
+        bounds: L.latLngBounds([38.55, -9.55], [39.00, -8.68]),
+      });
+      wmsLayer.addTo(leafletLayer);
+      st.leafletLayer = leafletLayer;
+      st.loaded  = true;
+      st.loading = false;
+      if (spin) spin.style.display = 'none';
+      if (st.active) {
+        leafletLayer.addTo(_map);
+        _callbacks.onOverlayStatus?.(id, 'ok', overlayShortName(def));
+      }
+      return;
+    }
+
     if (def.categorized === 'fire') {
       // Server-rendered tiles — no GeoJSON download, no client lag
       const dynLayer = L.esri.dynamicMapLayer({ url: def.server, layers: [def.layerId], opacity: 0.65 });
