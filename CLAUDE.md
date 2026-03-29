@@ -189,7 +189,7 @@ python3 -m http.server 8080
 ## Layer System
 
 ### Base zoning layers (always on by default)
-Twelve `L.layerGroup()` instances, one per municipality. Only visible at zoom ≥ `MIN_DATA_ZOOM` (1) and only when that municipality is active (or when Grande Lisboa is active, in which case all twelve show simultaneously).
+Nineteen `L.layerGroup()` instances (urbanLayer + ruralLayer for Sintra, one each for the other seventeen municipalities). Only visible at zoom ≥ `MIN_DATA_ZOOM` (1) and only when that municipality is active (or when Grande Lisboa is active, in which case all nineteen show simultaneously).
 
 | Layer | Type | Source |
 |-------|------|--------|
@@ -219,7 +219,7 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 `activeLayer` variable tracks what's selected: `'zoning'`, a def id, or `'none'` (all layers hidden — basemap only).
 
 **Renderers:**
-- Sintra + Amadora + Lisboa + Mafra zoning: `renderer = L.svg({ padding: 1 })`
+- All GeoJSON municipality zoning layers (Sintra, Amadora, Lisboa, Mafra, Montijo, Palmela, Seixal, Sesimbra, Setúbal): `renderer = L.svg({ padding: 1 })`
 - Overlay GeoJSON with hatch patterns: `renderer` (SVG — canvas can't render `url()` fills)
 - Overlay GeoJSON without hatch: `overlayRenderer = L.canvas({ padding: 0.5 })`
 - Fire risk + tile municipalities: `L.esri.dynamicMapLayer` (server tiles, no GeoJSON download)
@@ -275,7 +275,7 @@ GeoJSON layers use `loadLayerData(cachedFile, fallbackUrl)`:
 2. Fetch live — if this also fails → `console.error`, return `null`
 3. `null` = both failed → layer shows error chip state
 
-Amadora, Lisboa, Mafra, and Montijo use custom loaders (`loadAmadora()`, `loadLisboa()`, `loadMafra()`, `loadMontijo()`) that fetch from the cached file first, then fall back to the DGT WFS directly (not via `loadLayerData` since WFS needs a different fetch path).
+All GeoJSON municipalities use dedicated custom loaders (`loadAmadora()`, `loadLisboa()`, `loadMafra()`, `loadMontijo()`, `loadPalmela()`, `loadSeixal()`, `loadSesimbra()`, `loadSetubal()`) that fetch from the cached file first, then fall back to the live source directly (not via `loadLayerData` since WFS/REST endpoints need a different fetch path). Each custom loader takes an `attempt` parameter for auto-retry.
 
 **What stays live-only (never cached):**
 - Cascais, Oeiras, Loures, Almada, Barreiro, Vila Franca de Xira, Odivelas, Alcochete zoning tiles (`L.esri.dynamicMapLayer`)
@@ -327,7 +327,7 @@ Pushes with `github-actions[bot]` identity. Push failures are warnings, not fata
 Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 60000]` (15s, 30s, 1min):
 - Tile municipality layers (Cascais/Oeiras/Loures/Almada/Barreiro/VFXira/Odivelas/Alcochete): clears layer group before each retry, uses `.once('loaderror')`
 - Overlays: retry count in `ovlState[id].retries`; timer guard checks `activeLayer === id && !st.loaded`. Resets on municipality switch.
-- Sintra urban/rural + Amadora + Lisboa + Mafra: retry via `attempt` param; served from local cache so failures are near-instant
+- All GeoJSON municipalities (Sintra urban/rural, Amadora, Lisboa, Mafra, Montijo, Palmela, Seixal, Sesimbra, Setúbal): retry via `attempt` param; served from local cache so failures are near-instant
 
 ---
 
@@ -416,10 +416,16 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - `updateLayerVisibility` checks `isGL = _activeMunicipality === 'grande-lisboa'` and adds all eighteen `xOn` conditions with `|| isGL`, making every layer group visible simultaneously.
 - `updateSintraChip` in `ui.js` extends its `on` check to include `grande-lisboa` so Sintra urban/rural layers are also added to the map. The Sintra chip itself is still hidden (only shown for `activeMunicipality === 'sintra'`).
 - `pickMunicipality` uses `map.setView(cfg.center, cfg.zoom)` instead of `panTo` so zoom resets to 10.
-- In Grande Lisboa mode, clicking fires all tile identify queries in parallel (6 queries: 5 CASCAIS_BASE layers + 1 AML_PDM1_BASE layer 2 covering Almada/Barreiro/Alcochete) and shows the first non-empty result. GeoJSON polygon clicks (Sintra, Amadora, Lisboa, Mafra, Montijo, Palmela, Seixal, Sesimbra) also work via Leaflet's built-in feature events. All 17 municipalities are clickable in region view.
+- In Grande Lisboa mode, clicking fires all tile identify queries in parallel (7 queries: 6 CASCAIS_BASE layers — Cascais/2, Oeiras/3, Moita/4, Loures/6, Odivelas/8, VFXira/10 — + 1 AML_PDM1_BASE layer 2 covering Almada/Barreiro/Alcochete) and shows the first non-empty result. GeoJSON polygon clicks (Sintra, Amadora, Lisboa, Mafra, Montijo, Palmela, Seixal, Sesimbra) also work via Leaflet's built-in feature events. All 18 municipalities are clickable in region view.
 - `chip-grande-lisboa` shows 'ok' immediately; all per-municipality chips are hidden.
 - `updateZoningOverlayChip` shows `setOverlayChip('ok', 'Solo')` immediately.
 - Overlay panel: only **Qualificação do Solo**, **RAN** (`muni: 'both'`, uses `ran-cascais.geojson`), and **REN** (`ren-grande-lisboa`, uses `ren-cascais.geojson`). All Sintra-specific layers are filtered out by `buildOverlayPanel`.
+
+---
+
+## Deferred Features
+
+- **Enhanced detail panel content** (richer property display, additional metadata fields in the bottom sheet) — moved to a feature branch; not planned for main in the near term. Current detail panel shows basic zone code + label only.
 
 ---
 
