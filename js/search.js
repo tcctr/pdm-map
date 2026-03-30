@@ -2,6 +2,15 @@
 // ADDRESS SEARCH + REVERSE GEOCODE (Nominatim)
 // ============================================================
 
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {}) {
   const searchInput   = document.getElementById('search-input');
   const searchResults = document.getElementById('search-results');
@@ -46,7 +55,7 @@ export function initSearch(map, { onMunicipalityDetected, getGpsLocation } = {})
         const muni = detectMunicipality(item.display_name);
         const warning = muni ? '' : '<span class="result-warning">⚠ Sem dados PDM disponíveis</span>';
         const cls = muni ? '' : ' outside-area';
-        return `<div class="search-result-item${cls}">${item.display_name}${warning}</div>`;
+        return `<div class="search-result-item${cls}">${escHtml(item.display_name)}${warning}</div>`;
       }).join('');
       searchResults.querySelectorAll('.search-result-item').forEach((el, i) => {
         el.addEventListener('mouseenter', () => setSelectedIndex(i));

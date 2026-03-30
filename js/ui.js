@@ -4,6 +4,15 @@
 
 import { OVERLAY_DEFS, FIRE_COLORS, MIN_DATA_ZOOM } from './config.js';
 
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── Module-level state (set by initUI) ──────────────────────
 let _map                       = null;
 let _urbanLayer                = null;
@@ -102,8 +111,8 @@ export function showDetail(props, colorCfg, codeLabel) {
   // ── Metadata row ──
   const area = props.area_ha || props.Area_Ha;
   const metaItems = [];
-  if (area) metaItems.push(`<strong>\u00c1rea:</strong> ${parseFloat(area).toFixed(2)} ha`);
-  if (props.Classe) metaItems.push(`<strong>Classe:</strong> ${props.Classe}`);
+  if (area) metaItems.push(`<strong>\u00c1rea:</strong> ${escHtml(parseFloat(area).toFixed(2))} ha`);
+  if (props.Classe) metaItems.push(`<strong>Classe:</strong> ${escHtml(props.Classe)}`);
   if (metaItems.length) {
     html += `<div class="detail-row" style="margin-bottom:14px"><div class="detail-row-value" style="color:rgba(255,255,255,0.5);font-size:12px">${metaItems.join(' &nbsp;\u00b7&nbsp; ')}</div></div>`;
   }
