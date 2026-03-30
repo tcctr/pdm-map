@@ -431,7 +431,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 
 ## Known Limitations
 
-- Cascais/Oeiras/Loures/VFXira zoning geometry is blocked by AML pdm_revisao server — tile rendering only, no GeoJSON export
+- Cascais/Oeiras/Loures/VFXira zoning geometry is blocked by AML pdm_revisao server — tile rendering only. The REST `/query` endpoint returns features but **strips all geometry** (no coordinates in response, regardless of `returnGeometry=true`). QGIS hits the same wall. DGT WFS `SDISNITWFSCRUS_1104_1` (Cascais) returns HTTP 502 — not functional.
 - Almada tiles go blank above zoom 14 (ArcGIS `maxScale:25000`) — same behaviour as Cascais; see data source notes for `layerDefs` and `identifyFeatures` quirks
 - Sintra overlay layers only cover Sintra territory (except RAN and ren-* which load AML-wide data)
 - `WMS_SRUP_REN_RAN` (`RAN_BASE`) server on Sintra's infrastructure is unreliable — only `ran-sintra` now depends on it
