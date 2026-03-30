@@ -1,19 +1,28 @@
-// Vercel Edge Middleware — HTTP Basic Auth
-// Set BASIC_AUTH_USER and BASIC_AUTH_PASSWORD in Vercel project environment variables.
-// Falls back to denying all requests if BASIC_AUTH_PASSWORD is not configured.
+// Vercel Edge Middleware — HTTP Basic Auth (multi-user)
+// Set BASIC_AUTH_CREDENTIALS in Vercel environment variables as a comma-separated
+// list of user:password pairs, e.g.:
+//   Tiago:abc123,Rui:xyz789,Beta-tester_1:foo,Beta-tester_2:bar,Beta-tester_3:baz
+// Falls closed (500) if the variable is not configured.
 
 export const config = {
   matcher: ['/((?!_vercel).*)'],
 };
 
 export default function middleware(request) {
-  const expectedUser = process.env.BASIC_AUTH_USER || 'mapear';
-  const expectedPass = process.env.BASIC_AUTH_PASSWORD;
+  const credsEnv = process.env.BASIC_AUTH_CREDENTIALS;
 
-  // Fail closed: if no password is configured, deny everything
-  if (!expectedPass) {
+  // Fail closed: if credentials are not configured, deny everything
+  if (!credsEnv) {
     return new Response('Server misconfiguration: auth not configured.', { status: 500 });
   }
+
+  // Parse "user:pass,user:pass,..." into a Map
+  const validCredentials = new Map(
+    credsEnv.split(',').map(entry => {
+      const colonIdx = entry.indexOf(':');
+      return [entry.slice(0, colonIdx).trim(), entry.slice(colonIdx + 1).trim()];
+    })
+  );
 
   const authHeader = request.headers.get('Authorization') || '';
   if (authHeader.startsWith('Basic ')) {
@@ -22,7 +31,7 @@ export default function middleware(request) {
       const colonIdx = decoded.indexOf(':');
       const user = decoded.slice(0, colonIdx);
       const pass = decoded.slice(colonIdx + 1);
-      if (user === expectedUser && pass === expectedPass) {
+      if (validCredentials.get(user) === pass) {
         return; // allow through
       }
     } catch {
