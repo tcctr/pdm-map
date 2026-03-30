@@ -13,25 +13,6 @@
 </head>
 <body>
 
-<!-- Access gate — shown before map loads if not yet granted -->
-<div id="gate">
-  <div id="gate-card">
-    <div id="gate-logo">
-      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="18" cy="14" r="7" fill="#e63946"/>
-        <circle cx="18" cy="14" r="3" fill="white"/>
-        <path d="M18 21 C18 21 8 28 8 33 L28 33 C28 28 18 21 18 21Z" fill="#e63946"/>
-      </svg>
-      <span id="gate-title">Mapear</span>
-    </div>
-    <p id="gate-subtitle">Introduza o código de acesso</p>
-    <div id="gate-input-wrap">
-      <input id="gate-input" type="text" placeholder="Código…" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" maxlength="32" />
-    </div>
-    <p id="gate-error">Código inválido.</p>
-    <button id="gate-btn">Entrar</button>
-  </div>
-</div>
 
 <div id="map"></div>
 
@@ -263,54 +244,6 @@
 <!-- Esri Leaflet (for Cascais dynamic map layer + identify) -->
 <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
 
-<script>
-(function () {
-  const ACCESS_CODES = ['MAPEAR-1QV!', 'MAPEAR-2RK#', 'MAPEAR-3XP@', 'MAPEAR-4TM$', 'MAPEAR-5BN%'];
-  const gate   = document.getElementById('gate');
-  const input  = document.getElementById('gate-input');
-  const btn    = document.getElementById('gate-btn');
-  const errMsg = document.getElementById('gate-error');
-
-  function grant() {
-    localStorage.setItem('access', 'granted');
-    gate.classList.add('hidden');
-  }
-
-  // Already granted — hide gate immediately, no flicker
-  if (localStorage.getItem('access') === 'granted') {
-    gate.classList.add('hidden');
-    return;
-  }
-
-  function attempt() {
-    if (ACCESS_CODES.includes(input.value.trim())) {
-      grant();
-    } else {
-      errMsg.classList.add('visible');
-      input.classList.remove('shake');
-      // Force reflow so the animation restarts if already shaking
-      void input.offsetWidth;
-      input.classList.add('shake', 'error');
-      input.addEventListener('animationend', () => input.classList.remove('shake'), { once: true });
-      input.select();
-    }
-  }
-
-  btn.addEventListener('click', attempt);
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') attempt();
-    // Clear error state on new input
-    if (errMsg.classList.contains('visible')) {
-      errMsg.classList.remove('visible');
-      input.classList.remove('error');
-    }
-  });
-  input.addEventListener('input', () => {
-    errMsg.classList.remove('visible');
-    input.classList.remove('error');
-  });
-})();
-</script>
 
 <script type="module" src="js/main.js"></script>
 </body>
