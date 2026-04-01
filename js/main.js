@@ -95,11 +95,18 @@ function locateUser() {
 // MUNICIPALITY PICKER
 // ============================================================
 
+function updateMuniScrollFade() {
+  const dd = document.getElementById('muni-dropdown');
+  const canScrollMore = dd.scrollHeight - dd.scrollTop - dd.clientHeight > 4;
+  dd.classList.toggle('has-scroll', canScrollMore);
+}
+
 function toggleMuniDropdown() {
   const btn  = document.getElementById('muni-picker-btn');
   const dd   = document.getElementById('muni-dropdown');
   const open = dd.classList.toggle('open');
   btn.classList.toggle('open', open);
+  if (open) requestAnimationFrame(updateMuniScrollFade);
 }
 
 function closeMuniDropdown() {
@@ -342,6 +349,7 @@ loadCacheMetadata();
 
 // Municipality picker
 document.getElementById('muni-picker-btn').addEventListener('click', toggleMuniDropdown);
+document.getElementById('muni-dropdown').addEventListener('scroll', updateMuniScrollFade, { passive: true });
 document.getElementById('muni-dropdown').addEventListener('click', e => {
   const opt = e.target.closest('.muni-option');
   if (opt) pickMunicipality(opt.dataset.muni);

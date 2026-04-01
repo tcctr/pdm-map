@@ -92,6 +92,17 @@ html, body {
   display: none;
 }
 #muni-dropdown.open { display: block; }
+#muni-dropdown.has-scroll::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  display: block;
+  height: 48px;
+  margin-top: -48px;
+  border-radius: 0 0 14px 14px;
+  background: linear-gradient(to bottom, transparent, rgba(8,8,20,0.88));
+  pointer-events: none;
+}
 .muni-option {
   display: flex;
   align-items: center;
