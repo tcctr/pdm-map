@@ -66,7 +66,7 @@ export function updateSintraChip() {
   const sintraStatus      = _getSintraStatus();
   const activeLayer       = _getActiveLayer();
   const activeMunicipality = _getActiveMunicipality();
-  const on = (activeLayer === 'zoning' || activeLayer === 'cadastro') && (activeMunicipality === 'sintra' || activeMunicipality === 'grande-lisboa');
+  const on = activeLayer === 'zoning' && (activeMunicipality === 'sintra' || activeMunicipality === 'grande-lisboa');
 
   [_urbanLayer, _ruralLayer].forEach(l => on && zoomed ? _map.addLayer(l) : _map.removeLayer(l));
 
@@ -74,7 +74,7 @@ export function updateSintraChip() {
   if (!sintraEl) return;
   sintraEl.style.display = activeMunicipality === 'sintra' ? '' : 'none';
   if (activeMunicipality !== 'sintra') return;
-  if (activeLayer !== 'zoning' && activeLayer !== 'cadastro') return; // overlay active — leave chip as-is
+  if (activeLayer !== 'zoning') return; // overlay active — leave chip as-is
   if (!zoomed) { setChip('chip-sintra', 'warn', 'Sintra: zoom'); return; }
 
   const u = sintraStatus.urban;
@@ -148,6 +148,22 @@ export function showOverlayDetail(def, props) {
     code = cl || def.name;
   }
   showDetail(props, { fill, label: def.name }, code);
+  if (def.id === 'cadastro') {
+    const rowsEl = document.getElementById('detail-rows');
+    rowsEl.insertAdjacentHTML('beforeend',
+      '<div class="detail-row" style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)">' +
+      '<div class="detail-row-value" style="font-size:12px;color:rgba(255,255,255,0.5)">' +
+      '<strong>Qualifica\u00e7\u00e3o do Solo:</strong> <span id="detail-zoning-val" style="font-style:italic">\u2026</span>' +
+      '</div></div>',
+    );
+  }
+}
+
+export function updateDetailZoning(label) {
+  const el = document.getElementById('detail-zoning-val');
+  if (!el) return;
+  el.style.fontStyle = 'normal';
+  el.textContent = label || '\u2014';
 }
 
 // ── Layers sheet ──────────────────────────────────────────────

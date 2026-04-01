@@ -6,6 +6,8 @@ import {
   MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM,
   CASCAIS_BASE, CASCAIS_COLORS, OEIRAS_COLORS, LOURES_COLORS, CONDICIONANTES_BASE,
   AML_PDM1_BASE, ALMADA_COLORS, BARREIRO_COLORS, ALCOCHETE_COLORS, ODIVELAS_COLORS, VFX_COLORS, MOITA_COLORS,
+  URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, LISBOA_COLORS, MAFRA_COLORS,
+  MONTIJO_COLORS, PALMELA_COLORS, SEIXAL_COLORS, SESIMBRA_COLORS, SETUBAL_COLORS,
 } from './config.js';
 
 // ── Module-level state ───────────────────────────────────────
@@ -72,30 +74,28 @@ export function updateLayerVisibility() {
 
   const zoomed = _map.getZoom() >= MIN_DATA_ZOOM;
   const isGL = _activeMunicipality === 'grande-lisboa';
-  // Cadastro is a transparent overlay — zoning stays visible underneath
-  const showZoning = _activeLayer === 'zoning' || _activeLayer === 'cadastro';
 
   // Cascais tile layer
-  const cascaisOn = showZoning && (_activeMunicipality === 'cascais' || isGL);
+  const cascaisOn = _activeLayer === 'zoning' && (_activeMunicipality === 'cascais' || isGL);
   cascaisOn && zoomed ? _map.addLayer(_cascaisLayer) : _map.removeLayer(_cascaisLayer);
 
   // Oeiras tile layer
-  const oeirasOn = showZoning && (_activeMunicipality === 'oeiras' || isGL);
+  const oeirasOn = _activeLayer === 'zoning' && (_activeMunicipality === 'oeiras' || isGL);
   oeirasOn && zoomed ? _map.addLayer(_oeirasLayer) : _map.removeLayer(_oeirasLayer);
 
   // Loures tile layer
-  const louresOn = showZoning && (_activeMunicipality === 'loures' || isGL);
+  const louresOn = _activeLayer === 'zoning' && (_activeMunicipality === 'loures' || isGL);
   louresOn && zoomed ? _map.addLayer(_louresLayer) : _map.removeLayer(_louresLayer);
 
   // Amadora GeoJSON layer
-  const amadoraOn = showZoning && (_activeMunicipality === 'amadora' || isGL);
+  const amadoraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'amadora' || isGL);
   amadoraOn && zoomed ? _map.addLayer(_amadoraLayer) : _map.removeLayer(_amadoraLayer);
 
   // chip-cascais
   const cascaisEl = document.getElementById('chip-cascais');
   if (cascaisEl) {
     cascaisEl.style.display = _activeMunicipality === 'cascais' ? '' : 'none';
-    if (_activeMunicipality === 'cascais' && showZoning && !cascaisEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'cascais' && _activeLayer === 'zoning' && !cascaisEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-cascais', 'warn', 'Cascais: zoom');
       } else if (_map.getZoom() > 15) {
@@ -111,7 +111,7 @@ export function updateLayerVisibility() {
   const oeirasEl = document.getElementById('chip-oeiras');
   if (oeirasEl) {
     oeirasEl.style.display = _activeMunicipality === 'oeiras' ? '' : 'none';
-    if (_activeMunicipality === 'oeiras' && showZoning && !oeirasEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'oeiras' && _activeLayer === 'zoning' && !oeirasEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-oeiras', 'warn', 'Oeiras: zoom');
       } else if (_map.getZoom() > 15) {
@@ -127,7 +127,7 @@ export function updateLayerVisibility() {
   const louresEl = document.getElementById('chip-loures');
   if (louresEl) {
     louresEl.style.display = _activeMunicipality === 'loures' ? '' : 'none';
-    if (_activeMunicipality === 'loures' && showZoning && !louresEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'loures' && _activeLayer === 'zoning' && !louresEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-loures', 'warn', 'Loures: zoom');
       } else if (_map.getZoom() > 15) {
@@ -143,7 +143,7 @@ export function updateLayerVisibility() {
   const amadoraEl = document.getElementById('chip-amadora');
   if (amadoraEl) {
     amadoraEl.style.display = _activeMunicipality === 'amadora' ? '' : 'none';
-    if (_activeMunicipality === 'amadora' && showZoning && !amadoraEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'amadora' && _activeLayer === 'zoning' && !amadoraEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-amadora', 'warn', 'Amadora: zoom');
       } else {
@@ -154,14 +154,14 @@ export function updateLayerVisibility() {
   }
 
   // Almada tile layer (maxScale:25000 — tiles go blank above zoom 14)
-  const almadaOn = showZoning && (_activeMunicipality === 'almada' || isGL);
+  const almadaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'almada' || isGL);
   almadaOn && zoomed ? _map.addLayer(_almadaLayer) : _map.removeLayer(_almadaLayer);
 
   // chip-almada (tile layer — blank tiles above zoom 14, same pattern as Cascais)
   const almadaEl = document.getElementById('chip-almada');
   if (almadaEl) {
     almadaEl.style.display = _activeMunicipality === 'almada' ? '' : 'none';
-    if (_activeMunicipality === 'almada' && showZoning && !almadaEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'almada' && _activeLayer === 'zoning' && !almadaEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-almada', 'warn', 'Almada: zoom');
       } else if (_map.getZoom() > 14) {
@@ -174,14 +174,14 @@ export function updateLayerVisibility() {
   }
 
   // Lisboa GeoJSON layer
-  const lisboaOn = showZoning && (_activeMunicipality === 'lisboa' || isGL);
+  const lisboaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'lisboa' || isGL);
   lisboaOn && zoomed ? _map.addLayer(_lisboaLayer) : _map.removeLayer(_lisboaLayer);
 
   // chip-lisboa (GeoJSON layer — no maxZoom cap)
   const lisboaEl = document.getElementById('chip-lisboa');
   if (lisboaEl) {
     lisboaEl.style.display = _activeMunicipality === 'lisboa' ? '' : 'none';
-    if (_activeMunicipality === 'lisboa' && showZoning && !lisboaEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'lisboa' && _activeLayer === 'zoning' && !lisboaEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-lisboa', 'warn', 'Lisboa: zoom');
       } else {
@@ -192,14 +192,14 @@ export function updateLayerVisibility() {
   }
 
   // Vila Franca de Xira GeoJSON layer
-  const vfxiraOn = showZoning && (_activeMunicipality === 'vfxira' || isGL);
+  const vfxiraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'vfxira' || isGL);
   vfxiraOn && zoomed ? _map.addLayer(_vfxiraLayer) : _map.removeLayer(_vfxiraLayer);
 
   // chip-vfxira (tile layer — maxZoom:15, same pattern as Cascais/Oeiras/Loures)
   const vfxiraEl = document.getElementById('chip-vfxira');
   if (vfxiraEl) {
     vfxiraEl.style.display = _activeMunicipality === 'vfxira' ? '' : 'none';
-    if (_activeMunicipality === 'vfxira' && showZoning && !vfxiraEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'vfxira' && _activeLayer === 'zoning' && !vfxiraEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-vfxira', 'warn', 'VF Xira: zoom');
       } else if (_map.getZoom() > 15) {
@@ -212,14 +212,14 @@ export function updateLayerVisibility() {
   }
 
   // Mafra GeoJSON layer
-  const mafraOn = showZoning && (_activeMunicipality === 'mafra' || isGL);
+  const mafraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'mafra' || isGL);
   mafraOn && zoomed ? _map.addLayer(_mafraLayer) : _map.removeLayer(_mafraLayer);
 
   // chip-mafra (GeoJSON layer — no maxZoom cap)
   const mafraEl = document.getElementById('chip-mafra');
   if (mafraEl) {
     mafraEl.style.display = _activeMunicipality === 'mafra' ? '' : 'none';
-    if (_activeMunicipality === 'mafra' && showZoning && !mafraEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'mafra' && _activeLayer === 'zoning' && !mafraEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-mafra', 'warn', 'Mafra: zoom');
       } else {
@@ -230,14 +230,14 @@ export function updateLayerVisibility() {
   }
 
   // Odivelas tile layer (AML pdm_revisao layer 8 — no scale restriction)
-  const odivelaOn = showZoning && (_activeMunicipality === 'odivelas' || isGL);
+  const odivelaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'odivelas' || isGL);
   odivelaOn && zoomed ? _map.addLayer(_odivelaLayer) : _map.removeLayer(_odivelaLayer);
 
   // chip-odivelas (tile layer — pdm_revisao has no server maxScale, but maxZoom:15 used defensively)
   const odivelaEl = document.getElementById('chip-odivelas');
   if (odivelaEl) {
     odivelaEl.style.display = _activeMunicipality === 'odivelas' ? '' : 'none';
-    if (_activeMunicipality === 'odivelas' && showZoning && !odivelaEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'odivelas' && _activeLayer === 'zoning' && !odivelaEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-odivelas', 'warn', 'Odivelas: zoom');
       } else if (_map.getZoom() > 15) {
@@ -250,14 +250,14 @@ export function updateLayerVisibility() {
   }
 
   // Alcochete tile layer (maxScale:25000 — tiles go blank above zoom 14, same as Almada)
-  const alcocheteOn = showZoning && (_activeMunicipality === 'alcochete' || isGL);
+  const alcocheteOn = _activeLayer === 'zoning' && (_activeMunicipality === 'alcochete' || isGL);
   alcocheteOn && zoomed ? _map.addLayer(_alcocheteLayer) : _map.removeLayer(_alcocheteLayer);
 
   // chip-alcochete (tile layer — blank tiles above zoom 14, same pattern as Almada)
   const alcocheteEl = document.getElementById('chip-alcochete');
   if (alcocheteEl) {
     alcocheteEl.style.display = _activeMunicipality === 'alcochete' ? '' : 'none';
-    if (_activeMunicipality === 'alcochete' && showZoning && !alcocheteEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'alcochete' && _activeLayer === 'zoning' && !alcocheteEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-alcochete', 'warn', 'Alcochete: zoom');
       } else if (_map.getZoom() > 14) {
@@ -270,14 +270,14 @@ export function updateLayerVisibility() {
   }
 
   // Barreiro tile layer (maxScale:25000 — tiles go blank above zoom 14, same as Almada/Alcochete)
-  const barreiroOn = showZoning && (_activeMunicipality === 'barreiro' || isGL);
+  const barreiroOn = _activeLayer === 'zoning' && (_activeMunicipality === 'barreiro' || isGL);
   barreiroOn && zoomed ? _map.addLayer(_barreiroLayer) : _map.removeLayer(_barreiroLayer);
 
   // chip-barreiro (tile layer — blank tiles above zoom 14, same pattern as Almada/Alcochete)
   const barreiroEl = document.getElementById('chip-barreiro');
   if (barreiroEl) {
     barreiroEl.style.display = _activeMunicipality === 'barreiro' ? '' : 'none';
-    if (_activeMunicipality === 'barreiro' && showZoning && !barreiroEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'barreiro' && _activeLayer === 'zoning' && !barreiroEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-barreiro', 'warn', 'Barreiro: zoom');
       } else if (_map.getZoom() > 14) {
@@ -290,14 +290,14 @@ export function updateLayerVisibility() {
   }
 
   // Montijo GeoJSON layer
-  const montijoOn = showZoning && (_activeMunicipality === 'montijo' || isGL);
+  const montijoOn = _activeLayer === 'zoning' && (_activeMunicipality === 'montijo' || isGL);
   montijoOn && zoomed ? _map.addLayer(_montijoLayer) : _map.removeLayer(_montijoLayer);
 
   // chip-montijo (GeoJSON layer — no maxZoom cap)
   const montijoEl = document.getElementById('chip-montijo');
   if (montijoEl) {
     montijoEl.style.display = _activeMunicipality === 'montijo' ? '' : 'none';
-    if (_activeMunicipality === 'montijo' && showZoning && !montijoEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'montijo' && _activeLayer === 'zoning' && !montijoEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-montijo', 'warn', 'Montijo: zoom');
       } else {
@@ -308,14 +308,14 @@ export function updateLayerVisibility() {
   }
 
   // Moita tile layer (AML pdm_revisao layer 4 — no scale restriction, same as Odivelas)
-  const moitaOn = showZoning && (_activeMunicipality === 'moita' || isGL);
+  const moitaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'moita' || isGL);
   moitaOn && zoomed ? _map.addLayer(_moitaLayer) : _map.removeLayer(_moitaLayer);
 
   // chip-moita (tile layer — no server maxScale, but maxZoom:15 used defensively)
   const moitaEl = document.getElementById('chip-moita');
   if (moitaEl) {
     moitaEl.style.display = _activeMunicipality === 'moita' ? '' : 'none';
-    if (_activeMunicipality === 'moita' && showZoning && !moitaEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'moita' && _activeLayer === 'zoning' && !moitaEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-moita', 'warn', 'Moita: zoom');
       } else if (_map.getZoom() > 15) {
@@ -328,14 +328,14 @@ export function updateLayerVisibility() {
   }
 
   // Palmela GeoJSON layer
-  const palmelaOn = showZoning && (_activeMunicipality === 'palmela' || isGL);
+  const palmelaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'palmela' || isGL);
   palmelaOn && zoomed ? _map.addLayer(_palmelaLayer) : _map.removeLayer(_palmelaLayer);
 
   // chip-palmela (GeoJSON layer — no maxZoom cap)
   const palmelaEl = document.getElementById('chip-palmela');
   if (palmelaEl) {
     palmelaEl.style.display = _activeMunicipality === 'palmela' ? '' : 'none';
-    if (_activeMunicipality === 'palmela' && showZoning && !palmelaEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'palmela' && _activeLayer === 'zoning' && !palmelaEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-palmela', 'warn', 'Palmela: zoom');
       } else {
@@ -346,14 +346,14 @@ export function updateLayerVisibility() {
   }
 
   // Seixal GeoJSON layer
-  const seixalOn = showZoning && (_activeMunicipality === 'seixal' || isGL);
+  const seixalOn = _activeLayer === 'zoning' && (_activeMunicipality === 'seixal' || isGL);
   seixalOn && zoomed ? _map.addLayer(_seixalLayer) : _map.removeLayer(_seixalLayer);
 
   // chip-seixal (GeoJSON layer — no maxZoom cap)
   const seixalEl = document.getElementById('chip-seixal');
   if (seixalEl) {
     seixalEl.style.display = _activeMunicipality === 'seixal' ? '' : 'none';
-    if (_activeMunicipality === 'seixal' && showZoning && !seixalEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'seixal' && _activeLayer === 'zoning' && !seixalEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-seixal', 'warn', 'Seixal: zoom');
       } else {
@@ -364,14 +364,14 @@ export function updateLayerVisibility() {
   }
 
   // Sesimbra GeoJSON layer
-  const sesimbraOn = showZoning && (_activeMunicipality === 'sesimbra' || isGL);
+  const sesimbraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'sesimbra' || isGL);
   sesimbraOn && zoomed ? _map.addLayer(_sesimbraLayer) : _map.removeLayer(_sesimbraLayer);
 
   // chip-sesimbra (GeoJSON layer — no maxZoom cap)
   const sesimbraEl = document.getElementById('chip-sesimbra');
   if (sesimbraEl) {
     sesimbraEl.style.display = _activeMunicipality === 'sesimbra' ? '' : 'none';
-    if (_activeMunicipality === 'sesimbra' && showZoning && !sesimbraEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'sesimbra' && _activeLayer === 'zoning' && !sesimbraEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-sesimbra', 'warn', 'Sesimbra: zoom');
       } else {
@@ -382,14 +382,14 @@ export function updateLayerVisibility() {
   }
 
   // Setúbal GeoJSON layer
-  const setubalOn = showZoning && (_activeMunicipality === 'setubal' || isGL);
+  const setubalOn = _activeLayer === 'zoning' && (_activeMunicipality === 'setubal' || isGL);
   setubalOn && zoomed ? _map.addLayer(_setubalLayer) : _map.removeLayer(_setubalLayer);
 
   // chip-setubal (GeoJSON layer — no maxZoom cap)
   const setubalEl = document.getElementById('chip-setubal');
   if (setubalEl) {
     setubalEl.style.display = _activeMunicipality === 'setubal' ? '' : 'none';
-    if (_activeMunicipality === 'setubal' && showZoning && !setubalEl.classList.contains('chip-loading')) {
+    if (_activeMunicipality === 'setubal' && _activeLayer === 'zoning' && !setubalEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-setubal', 'warn', 'Set\u00fabal: zoom');
       } else {
@@ -454,11 +454,7 @@ export function handleLayerSelect(value) {
     }
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
-    if (value === 'cadastro') {
-      updateLayerVisibility(); // keep zoning layers visible underneath cadastro
-    } else {
-      [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer, _montijoLayer, _palmelaLayer, _seixalLayer, _sesimbraLayer, _setubalLayer].forEach(l => _map.removeLayer(l));
-    }
+    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer, _montijoLayer, _palmelaLayer, _seixalLayer, _sesimbraLayer, _setubalLayer].forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {
@@ -542,7 +538,96 @@ export function initBasemapToggle(map) {
 //   onUpdateLayersBtnLabel(v)  — updates layers button label
 //   onCloseLayersSheet()       — closes layers popup
 //   onUpdateZoningOverlayChip()— updates Solo chip for zoning mode
+//   onUpdateDetailZoning(label)— injects zoning label into open cadastro detail panel
 // }
+
+// ── Point-in-polygon helpers ──────────────────────────────────
+
+function pointInRing(x, y, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+function pointInPolygon(coord, geometry) {
+  const [x, y] = coord;
+  const polys = geometry.type === 'MultiPolygon' ? geometry.coordinates : [geometry.coordinates];
+  for (const rings of polys) {
+    if (!pointInRing(x, y, rings[0])) continue;
+    let inHole = false;
+    for (let i = 1; i < rings.length; i++) if (pointInRing(x, y, rings[i])) { inHole = true; break; }
+    if (!inHole) return true;
+  }
+  return false;
+}
+
+// Queries the active municipality's zoning at a given latlng.
+// Returns a Promise<string|null> resolving to the zoning label.
+function queryZoningAtPoint(latlng) {
+  const { lat, lng } = latlng;
+  const muni = _activeMunicipality;
+
+  const tileCfg = {
+    cascais:   { url: CASCAIS_BASE,  layers: 'visible:2',  colors: CASCAIS_COLORS,   field: 'Categoria' },
+    oeiras:    { url: CASCAIS_BASE,  layers: 'visible:3',  colors: OEIRAS_COLORS,    field: 'Categoria' },
+    loures:    { url: CASCAIS_BASE,  layers: 'visible:6',  colors: LOURES_COLORS,    field: 'Categoria' },
+    almada:    { url: AML_PDM1_BASE, layers: 'all:2',      colors: ALMADA_COLORS,    field: 'Classe'    },
+    barreiro:  { url: AML_PDM1_BASE, layers: 'all:2',      colors: BARREIRO_COLORS,  field: 'Classe'    },
+    alcochete: { url: AML_PDM1_BASE, layers: 'all:2',      colors: ALCOCHETE_COLORS, field: 'Classe'    },
+    vfxira:    { url: CASCAIS_BASE,  layers: 'visible:10', colors: VFX_COLORS,       field: 'Classe'    },
+    odivelas:  { url: CASCAIS_BASE,  layers: 'visible:8',  colors: ODIVELAS_COLORS,  field: 'Categoria' },
+    moita:     { url: CASCAIS_BASE,  layers: 'visible:4',  colors: MOITA_COLORS,     field: 'Categoria' },
+  };
+  if (tileCfg[muni]) {
+    const { url, layers, colors, field } = tileCfg[muni];
+    return new Promise(resolve => {
+      L.esri.identifyFeatures({ url }).on(_map).at(latlng).layers(layers).tolerance(0)
+        .run((err, fc) => {
+          if (err || !fc?.features?.length) return resolve(null);
+          const key = (fc.features[0].properties[field] || '').trim();
+          const cfg = colors[key];
+          resolve(cfg ? (cfg.label || key) : (key || null));
+        });
+    });
+  }
+
+  const geojsonCfg = {
+    sintra:   [{ layer: _urbanLayer,   field: 'CAT',            colors: URBAN_COLORS    },
+               { layer: _ruralLayer,   field: 'Ord_Categ',      colors: RURAL_COLORS    }],
+    amadora:  [{ layer: _amadoraLayer,  field: 'Categoria_2021', colors: AMADORA_COLORS  }],
+    lisboa:   [{ layer: _lisboaLayer,   field: 'Categoria',      colors: LISBOA_COLORS   }],
+    mafra:    [{ layer: _mafraLayer,    field: 'Categoria',      colors: MAFRA_COLORS    }],
+    montijo:  [{ layer: _montijoLayer,  field: 'Categoria_2021', colors: MONTIJO_COLORS, fallback: 'Classe_2021' }],
+    palmela:  [{ layer: _palmelaLayer,  field: 'tipo',           colors: PALMELA_COLORS  }],
+    seixal:   [{ layer: _seixalLayer,   field: 'designacao',     colors: SEIXAL_COLORS   }],
+    sesimbra: [{ layer: _sesimbraLayer, field: 'Categoria_2021', colors: SESIMBRA_COLORS, fallback: 'Classe_2021' }],
+    setubal:  [{ layer: _setubalLayer,  field: 'Categoria',      colors: SETUBAL_COLORS  }],
+  };
+  const layerCfgs = geojsonCfg[muni];
+  if (!layerCfgs) return Promise.resolve(null);
+
+  const coord = [lng, lat];
+  for (const { layer, field, colors, fallback } of layerCfgs) {
+    let found = null;
+    layer.eachLayer(sub => {
+      if (found) return;
+      sub.eachLayer(fl => {
+        if (found) return;
+        const geom = fl.feature?.geometry;
+        if (!geom || !pointInPolygon(coord, geom)) return;
+        let key = (fl.feature.properties[field] || '').trim();
+        if ((!key || key === 'Não Atribuída') && fallback) key = (fl.feature.properties[fallback] || '').trim();
+        const cfg = colors[key];
+        found = cfg ? (cfg.label || key) : (key || null);
+      });
+    });
+    if (found) return Promise.resolve(found);
+  }
+  return Promise.resolve(null);
+}
 
 export function initMapHandlers({
   ovlState,
@@ -551,7 +636,7 @@ export function initMapHandlers({
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
   onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet,
-  onUpdateZoningOverlayChip,
+  onUpdateZoningOverlayChip, onUpdateDetailZoning,
 }) {
   _ovlState     = ovlState;
   _urbanLayer   = urbanLayer;
@@ -585,6 +670,7 @@ export function initMapHandlers({
     onUpdateLayersBtnLabel,
     onCloseLayersSheet,
     onUpdateZoningOverlayChip,
+    onUpdateDetailZoning,
     onOverlayShortName:  overlayShortName,
     onLoadOverlay:       loadOverlay,
     onGetCascaisReady:   getCascaisReady,
@@ -740,11 +826,13 @@ export function initMapHandlers({
         `&WIDTH=${mapSize.x}&HEIGHT=${mapSize.y}` +
         `&CRS=EPSG%3A4326&BBOX=${bbox}` +
         `&I=${Math.round(pt.x)}&J=${Math.round(pt.y)}&STYLES=`;
+      const zoningPromise = queryZoningAtPoint(e.latlng);
       fetch(url)
         .then(r => r.json())
         .then(fc => {
           if (!fc?.features?.length) return;
           _callbacks.onShowOverlayDetail?.(def, fc.features[0].properties);
+          zoningPromise.then(label => _callbacks.onUpdateDetailZoning?.(label)).catch(() => {});
         })
         .catch(() => {});
     } else if (_activeLayer === 'incendio') {
