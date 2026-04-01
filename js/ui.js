@@ -66,7 +66,7 @@ export function updateSintraChip() {
   const sintraStatus      = _getSintraStatus();
   const activeLayer       = _getActiveLayer();
   const activeMunicipality = _getActiveMunicipality();
-  const on = activeLayer === 'zoning' && (activeMunicipality === 'sintra' || activeMunicipality === 'grande-lisboa');
+  const on = (activeLayer === 'zoning' || activeLayer === 'cadastro') && (activeMunicipality === 'sintra' || activeMunicipality === 'grande-lisboa');
 
   [_urbanLayer, _ruralLayer].forEach(l => on && zoomed ? _map.addLayer(l) : _map.removeLayer(l));
 
@@ -74,7 +74,7 @@ export function updateSintraChip() {
   if (!sintraEl) return;
   sintraEl.style.display = activeMunicipality === 'sintra' ? '' : 'none';
   if (activeMunicipality !== 'sintra') return;
-  if (activeLayer !== 'zoning') return; // overlay active — leave chip as-is
+  if (activeLayer !== 'zoning' && activeLayer !== 'cadastro') return; // overlay active — leave chip as-is
   if (!zoomed) { setChip('chip-sintra', 'warn', 'Sintra: zoom'); return; }
 
   const u = sintraStatus.urban;
