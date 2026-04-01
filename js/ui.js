@@ -191,6 +191,7 @@ export function openLayersSheet() {
   sheet.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
   sheet.classList.add('open');
   document.getElementById('layers-backdrop').classList.add('open');
+  btn.classList.add('open');
   // Check after transition so height is final
   requestAnimationFrame(updateScrollFade);
 }

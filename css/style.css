@@ -498,6 +498,13 @@ html, body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+#layers-btn-chevron {
+  font-size: 9px;
+  color: rgba(255,255,255,0.4);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+#layers-btn.open #layers-btn-chevron { transform: rotate(180deg); }
 
 /* ---- Layers popup ---- */
 #layers-backdrop {

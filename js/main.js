@@ -237,6 +237,7 @@ const sintraStatus = { urban: 'loading', urbanText: '', rural: 'loading', ruralT
 function closeLayersSheet() {
   document.getElementById('layers-sheet').classList.remove('open');
   document.getElementById('layers-backdrop').classList.remove('open');
+  document.getElementById('layers-btn').classList.remove('open');
   document.getElementById('overlay-body').scrollTop = 0;
 }
 
@@ -249,7 +250,7 @@ function toggleLayersSheet() {
 function updateLayersBtnLabel(value) {
   if (value === 'none') { document.getElementById('layers-btn-label').textContent = 'Mapa base'; return; }
   const def = OVERLAY_DEFS.find(d => d.id === value);
-  document.getElementById('layers-btn-label').textContent = def ? def.name : 'Mapeamento';
+  document.getElementById('layers-btn-label').textContent = def ? def.name : 'Qualificação do Solo';
 }
 
 // ============================================================
