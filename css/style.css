@@ -526,6 +526,16 @@ html, body {
   transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.2s;
 }
 #layers-sheet.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
+#layers-sheet.has-scroll::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 52px;
+  border-radius: 0 0 18px 18px;
+  background: linear-gradient(to bottom, transparent, rgba(8,8,20,0.88));
+  pointer-events: none;
+  z-index: 2;
+}
 
 #layers-handle { display: none; }
 

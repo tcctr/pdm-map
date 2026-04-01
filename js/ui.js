@@ -168,6 +168,14 @@ export function updateDetailZoning(label) {
 
 // ── Layers sheet ──────────────────────────────────────────────
 
+function updateScrollFade() {
+  const body  = document.getElementById('overlay-body');
+  const sheet = document.getElementById('layers-sheet');
+  if (!body || !sheet) return;
+  const canScrollMore = body.scrollHeight - body.scrollTop - body.clientHeight > 4;
+  sheet.classList.toggle('has-scroll', canScrollMore);
+}
+
 export function openLayersSheet() {
   const btn   = document.getElementById('layers-btn');
   const sheet = document.getElementById('layers-sheet');
@@ -175,6 +183,8 @@ export function openLayersSheet() {
   sheet.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
   sheet.classList.add('open');
   document.getElementById('layers-backdrop').classList.add('open');
+  // Check after transition so height is final
+  requestAnimationFrame(updateScrollFade);
 }
 
 // ── Overlay panel builder ─────────────────────────────────────
@@ -204,6 +214,7 @@ export function buildOverlayPanel() {
     }
   }
   body.innerHTML = html;
+  requestAnimationFrame(updateScrollFade);
 }
 
 // ── initUI ────────────────────────────────────────────────────
@@ -238,6 +249,9 @@ export function initUI({
   _getActiveLayer            = getActiveLayer;
   _getActiveMunicipality     = getActiveMunicipality;
   _onZoningOverlayChipUpdate = onZoningOverlayChipUpdate;
+
+  // Scroll fade on overlay list
+  document.getElementById('overlay-body').addEventListener('scroll', updateScrollFade, { passive: true });
 
   // Swipe down to close detail panel
   let touchStartY = 0;
