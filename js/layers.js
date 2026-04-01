@@ -1159,7 +1159,13 @@ async function loadSetubal(attempt = 0) {
 export async function loadOverlay(id, activeMunicipality) {
   const def = OVERLAY_DEFS.find(d => d.id === id);
   const st  = ovlState[id];
-  if (st.loaded)  { if (st.active) st.leafletLayer.addTo(_map); return; }
+  if (st.loaded)  {
+    if (st.active) {
+      st.leafletLayer.addTo(_map);
+      _callbacks.onOverlayStatus?.(id, 'ok', overlayShortName(def));
+    }
+    return;
+  }
   if (st.loading) return;
   st.loading = true;
   const spin = document.getElementById('ovl-spin-' + id);
