@@ -28,11 +28,20 @@ const _chipLoadedState = {};
 
 // ── Generic chip helper ──────────────────────────────────────
 
+function syncStatusbar() {
+  const bar = document.getElementById('statusbar');
+  if (!bar) return;
+  const hasVisible = Array.from(bar.children).some(c => c.style.display !== 'none');
+  bar.style.display = hasVisible ? '' : 'none';
+}
+
 export function setChip(id, state, text) {
   const el = document.getElementById(id);
   if (!el) return;
   el.className = 'status-chip chip-' + state;
   el.innerHTML = `<div class="dot"></div><span>${text}</span>`;
+  el.style.display = (state === 'error' || state === 'warn') ? '' : 'none';
+  syncStatusbar();
 }
 
 export function setChipLoaded(id, state, text) {
@@ -72,8 +81,7 @@ export function updateSintraChip() {
 
   const sintraEl = document.getElementById('chip-sintra');
   if (!sintraEl) return;
-  sintraEl.style.display = activeMunicipality === 'sintra' ? '' : 'none';
-  if (activeMunicipality !== 'sintra') return;
+  if (activeMunicipality !== 'sintra') { sintraEl.style.display = 'none'; syncStatusbar(); return; }
   if (activeLayer !== 'zoning') return; // overlay active — leave chip as-is
   if (!zoomed) { setChip('chip-sintra', 'warn', 'Sintra: zoom'); return; }
 

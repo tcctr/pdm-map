@@ -126,10 +126,7 @@ function pickMunicipality(muni) {
 // ============================================================
 
 function setOverlayChip(state, text) {
-  const el = document.getElementById('chip-overlay');
-  if (!el) return;
-  el.className = 'status-chip chip-' + state;
-  el.innerHTML = `<div class="dot"></div><span>${text}</span>`;
+  setChip('chip-overlay', state, text);
 }
 
 function updateZoningOverlayChip() {
