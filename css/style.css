@@ -34,15 +34,21 @@ html, body {
   right: max(10px, calc(var(--safe-right) + 4px));
   z-index: 1000;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 10px;
+  flex-direction: column;
+  gap: 0;
+  padding: 8px 10px 8px;
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: var(--glass-border);
   border-radius: 18px;
   box-shadow: var(--glass-shadow);
+}
+
+#topbar-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 /* ---- Municipality picker (replaces title) ---- */
@@ -218,22 +224,13 @@ html, body {
   margin-top: 2px;
 }
 
-/* ---- Status bar ---- */
+/* ---- Status bar (second row inside topbar) ---- */
 #statusbar {
-  position: fixed;
-  top: max(76px, calc(var(--safe-top) + 70px));
-  left: max(10px, calc(var(--safe-left) + 4px));
-  right: max(10px, calc(var(--safe-right) + 4px));
-  z-index: 999;
   display: flex;
-  gap: 6px;
-  padding: 6px 10px;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
-  border-radius: 14px;
-  box-shadow: var(--glass-shadow);
+  gap: 5px;
+  padding: 7px 0 0;
+  margin: 0 0;
+  border-top: 1px solid rgba(255,255,255,0.07);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -243,14 +240,13 @@ html, body {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 12px;
-  min-height: 32px;
+  padding: 4px 10px;
+  min-height: 26px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
   border: 1px solid rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
 }
 .status-chip .dot {
