@@ -9,9 +9,9 @@ export const config = {
 };
 
 export default function middleware(request) {
-  // Allow public landing page through without auth
+  // Landing page and its assets are public — only /app requires auth
   const { pathname } = new URL(request.url);
-  if (pathname === '/landing.html' || pathname === '/landing') return;
+  if (pathname === '/' || pathname === '/index.html' || pathname === '/favicon.svg') return;
 
   const credsEnv = process.env.BASIC_AUTH_CREDENTIALS;
 
