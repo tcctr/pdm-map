@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapear — Zonas PDM da Área Metropolitana de Lisboa</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --glass-bg: rgba(10,10,20,0.62);
+      --glass-blur: blur(28px) saturate(160%);
+      --glass-border: 1px solid rgba(255,255,255,0.10);
+      --glass-shadow: 0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+      --accent: #e63946;
+      --accent-hover: #ff4d5a;
+      --text-primary: rgba(255,255,255,0.97);
+      --text-secondary: rgba(255,255,255,0.55);
+      --text-muted: rgba(255,255,255,0.32);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: #1a1a2e;
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-bottom: var(--glass-border);
+    }
+
+    .nav-logo {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .nav-logo span {
+      color: var(--accent);
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .nav-cta:hover { background: var(--accent-hover); }
+
+    /* ─── HERO ─── */
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px 24px 80px;
+      overflow: hidden;
+    }
+
+    /* Abstract map-like background */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 40%, rgba(230,57,70,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 80% 60%, rgba(96,165,250,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 80% 40% at 50% 20%, rgba(74,222,128,0.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* Grid lines overlay */
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(230,57,70,0.15);
+      border: 1px solid rgba(230,57,70,0.3);
+      color: #f87171;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      letter-spacing: 0.3px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #e63946;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .hero h1 {
+      font-size: clamp(42px, 9vw, 80px);
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1.05;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 span { color: var(--accent); }
+
+    .hero-tagline {
+      font-size: clamp(15px, 2.5vw, 18px);
+      color: var(--text-secondary);
+      max-width: 500px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px 28px;
+      border-radius: 13px;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text-primary);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px 28px;
+      border-radius: 13px;
+      text-decoration: none;
+      border: var(--glass-border);
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-secondary:hover { background: rgba(255,255,255,0.13); transform: translateY(-1px); }
+
+    .hero-scroll {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    .hero-scroll svg { opacity: 0.4; }
+
+    /* ─── SECTIONS COMMON ─── */
+    section {
+      padding: 96px 24px;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: clamp(26px, 4vw, 38px);
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .section-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 520px;
+      margin-bottom: 56px;
+    }
+
+    /* ─── FEATURES ─── */
+    #features {
+      border-top: var(--glass-border);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      border-radius: 18px;
+      padding: 28px 24px;
+    }
+
+    .feature-icon {
+      font-size: 28px;
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .feature-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.2px;
+    }
+
+    .feature-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* ─── MUNICIPALITIES STRIP ─── */
+    .munis-strip {
+      margin-top: 48px;
+      background: rgba(255,255,255,0.04);
+      border: var(--glass-border);
+      border-radius: 14px;
+      padding: 20px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .munis-strip-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      width: 100%;
+      margin-bottom: 4px;
+    }
+
+    .muni-pill {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text-secondary);
+    }
+
+    /* ─── PRICING ─── */
+    #pricing {
+      border-top: var(--glass-border);
+      text-align: center;
+    }
+
+    #pricing .section-subtitle {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .pricing-grid {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+
+    .pricing-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      border-radius: 22px;
+      padding: 36px 28px 28px;
+      width: 300px;
+      max-width: calc(100vw - 48px);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .pricing-card.featured {
+      border: 1.5px solid rgba(230,57,70,0.55);
+      box-shadow: 0 0 0 1px rgba(230,57,70,0.12), var(--glass-shadow);
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 4px 14px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .pricing-plan-name {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .pricing-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .pricing-amount {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .pricing-currency {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .pricing-price {
+      font-size: 52px;
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+
+    .pricing-period {
+      font-size: 14px;
+      color: var(--text-muted);
+      align-self: center;
+    }
+
+    .pricing-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    .pricing-divider {
+      border: none;
+      border-top: var(--glass-border);
+      margin-bottom: 24px;
+    }
+
+    .pricing-features {
+      list-style: none;
+      text-align: left;
+      margin-bottom: 28px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pricing-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .pricing-features li::before {
+      content: '';
+      width: 16px;
+      height: 16px;
+      min-width: 16px;
+      background: rgba(74,222,128,0.2);
+      border-radius: 50%;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='8' viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4L3.5 6.5L9 1' stroke='%234ade80' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .btn-plan {
+      display: block;
+      text-align: center;
+      padding: 14px;
+      border-radius: 13px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-plan:hover { transform: translateY(-1px); }
+
+    .btn-plan-default {
+      background: rgba(255,255,255,0.1);
+      border: var(--glass-border);
+      color: var(--text-primary);
+    }
+
+    .btn-plan-default:hover { background: rgba(255,255,255,0.16); }
+
+    .btn-plan-featured {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-plan-featured:hover { background: var(--accent-hover); }
+
+    /* ─── FAQ ─── */
+    #faq {
+      border-top: var(--glass-border);
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 700px;
+    }
+
+    details {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+
+    details[open] {
+      box-shadow: var(--glass-shadow);
+    }
+
+    summary {
+      padding: 18px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      list-style: none;
+      gap: 16px;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    summary::after {
+      content: '+';
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text-muted);
+      min-width: 18px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    details[open] summary::after {
+      transform: rotate(45deg);
+    }
+
+    .faq-answer {
+      padding: 0 20px 20px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      border-top: var(--glass-border);
+      padding-top: 14px;
+    }
+
+    .faq-answer p + p { margin-top: 8px; }
+
+    .muni-list-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .muni-list-inline span {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text-muted);
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: var(--glass-border);
+      padding: 32px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .footer-copy {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links a {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer-links a:hover { color: var(--text-secondary); }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(6px); }
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 640px) {
+      nav { padding: 12px 16px; }
+      section { padding: 72px 20px; }
+      .hero { padding: 80px 20px 60px; }
+      footer { padding: 24px 20px; }
+      .pricing-card { width: 100%; }
+      .features-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/landing.html" class="nav-logo">Mape<span>ar</span></a>
+    <a href="#pricing" class="nav-cta">Ver planos</a>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">AML · 18 Municípios</div>
+      <h1>Consulte o <span>PDM</span><br>de qualquer ponto<br>da Grande Lisboa</h1>
+      <p class="hero-tagline">
+        Zonas de uso do solo, condicionantes e restrições urbanísticas —
+        para toda a Área Metropolitana de Lisboa, no seu telemóvel.
+      </p>
+      <div class="hero-actions">
+        <a href="#pricing" class="btn-primary">
+          Ver planos de acesso
+        </a>
+        <a href="/" class="btn-secondary">
+          Abrir mapa →
+        </a>
+      </div>
+    </div>
+    <div class="hero-scroll" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M4 9l4 4 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Explorar
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <span class="section-label">Funcionalidades</span>
+    <h2 class="section-title">Tudo o que precisa para<br>consultar o PDM</h2>
+    <p class="section-subtitle">
+      Uma ferramenta pensada para proprietários, investidores, arquitetos e profissionais de urbanismo.
+    </p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🗺️</span>
+        <div class="feature-title">18 Municípios da AML</div>
+        <p class="feature-desc">
+          Cobertura completa da Área Metropolitana de Lisboa — desde Sintra e Cascais até Setúbal e Palmela.
+        </p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📍</span>
+        <div class="feature-title">GPS integrado</div>
+        <p class="feature-desc">
+          Deteta automaticamente a sua localização e o município correspondente. Consulta imediata, sem pesquisar.
+        </p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔍</span>
+        <div class="feature-title">Pesquisa de morada</div>
+        <p class="feature-desc">
+          Pesquise qualquer morada ou localidade na AML. O mapa centra-se no ponto e mostra a classificação do solo.
+        </p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔄</span>
+        <div class="feature-title">Dados atualizados</div>
+        <p class="feature-desc">
+          Sincronização semanal automática com as fontes oficiais (DGT, AML, municípios). Sempre com dados recentes.
+        </p>
+      </div>
+    </div>
+
+    <div class="munis-strip">
+      <div class="munis-strip-label">Municípios cobertos</div>
+      <span class="muni-pill">Sintra</span>
+      <span class="muni-pill">Cascais</span>
+      <span class="muni-pill">Oeiras</span>
+      <span class="muni-pill">Lisboa</span>
+      <span class="muni-pill">Loures</span>
+      <span class="muni-pill">Amadora</span>
+      <span class="muni-pill">Almada</span>
+      <span class="muni-pill">Barreiro</span>
+      <span class="muni-pill">Seixal</span>
+      <span class="muni-pill">Sesimbra</span>
+      <span class="muni-pill">Setúbal</span>
+      <span class="muni-pill">Palmela</span>
+      <span class="muni-pill">Moita</span>
+      <span class="muni-pill">Montijo</span>
+      <span class="muni-pill">Alcochete</span>
+      <span class="muni-pill">Mafra</span>
+      <span class="muni-pill">Odivelas</span>
+      <span class="muni-pill">V. F. de Xira</span>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <span class="section-label">Planos</span>
+    <h2 class="section-title">Acesso simples e transparente</h2>
+    <p class="section-subtitle">
+      Escolha o plano que se adapta às suas necessidades. Sem surpresas, sem renovações forçadas.
+    </p>
+
+    <div class="pricing-grid">
+
+      <!-- 72h -->
+      <div class="pricing-card">
+        <div class="pricing-plan-name">Acesso 72h</div>
+        <p class="pricing-desc">Para uma consulta pontual</p>
+        <div class="pricing-amount">
+          <span class="pricing-currency">€</span>
+          <span class="pricing-price">3</span>
+        </div>
+        <p class="pricing-note">pagamento único · acesso por 72 horas</p>
+        <hr class="pricing-divider">
+        <ul class="pricing-features">
+          <li>Todos os 18 municípios</li>
+          <li>GPS + pesquisa de morada</li>
+          <li>Camadas RAN, REN e risco</li>
+          <li>Acesso durante 3 dias</li>
+        </ul>
+        <a href="#" class="btn-plan btn-plan-default" data-stripe-plan="72h">Começar agora</a>
+      </div>
+
+      <!-- Monthly (featured) -->
+      <div class="pricing-card featured">
+        <div class="pricing-badge">Mais popular</div>
+        <div class="pricing-plan-name">Mensal</div>
+        <p class="pricing-desc">Para uso recorrente</p>
+        <div class="pricing-amount">
+          <span class="pricing-currency">€</span>
+          <span class="pricing-price">8</span>
+          <span class="pricing-period">/mês</span>
+        </div>
+        <p class="pricing-note">cancele quando quiser · renova mensalmente</p>
+        <hr class="pricing-divider">
+        <ul class="pricing-features">
+          <li>Todos os 18 municípios</li>
+          <li>GPS + pesquisa de morada</li>
+          <li>Camadas RAN, REN e risco</li>
+          <li>Acesso contínuo</li>
+        </ul>
+        <a href="#" class="btn-plan btn-plan-featured" data-stripe-plan="monthly">Subscrever</a>
+      </div>
+
+      <!-- Lifetime -->
+      <div class="pricing-card">
+        <div class="pricing-plan-name">Vitalício</div>
+        <p class="pricing-desc">Acesso permanente</p>
+        <div class="pricing-amount">
+          <span class="pricing-currency">€</span>
+          <span class="pricing-price">49</span>
+        </div>
+        <p class="pricing-note">pagamento único · acesso para sempre</p>
+        <hr class="pricing-divider">
+        <ul class="pricing-features">
+          <li>Todos os 18 municípios</li>
+          <li>GPS + pesquisa de morada</li>
+          <li>Camadas RAN, REN e risco</li>
+          <li>Todas as futuras atualizações</li>
+        </ul>
+        <a href="#" class="btn-plan btn-plan-default" data-stripe-plan="lifetime">Comprar acesso</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <span class="section-label">FAQ</span>
+    <h2 class="section-title">Perguntas frequentes</h2>
+
+    <div class="faq-list">
+
+      <details>
+        <summary>O que é o PDM?</summary>
+        <div class="faq-answer">
+          <p>O Plano Diretor Municipal (PDM) é o principal instrumento de planeamento territorial de cada município. Define a classificação e qualificação do solo — distinguindo solo urbano (edificável) de solo rústico (agrícola, florestal, natural) — e estabelece as regras de uso, transformação e ocupação do território.</p>
+          <p>Consultar o PDM é essencial antes de comprar um terreno, pedir uma licença de construção ou planear qualquer intervenção urbanística.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Quais os municípios cobertos pelo Mapear?</summary>
+        <div class="faq-answer">
+          <p>O Mapear cobre os 18 municípios da Área Metropolitana de Lisboa (AML):</p>
+          <div class="muni-list-inline">
+            <span>Sintra</span><span>Cascais</span><span>Oeiras</span><span>Lisboa</span>
+            <span>Loures</span><span>Amadora</span><span>Almada</span><span>Barreiro</span>
+            <span>Seixal</span><span>Sesimbra</span><span>Setúbal</span><span>Palmela</span>
+            <span>Moita</span><span>Montijo</span><span>Alcochete</span><span>Mafra</span>
+            <span>Odivelas</span><span>Vila Franca de Xira</span>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>Com que frequência são atualizados os dados?</summary>
+        <div class="faq-answer">
+          <p>Os dados são sincronizados automaticamente todas as semanas (às segundas-feiras) a partir das fontes oficiais: DGT (Direção-Geral do Território), servidores AML e os serviços GIS de cada município.</p>
+          <p>A data da última sincronização é visível no próprio mapa.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>O que acontece quando o acesso de 72h termina?</summary>
+        <div class="faq-answer">
+          <p>O acesso expira passadas 72 horas após a compra. Pode sempre adquirir um novo acesso de 72h, ou optar pelo plano Mensal ou Vitalício para acesso contínuo.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>Posso cancelar a subscrição mensal?</summary>
+        <div class="faq-answer">
+          <p>Sim. Pode cancelar a qualquer momento através do portal de cliente da Stripe (link enviado por e-mail após a subscrição). O cancelamento tem efeito no final do período já pago — não há reembolsos parciais.</p>
+        </div>
+      </details>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <span class="footer-copy">© 2025 Mapear</span>
+    <div class="footer-links">
+      <a href="/">Abrir mapa</a>
+      <a href="mailto:">Contacto</a>
+    </div>
+  </footer>
+
+</body>
+</html>

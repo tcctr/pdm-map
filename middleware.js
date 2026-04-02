@@ -9,6 +9,10 @@ export const config = {
 };
 
 export default function middleware(request) {
+  // Allow public landing page through without auth
+  const { pathname } = new URL(request.url);
+  if (pathname === '/landing.html' || pathname === '/landing') return;
+
   const credsEnv = process.env.BASIC_AUTH_CREDENTIALS;
 
   // Fail closed: if credentials are not configured, deny everything
