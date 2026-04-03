@@ -4,25 +4,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Mapear** — a single-page web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for eighteen municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete, Moita, Montijo, Palmela, Seixal, Sesimbra, Setúbal), plus a **Grande Lisboa** region view that renders all eighteen simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
+**Mapear** — a commercial web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for eighteen municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete, Moita, Montijo, Palmela, Seixal, Sesimbra, Setúbal), plus a **Grande Lisboa** region view that renders all eighteen simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
+
+The public entry point is a marketing landing page (`index.html`) with Stripe-powered payment plans. After payment users receive credentials for HTTP Basic Auth on the map app (`app.html`, served at `/app`).
 
 ## Architecture
 
-No build step, no bundler. Pure ES modules loaded directly by the browser.
+No build step, no bundler. The map app uses pure ES modules loaded directly by the browser. The API layer uses Vercel Serverless Functions (Node.js 20).
 
 **File structure:**
+- `index.html` — public landing page (dark glass marketing page, Stripe pricing cards)
+- `app.html` — map app HTML skeleton; CDN imports; `<script type="module" src="js/main.js">`; served at `/app` via `vercel.json` rewrite
+- `success.html` — post-payment success page; shows generated credentials; served at `/success`
+- `middleware.js` — Vercel Edge Middleware; HTTP Basic Auth for `/app`; checks env var creds then Vercel KV
+- `vercel.json` — rewrites `/app` → `app.html` and `/success` → `success.html`
+- `api/checkout.js` — Vercel Function; creates Stripe Checkout session; returns `{ url }`
+- `api/verify-session.js` — Vercel Function; verifies Stripe session; generates + stores credentials in KV
+- `api/webhook.js` — Vercel Function; handles Stripe webhook events (renewal, cancellation)
 - `js/config.js` — all constants, color maps, `OVERLAY_DEFS`, `MUNICIPALITIES`, base URLs
 - `js/map.js` — Leaflet map init, base layers, municipality switching, layer visibility, map event handlers
 - `js/layers.js` — `loadLayerData`, `fetchAllFeatures`, overlay lazy-loading, retry logic
 - `js/ui.js` — detail panel, chips, layers sheet, cache date indicator, swipe gestures
 - `js/search.js` — Nominatim address search and reverse geocode
 - `js/main.js` — entry point, wires all modules together, GPS tracking, event listeners
-- `css/style.css` — all styles
-- `index.html` — HTML skeleton only, CDN imports, `<script type="module" src="js/main.js">`
+- `css/style.css` — all styles for the map app
+- `scripts/sync-data.js` — data sync CLI script
 
-**`package.json`** exists with `"type": "module"` — required for the sync script's ES module imports. No external runtime dependencies.
+**`package.json`** has `"type": "module"`. Runtime npm dependencies: `stripe` (Vercel Functions), `@vercel/kv` (Vercel Functions). The map app itself has no npm dependencies — it loads Leaflet and esri-leaflet from CDN.
 
-**External dependencies (CDN):**
+**External dependencies (CDN, map app only):**
 - Leaflet 1.9.4 — map rendering and GeoJSON layer management
 - esri-leaflet 3.0.12 — `dynamicMapLayer` (tile rendering) and `identifyFeatures` (click queries) for tile-rendered municipalities and fire risk layers
 
@@ -31,6 +41,96 @@ No build step, no bundler. Pure ES modules loaded directly by the browser.
 npx serve .
 python3 -m http.server 8080
 ```
+Note: API routes (`/api/*`) only work on Vercel. For local payment testing use the Stripe CLI: `stripe listen --forward-to localhost:3000/api/webhook`.
+
+---
+
+## Landing Page
+
+`index.html` is the public homepage — no auth required. It is a standalone self-contained page (inline `<style>`, no dependency on `css/style.css`) using the same dark glass design system as the map app (`--glass-bg`, `--glass-blur`, `--glass-border`, `--glass-shadow`, `--glass-deep-bg`, `--glass-deep-blur`). Background is `#0d0d1a` (slightly darker than app's `#1a1a2e`).
+
+**Sections:** Hero → Features → Pricing → FAQ → Footer
+
+**Nav:** floating pill (10px margin, `border-radius: 18px`, glass shadow) matching the app's `#topbar` style. Right side has "Ver planos" and "Entrar →" buttons; "Entrar →" links to `/app`.
+
+**Pricing cards:** three glass cards — 72h (€3), Mensal (€8/mês, featured with coral border + "Mais popular" badge), Vitalício (€49). Buttons have `data-stripe-plan="72h|monthly|lifetime"` attributes. A `<script>` at the bottom intercepts clicks, POSTs `{ plan }` to `/api/checkout`, and redirects to the returned Stripe URL.
+
+---
+
+## Payment System
+
+**Flow:**
+1. User clicks a plan button on the landing page
+2. Browser POSTs `{ plan }` to `/api/checkout` → Stripe Checkout Session created → redirect to Stripe
+3. User pays → Stripe redirects to `/success?session_id=cs_xxx`
+4. `success.html` calls `GET /api/verify-session?session_id=xxx`
+5. API generates credentials, stores in Vercel KV, returns `{ username, password, plan }`
+6. Success page displays username + password with copy buttons
+7. User goes to `/app`, enters credentials in the Basic Auth dialog
+
+**API routes:**
+
+| Route | File | Purpose |
+|-------|------|---------|
+| `POST /api/checkout` | `api/checkout.js` | Creates Stripe Checkout session |
+| `GET /api/verify-session` | `api/verify-session.js` | Verifies session, provisions credentials |
+| `POST /api/webhook` | `api/webhook.js` | Handles Stripe lifecycle events |
+
+**Checkout modes:** `monthly` uses `mode: 'subscription'`; `72h` and `lifetime` use `mode: 'payment'`. Never mix price types with the wrong mode — Stripe returns 400.
+
+**Credential generation:** `username = 'user_' + randomString(8)`, `password = randomString(12)` using `crypto.getRandomValues` (Node 20 global, no import needed).
+
+**Vercel KV data structure:**
+
+| Key | Value | TTL |
+|-----|-------|-----|
+| `cred:{username}` | `{ password, plan, expiresAt }` | 259200s (72h) / 2592000s (monthly) / none (lifetime) |
+| `session:{stripeSessionId}` | `{ username, password, plan }` | none (idempotency guard) |
+| `sub:{stripeSubscriptionId}` | `username` | none (webhook renewal lookup) |
+
+**Webhook events handled:**
+- `invoice.payment_succeeded` — extends `cred:` TTL by 30 days on monthly renewal
+- `customer.subscription.deleted` — deletes `cred:{username}` and `sub:{subId}` (revokes access)
+- `invoice.payment_failed` — no-op; Stripe's retry cycle + `subscription.deleted` handles lockout
+
+**Critical:** `api/webhook.js` exports `config = { api: { bodyParser: false } }`. Without this, Vercel pre-parses the body and Stripe signature verification always fails.
+
+**Required environment variables:**
+
+| Variable | Description |
+|----------|-------------|
+| `STRIPE_SECRET_KEY` | `sk_live_...` (prod) / `sk_test_...` (preview) |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_...` from Stripe Dashboard → Webhooks |
+| `STRIPE_PRICE_72H` | Stripe Price ID for 72h plan |
+| `STRIPE_PRICE_MONTHLY` | Stripe Price ID for monthly plan |
+| `STRIPE_PRICE_LIFETIME` | Stripe Price ID for lifetime plan |
+| `KV_REST_API_URL` | From Vercel KV dashboard (auto-populated when KV is connected) |
+| `KV_REST_API_TOKEN` | From Vercel KV dashboard |
+| `BASIC_AUTH_CREDENTIALS` | Admin credentials (comma-separated `user:pass` pairs) |
+
+---
+
+## Routing & Auth
+
+**`vercel.json`** rewrites:
+- `/app` → `app.html` (map app)
+- `/success` → `success.html` (post-payment credentials page)
+
+**`middleware.js`** (Vercel Edge Middleware, runs before all routes):
+
+Public routes (no auth): `/`, `/index.html`, `/favicon.svg`, `/api/*`, `/success*`
+
+Protected routes (Basic Auth required): everything else, including `/app` and `/app.html`
+
+Auth check order:
+1. Parse `Authorization: Basic ...` header
+2. Check `BASIC_AUTH_CREDENTIALS` env var (admin/hardcoded users)
+3. Check Vercel KV via REST API fetch: `GET {KV_REST_API_URL}/get/cred:{username}` — compare `password` field
+4. If both fail → 401
+
+**Important:** The middleware uses raw `fetch()` for KV lookups — it cannot import npm packages (Edge Runtime). `@vercel/kv` serialises objects as JSON strings; the REST API returns `{ result: "{\"password\":\"...\"}"}` — middleware must `JSON.parse(result)`.
+
+`/api/*` must be public in middleware so that the landing page's `fetch('/api/checkout')` and the success page's `fetch('/api/verify-session')` are not blocked by the Basic Auth challenge.
 
 ---
 
