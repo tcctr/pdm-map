@@ -5,5 +5,9 @@
   "private": true,
   "scripts": {
     "sync": "node scripts/sync-data.js"
+  },
+  "dependencies": {
+    "@vercel/kv": "^3.0.0",
+    "stripe": "^16.0.0"
   }
 }

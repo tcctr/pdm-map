@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acesso criado — Mapear</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --glass-deep-bg:   rgba(8,8,20,0.82);
+      --glass-deep-blur: blur(32px) saturate(180%);
+      --glass-border:    1px solid rgba(255,255,255,0.10);
+      --glass-shadow:    0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+      --accent:          #e63946;
+      --accent-hover:    #ff4d5a;
+    }
+
+    body {
+      background: #0d0d1a;
+      color: rgba(255,255,255,0.97);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(ellipse 70% 60% at 15% 25%, rgba(230,57,70,0.07) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 70% at 85% 70%, rgba(96,165,250,0.07) 0%, transparent 55%),
+        #0d0d1a;
+    }
+
+    .card {
+      background: var(--glass-deep-bg);
+      backdrop-filter: var(--glass-deep-blur);
+      -webkit-backdrop-filter: var(--glass-deep-blur);
+      border: var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      border-radius: 20px;
+      padding: 40px 36px 32px;
+      width: 100%;
+      max-width: 440px;
+    }
+
+    /* ── Loading ── */
+    .state { display: none; text-align: center; }
+    .state.active { display: block; }
+
+    #state-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 0;
+    }
+    #state-loading.active { display: flex; }
+
+    .spinner {
+      width: 30px; height: 30px;
+      border: 2px solid rgba(255,255,255,0.10);
+      border-top-color: rgba(255,255,255,0.55);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+
+    .loading-text { font-size: 13px; color: rgba(255,255,255,0.38); }
+
+    /* ── Success ── */
+    .success-icon {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: rgba(74,222,128,0.12);
+      border: 1px solid rgba(74,222,128,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 22px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 28px;
+      line-height: 1.55;
+    }
+
+    .plan-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 3px 11px;
+      border-radius: 20px;
+      background: rgba(230,57,70,0.12);
+      border: 1px solid rgba(230,57,70,0.25);
+      color: var(--accent);
+      margin-bottom: 28px;
+    }
+
+    .cred-block {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .cred-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      margin-bottom: 5px;
+    }
+
+    .cred-value {
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      color: rgba(255,255,255,0.97);
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.7);
+      border-radius: 10px;
+      padding: 7px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      font-family: inherit;
+    }
+
+    .copy-btn:hover { background: rgba(255,255,255,0.14); }
+
+    .copy-btn.copied {
+      background: rgba(74,222,128,0.12);
+      border-color: rgba(74,222,128,0.25);
+      color: #4ade80;
+    }
+
+    .warning {
+      font-size: 11px;
+      color: rgba(255,255,255,0.38);
+      margin: 16px 0 28px;
+      line-height: 1.55;
+      background: rgba(255,200,0,0.05);
+      border: 1px solid rgba(255,200,0,0.10);
+      border-radius: 10px;
+      padding: 10px 14px;
+      text-align: left;
+    }
+
+    .btn-go {
+      display: block;
+      width: 100%;
+      height: 48px;
+      line-height: 48px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(230,57,70,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: background 0.15s;
+    }
+
+    .btn-go:hover { background: var(--accent-hover); }
+
+    /* ── Error ── */
+    .error-msg {
+      color: rgba(248,113,113,0.9);
+      font-size: 13px;
+      line-height: 1.55;
+      margin-bottom: 24px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <!-- Loading -->
+  <div id="state-loading" class="state active">
+    <div class="spinner"></div>
+    <span class="loading-text">A verificar pagamento…</span>
+  </div>
+
+  <!-- Success -->
+  <div id="state-success" class="state" style="text-align:center">
+    <div class="success-icon">✓</div>
+    <h1>Acesso criado!</h1>
+    <p class="subtitle">Guarde estas credenciais — vai precisar delas para entrar no mapa.</p>
+    <div class="plan-badge" id="plan-label"></div>
+
+    <div class="cred-block">
+      <div>
+        <div class="cred-label">Utilizador</div>
+        <div class="cred-value" id="cred-user"></div>
+      </div>
+      <button class="copy-btn" id="copy-user" onclick="copyField('user')">Copiar</button>
+    </div>
+
+    <div class="cred-block">
+      <div>
+        <div class="cred-label">Palavra-passe</div>
+        <div class="cred-value" id="cred-pass"></div>
+      </div>
+      <button class="copy-btn" id="copy-pass" onclick="copyField('pass')">Copiar</button>
+    </div>
+
+    <p class="warning">
+      Estas credenciais não são enviadas por e-mail. Guarde-as agora antes de sair desta página.
+    </p>
+
+    <a class="btn-go" href="/app">Abrir o mapa →</a>
+  </div>
+
+  <!-- Error -->
+  <div id="state-error" class="state" style="text-align:center">
+    <p class="error-msg" id="error-text"></p>
+    <a class="btn-go" href="/#pricing">← Voltar aos planos</a>
+  </div>
+
+</div>
+<script>
+  const PLAN_LABELS = {
+    '72h':      'Acesso 72 Horas',
+    'monthly':  'Plano Mensal',
+    'lifetime': 'Plano Vitalício',
+  };
+
+  let creds = {};
+
+  function show(id) {
+    document.querySelectorAll('.state').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  async function init() {
+    const sessionId = new URLSearchParams(location.search).get('session_id');
+    if (!sessionId) {
+      show('state-error');
+      document.getElementById('error-text').textContent =
+        'Link inválido — sem session_id. Por favor contacte o suporte.';
+      return;
+    }
+
+    try {
+      const resp = await fetch(`/api/verify-session?session_id=${encodeURIComponent(sessionId)}`);
+      const data = await resp.json();
+
+      if (!resp.ok) throw new Error(data.error || 'Erro desconhecido');
+
+      const { username, password, plan } = data;
+      creds = { user: username, pass: password };
+
+      document.getElementById('plan-label').textContent = PLAN_LABELS[plan] || plan;
+      document.getElementById('cred-user').textContent  = username;
+      document.getElementById('cred-pass').textContent  = password;
+
+      show('state-success');
+    } catch (err) {
+      show('state-error');
+      document.getElementById('error-text').textContent =
+        `Erro ao verificar pagamento: ${err.message}`;
+    }
+  }
+
+  function copyField(field) {
+    const value = creds[field];
+    if (!value) return;
+    navigator.clipboard.writeText(value).then(() => {
+      const btn = document.getElementById(`copy-${field}`);
+      btn.textContent = 'Copiado!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>

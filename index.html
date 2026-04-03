@@ -895,5 +895,35 @@
     </div>
   </footer>
 
+<script>
+  document.querySelectorAll('[data-stripe-plan]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const plan         = btn.dataset.stripePlan;
+      const originalText = btn.textContent;
+
+      btn.textContent       = 'A redirecionar…';
+      btn.style.pointerEvents = 'none';
+      btn.style.opacity       = '0.65';
+
+      try {
+        const resp = await fetch('/api/checkout', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ plan }),
+        });
+        if (!resp.ok) throw new Error('checkout failed');
+        const { url } = await resp.json();
+        window.location.href = url;
+      } catch {
+        btn.textContent         = originalText;
+        btn.style.pointerEvents = '';
+        btn.style.opacity       = '';
+        alert('Erro ao iniciar pagamento. Tente novamente.');
+      }
+    });
+  });
+</script>
+
 </body>
 </html>
