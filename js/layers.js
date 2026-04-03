@@ -1174,7 +1174,28 @@ export async function loadOverlay(id, activeMunicipality) {
     const leafletLayer = L.layerGroup();
 
     if (def.categorized === 'wms') {
-      // Standard OGC WMS tile layer — fails silently per-tile, no error surfaced to user
+      // Probe WMS availability before adding — tileLayer.wms fails silently per-tile
+      const probeUrl = `${def.wmsUrl}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities`;
+      let wmsOk = false;
+      try {
+        const ctrl = new AbortController();
+        const tid  = setTimeout(() => ctrl.abort(), 8000);
+        const resp = await fetch(probeUrl, { signal: ctrl.signal });
+        clearTimeout(tid);
+        wmsOk = resp.ok;
+      } catch (_) { wmsOk = false; }
+
+      if (!wmsOk) {
+        st.loading = false;
+        if (spin) spin.style.display = 'none';
+        if (st.active) _callbacks.onOverlayStatus?.(id, 'error', overlayShortName(def) + ': indisponível');
+        if (st.retries < RETRY_DELAYS.length) {
+          const delay = RETRY_DELAYS[st.retries++];
+          setTimeout(() => { if (st.active && !st.loaded) loadOverlay(id, activeMunicipality); }, delay);
+        }
+        return;
+      }
+
       const wmsLayer = L.tileLayer.wms(def.wmsUrl, {
         layers: def.wmsLayers,
         styles: '',
