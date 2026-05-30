@@ -1205,7 +1205,6 @@ export async function loadOverlay(id, activeMunicipality) {
         opacity: def.opacity ?? 0.8,
         attribution: '',
         bounds: L.latLngBounds([38.55, -9.55], [39.00, -8.68]),
-        ...(def.tileClassName ? { className: def.tileClassName } : {}),
       });
       wmsLayer.addTo(leafletLayer);
       st.leafletLayer = leafletLayer;

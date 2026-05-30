@@ -261,7 +261,7 @@ Radio-button selection — only one layer active at a time. Selecting any overla
 | `patrimonio` | Bens Imóveis Classificados | sintra | CONDICIONANTES_BASE | 299 | `patrimonio.geojson` | purple fill |
 | `zep` | Zona Especial de Proteção | sintra | CONDICIONANTES_BASE | 302 | `zep.geojson` | violet fill |
 | `perigosos` | Equipamentos Perigosos | sintra | CONDICIONANTES_BASE | 368 | `perigosos.geojson` | gray fill |
-| `cadastro` | Cadastro Predial | both | CADASTRO_WMS_URL (SNIC GeoServer) | `cadastralparcel` | — (always live WMS) | `L.tileLayer.wms` v1.3.0; bounds clipped to AML `[38.55,-9.55]→[39.00,-8.68]`; click → WMS GetFeatureInfo |
+| `cadastro` | Cadastro Predial | both | CADASTRO_WMS_URL (SNIC GeoServer) | `cadastralparcel` | — (always live WMS) | `L.tileLayer.wms` v1.3.0; bounds clipped to AML `[38.55,-9.55]→[39.00,-8.68]`; click → WMS GetFeatureInfo; parcel highlight + parallel REN/RAN/fire queries |
 
 **Notes:**
 - `ren-sintra` was removed — no unified queryable REN boundary layer exists on Sintra's server.
@@ -348,11 +348,17 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | `updateLayerVisibility()` | `map.js` | Shows/hides zoning layers based on `activeLayer` and zoom level; handles per-municipality chip zoom warnings |
 | `handleLayerSelect(value)` | `map.js` | Switches active layer — handles `'zoning'`, `'none'`, and overlay def ids |
 | `selectMunicipality(muni)` | `map.js` | Switches municipality, resets overlay cache, rebuilds overlay panel — does NOT pan |
+| `queryZoningAtPoint(latlng)` | `map.js` | Queries active municipality's zoning at a point; returns `Promise<{label, fill}\|null>` — uses `identifyFeatures` for tile munis, point-in-polygon for GeoJSON munis |
+| `queryRENAtPoint(latlng)` | `map.js` | Queries CASCAIS_BASE/11 (AML-wide REN) at point; returns `Promise<boolean>` |
+| `queryRANAtPoint(latlng)` | `map.js` | Queries CONDICIONANTES_BASE/264 (Sintra) or CASCAIS_BASE/12 (others) for RAN; returns `Promise<boolean>` |
+| `queryFireAtPoint(latlng)` | `map.js` | Queries CONDICIONANTES_BASE/371 for fire risk class; returns `Promise<string\|null>` |
 | `updateCacheDateIndicator()` | `ui.js` | Updates `#cache-date` badge; appends "(alguns em direto)" if any fallback occurred |
 | `updateSintraChip()` | `ui.js` | Updates Sintra status chip based on load state + zoom |
 | `showDetail(props, colorCfg, codeLabel)` | `ui.js` | Opens detail panel; shifts layers button, locate button, AND basemap button up to stay visible |
 | `closeDetail()` | `ui.js` | Closes detail panel; restores layers button, locate button, and basemap button position |
-| `showOverlayDetail(def, props)` | `ui.js` | Adapts overlay properties for `showDetail` |
+| `showOverlayDetail(def, props, muni)` | `ui.js` | Adapts overlay properties for `showDetail`; for cadastro, injects async rows for Qualificação do Solo (with color dot), REN, RAN, and fire risk (Sintra only) |
+| `updateDetailZoning(result)` | `ui.js` | Updates `#detail-zoning-val`; accepts `{label, fill}` object and renders a color dot, or plain string |
+| `updateDetailRow(id, value)` | `ui.js` | Updates `#detail-{id}-val` row; renders "Sim" green / "Não" muted / plain text |
 | `buildOverlayPanel()` | `ui.js` | Generates the layers radio list HTML from `OVERLAY_DEFS`, filtered by active municipality |
 | `openLayersSheet()` | `ui.js` | Positions popup above button's current screen location (accounts for button shift) |
 | `setChipLoaded(id, state, text)` | `ui.js` | Saves chip state to `chipLoadedState` so it restores after zoom-out |
@@ -429,7 +435,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 
 ## Deferred Features
 
-- **Enhanced detail panel content** (richer property display, additional metadata fields in the bottom sheet) — moved to a feature branch; not planned for main in the near term. Current detail panel shows basic zone code + label only.
+- **Enhanced detail panel content** for zoning layers (richer property display beyond zone code + label) — not yet implemented for regular polygon clicks; only the cadastro parcel click has the multi-layer panel.
 
 ---
 
@@ -457,6 +463,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - Sesimbra `Categoria_2021` values have trailing spaces (`'Espaço de Atividades Industriais '`) — handled with `.trim()`
 - Setúbal's own server (`sig.cm-setubal.pt`) is unreachable (DNS does not resolve); AML PDM_I_GERACAO has 327 Setúbal features but only 3 coarse Classe values — DGT WFS 1512_1 used instead (792 features, 2025-01-28 PDM)
 - Setúbal WFS requires **WFS 2.0.0** (`typeNames` parameter, not `typeName`) — unlike other DGT WFS endpoints which use 1.1.0
+- Cadastro WMS tile color cannot be overridden — DGT GeoServer (`snicws.dgterritorio.gov.pt`) ignores `SLD_BODY` parameter in WMS GetMap requests; tiles are always rendered in the server's default grey-with-black-borders style
 
 ---
 
