@@ -147,7 +147,7 @@ export function closeDetail() {
   document.getElementById('basemap-btn').style.bottom = '';
 }
 
-export function showOverlayDetail(def, props) {
+export function showOverlayDetail(def, props, muni) {
   let fill = def.color;
   let code = def.name;
   if (def.categorized === 'fire') {
@@ -158,20 +158,52 @@ export function showOverlayDetail(def, props) {
   showDetail(props, { fill, label: def.name }, code);
   if (def.id === 'cadastro') {
     const rowsEl = document.getElementById('detail-rows');
-    rowsEl.insertAdjacentHTML('beforeend',
-      '<div class="detail-row" style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)">' +
-      '<div class="detail-row-value" style="font-size:12px;color:rgba(255,255,255,0.5)">' +
-      '<strong>Qualifica\u00e7\u00e3o do Solo:</strong> <span id="detail-zoning-val" style="font-style:italic">\u2026</span>' +
-      '</div></div>',
-    );
+    const mkRow = (id, label, first) => {
+      const style = first
+        ? 'margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)'
+        : 'margin-top:4px';
+      return `<div class="detail-row" style="${style}">` +
+        `<div class="detail-row-value" style="font-size:12px;color:rgba(255,255,255,0.5)">` +
+        `<strong>${label}:</strong> <span id="detail-${id}-val" style="font-style:italic">\u2026</span>` +
+        `</div></div>`;
+    };
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('zoning', 'Qualifica\u00e7\u00e3o do Solo', true));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('ren', 'REN', false));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('ran', 'RAN', false));
+    if (muni === 'sintra') {
+      rowsEl.insertAdjacentHTML('beforeend', mkRow('fire', 'Perigosidade de Inc\u00eandio', false));
+    }
   }
 }
 
-export function updateDetailZoning(label) {
+export function updateDetailZoning(result) {
   const el = document.getElementById('detail-zoning-val');
   if (!el) return;
   el.style.fontStyle = 'normal';
-  el.textContent = label || '\u2014';
+  if (!result) { el.textContent = '\u2014'; return; }
+  const label = typeof result === 'string' ? result : (result.label || '\u2014');
+  const fill  = typeof result !== 'string' ? result.fill : null;
+  if (fill) {
+    el.innerHTML =
+      `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;` +
+      `background:${escHtml(fill)};margin-right:5px;vertical-align:middle"></span>` +
+      escHtml(label);
+  } else {
+    el.textContent = label;
+  }
+}
+
+export function updateDetailRow(id, value) {
+  const el = document.getElementById(`detail-${id}-val`);
+  if (!el) return;
+  el.style.fontStyle = 'normal';
+  if (value === 'Sim') {
+    el.innerHTML = '<span style="color:#68d391">Sim</span>';
+  } else if (value === 'N\u00e3o') {
+    el.innerHTML = '<span style="color:rgba(255,255,255,0.35)">N\u00e3o</span>';
+  } else {
+    el.textContent = value || '\u2014';
+  }
 }
 
 // ── Layers sheet ──────────────────────────────────────────────

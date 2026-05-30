@@ -5,7 +5,7 @@
 import { OVERLAY_DEFS, MUNICIPALITIES } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
 import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer, seixalLayer, sesimbraLayer, setubalLayer } from './layers.js';
-import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel, updateDetailZoning } from './ui.js';
+import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel, updateDetailZoning, updateDetailRow } from './ui.js';
 import { initMap, initMapHandlers, initBasemapToggle, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './map.js';
 
 // ============================================================
@@ -335,6 +335,7 @@ initMapHandlers({
   onCloseLayersSheet:         closeLayersSheet,
   onUpdateZoningOverlayChip:  updateZoningOverlayChip,
   onUpdateDetailZoning:       updateDetailZoning,
+  onUpdateDetailRow:          updateDetailRow,
 });
 
 buildOverlayPanel();

@@ -32,8 +32,9 @@ let _montijoLayer   = null;
 let _palmelaLayer   = null;
 let _seixalLayer    = null;
 let _sesimbraLayer  = null;
-let _setubalLayer   = null;
-let _callbacks      = {};
+let _setubalLayer       = null;
+let _cadastroHighlight  = null;
+let _callbacks          = {};
 
 let _activeLayer        = 'zoning';
 let _activeMunicipality = 'sintra';
@@ -589,7 +590,7 @@ function queryZoningAtPoint(latlng) {
           if (err || !fc?.features?.length) return resolve(null);
           const key = (fc.features[0].properties[field] || '').trim();
           const cfg = colors[key];
-          resolve(cfg ? (cfg.label || key) : (key || null));
+          resolve(cfg ? { label: cfg.label || key, fill: cfg.fill } : (key ? { label: key, fill: '#888' } : null));
         });
     });
   }
@@ -621,12 +622,42 @@ function queryZoningAtPoint(latlng) {
         let key = (fl.feature.properties[field] || '').trim();
         if ((!key || key === 'Não Atribuída') && fallback) key = (fl.feature.properties[fallback] || '').trim();
         const cfg = colors[key];
-        found = cfg ? (cfg.label || key) : (key || null);
+        found = cfg ? { label: cfg.label || key, fill: cfg.fill } : (key ? { label: key, fill: '#888' } : null);
       });
     });
     if (found) return Promise.resolve(found);
   }
   return Promise.resolve(null);
+}
+
+function queryRENAtPoint(latlng) {
+  return new Promise(resolve => {
+    L.esri.identifyFeatures({ url: CASCAIS_BASE })
+      .on(_map).at(latlng).layers('all:11').tolerance(0)
+      .run((err, fc) => resolve(!err && fc?.features?.length > 0));
+  });
+}
+
+function queryRANAtPoint(latlng) {
+  const isSintra = _activeMunicipality === 'sintra';
+  const url      = isSintra ? CONDICIONANTES_BASE : CASCAIS_BASE;
+  const layerId  = isSintra ? 264 : 12;
+  return new Promise(resolve => {
+    L.esri.identifyFeatures({ url })
+      .on(_map).at(latlng).layers(`all:${layerId}`).tolerance(0)
+      .run((err, fc) => resolve(!err && fc?.features?.length > 0));
+  });
+}
+
+function queryFireAtPoint(latlng) {
+  return new Promise(resolve => {
+    L.esri.identifyFeatures({ url: CONDICIONANTES_BASE })
+      .on(_map).at(latlng).layers('all:371').tolerance(0)
+      .run((err, fc) => {
+        const cls = fc?.features?.[0]?.properties?.CLASSE || null;
+        resolve(cls);
+      });
+  });
 }
 
 export function initMapHandlers({
@@ -636,7 +667,7 @@ export function initMapHandlers({
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
   onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet,
-  onUpdateZoningOverlayChip, onUpdateDetailZoning,
+  onUpdateZoningOverlayChip, onUpdateDetailZoning, onUpdateDetailRow,
 }) {
   _ovlState     = ovlState;
   _urbanLayer   = urbanLayer;
@@ -671,6 +702,7 @@ export function initMapHandlers({
     onCloseLayersSheet,
     onUpdateZoningOverlayChip,
     onUpdateDetailZoning,
+    onUpdateDetailRow,
     onOverlayShortName:  overlayShortName,
     onLoadOverlay:       loadOverlay,
     onGetCascaisReady:   getCascaisReady,
@@ -688,6 +720,7 @@ export function initMapHandlers({
 
   _map.on('click', e => {
     _callbacks.onCloseDetail?.();
+    if (_cadastroHighlight) { _map.removeLayer(_cadastroHighlight); _cadastroHighlight = null; }
     if (_activeLayer === 'zoning' && _activeMunicipality === 'grande-lisboa') {
       // Fire all tile identify queries in parallel; show first non-empty result
       let shown = false;
@@ -827,12 +860,34 @@ export function initMapHandlers({
         `&CRS=EPSG%3A4326&BBOX=${bbox}` +
         `&I=${Math.round(pt.x)}&J=${Math.round(pt.y)}&STYLES=`;
       const zoningPromise = queryZoningAtPoint(e.latlng);
+      const renPromise    = queryRENAtPoint(e.latlng);
+      const ranPromise    = queryRANAtPoint(e.latlng);
+      const firePromise   = _activeMunicipality === 'sintra'
+        ? queryFireAtPoint(e.latlng)
+        : Promise.resolve(null);
       fetch(url)
         .then(r => r.json())
         .then(fc => {
           if (!fc?.features?.length) return;
-          _callbacks.onShowOverlayDetail?.(def, fc.features[0].properties);
-          zoningPromise.then(label => _callbacks.onUpdateDetailZoning?.(label)).catch(() => {});
+          const feature = fc.features[0];
+          if (feature.geometry) {
+            _cadastroHighlight = L.geoJSON(feature, {
+              style: { color: '#ffffff', weight: 2.5, opacity: 0.85, fillColor: '#ffffff', fillOpacity: 0.06 },
+            }).addTo(_map);
+          }
+          _callbacks.onShowOverlayDetail?.(def, feature.properties, _activeMunicipality);
+          zoningPromise
+            .then(r  => _callbacks.onUpdateDetailZoning?.(r))
+            .catch(() => _callbacks.onUpdateDetailZoning?.(null));
+          renPromise
+            .then(v  => _callbacks.onUpdateDetailRow?.('ren',  v ? 'Sim' : 'Não'))
+            .catch(() => _callbacks.onUpdateDetailRow?.('ren',  '—'));
+          ranPromise
+            .then(v  => _callbacks.onUpdateDetailRow?.('ran',  v ? 'Sim' : 'Não'))
+            .catch(() => _callbacks.onUpdateDetailRow?.('ran',  '—'));
+          firePromise
+            .then(v  => _callbacks.onUpdateDetailRow?.('fire', v || '—'))
+            .catch(() => _callbacks.onUpdateDetailRow?.('fire', '—'));
         })
         .catch(() => {});
     } else if (_activeLayer === 'incendio') {
