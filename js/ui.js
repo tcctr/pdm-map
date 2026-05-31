@@ -75,7 +75,9 @@ export function updateSintraChip() {
   const sintraStatus      = _getSintraStatus();
   const activeLayer       = _getActiveLayer();
   const activeMunicipality = _getActiveMunicipality();
-  const on = activeLayer === 'zoning' && (activeMunicipality === 'sintra' || activeMunicipality === 'grande-lisboa');
+  // Always keep Sintra layers on the map in zoningPane so SVG paths are pre-built;
+  // pane visibility (not add/remove) controls whether they're seen.
+  const on = activeMunicipality === 'sintra' || activeMunicipality === 'grande-lisboa';
 
   [_urbanLayer, _ruralLayer].forEach(l => on && zoomed ? _map.addLayer(l) : _map.removeLayer(l));
 

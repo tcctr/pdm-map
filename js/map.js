@@ -65,6 +65,17 @@ export function initMap(containerId) {
   L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);
 
   _map = map;
+
+  // zoningPane (z-index 350) holds all GeoJSON zoning layers; hidden when a non-zoning layer
+  // is active so paths are pre-created in the background without visual interference.
+  // cadastroPane (z-index 500) holds the cadastro WMS so it renders above the SVG overlay pane.
+  map.createPane('zoningPane');
+  map.getPane('zoningPane').style.zIndex = '350';
+  map.getPane('zoningPane').style.display = 'none';
+  map.createPane('cadastroPane');
+  map.getPane('cadastroPane').style.zIndex = '500';
+  map.getPane('cadastroPane').style.pointerEvents = 'none';
+
   return map;
 }
 
@@ -88,8 +99,8 @@ export function updateLayerVisibility() {
   const louresOn = _activeLayer === 'zoning' && (_activeMunicipality === 'loures' || isGL);
   louresOn && zoomed ? _map.addLayer(_louresLayer) : _map.removeLayer(_louresLayer);
 
-  // Amadora GeoJSON layer
-  const amadoraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'amadora' || isGL);
+  // Amadora GeoJSON layer (always on map in zoningPane; pane visibility controls display)
+  const amadoraOn = _activeMunicipality === 'amadora' || isGL;
   amadoraOn && zoomed ? _map.addLayer(_amadoraLayer) : _map.removeLayer(_amadoraLayer);
 
   // chip-cascais
@@ -174,8 +185,8 @@ export function updateLayerVisibility() {
     }
   }
 
-  // Lisboa GeoJSON layer
-  const lisboaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'lisboa' || isGL);
+  // Lisboa GeoJSON layer (always on map in zoningPane)
+  const lisboaOn = _activeMunicipality === 'lisboa' || isGL;
   lisboaOn && zoomed ? _map.addLayer(_lisboaLayer) : _map.removeLayer(_lisboaLayer);
 
   // chip-lisboa (GeoJSON layer — no maxZoom cap)
@@ -212,8 +223,8 @@ export function updateLayerVisibility() {
     }
   }
 
-  // Mafra GeoJSON layer
-  const mafraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'mafra' || isGL);
+  // Mafra GeoJSON layer (always on map in zoningPane)
+  const mafraOn = _activeMunicipality === 'mafra' || isGL;
   mafraOn && zoomed ? _map.addLayer(_mafraLayer) : _map.removeLayer(_mafraLayer);
 
   // chip-mafra (GeoJSON layer — no maxZoom cap)
@@ -290,8 +301,8 @@ export function updateLayerVisibility() {
     }
   }
 
-  // Montijo GeoJSON layer
-  const montijoOn = _activeLayer === 'zoning' && (_activeMunicipality === 'montijo' || isGL);
+  // Montijo GeoJSON layer (always on map in zoningPane)
+  const montijoOn = _activeMunicipality === 'montijo' || isGL;
   montijoOn && zoomed ? _map.addLayer(_montijoLayer) : _map.removeLayer(_montijoLayer);
 
   // chip-montijo (GeoJSON layer — no maxZoom cap)
@@ -328,8 +339,8 @@ export function updateLayerVisibility() {
     }
   }
 
-  // Palmela GeoJSON layer
-  const palmelaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'palmela' || isGL);
+  // Palmela GeoJSON layer (always on map in zoningPane)
+  const palmelaOn = _activeMunicipality === 'palmela' || isGL;
   palmelaOn && zoomed ? _map.addLayer(_palmelaLayer) : _map.removeLayer(_palmelaLayer);
 
   // chip-palmela (GeoJSON layer — no maxZoom cap)
@@ -346,8 +357,8 @@ export function updateLayerVisibility() {
     }
   }
 
-  // Seixal GeoJSON layer
-  const seixalOn = _activeLayer === 'zoning' && (_activeMunicipality === 'seixal' || isGL);
+  // Seixal GeoJSON layer (always on map in zoningPane)
+  const seixalOn = _activeMunicipality === 'seixal' || isGL;
   seixalOn && zoomed ? _map.addLayer(_seixalLayer) : _map.removeLayer(_seixalLayer);
 
   // chip-seixal (GeoJSON layer — no maxZoom cap)
@@ -364,8 +375,8 @@ export function updateLayerVisibility() {
     }
   }
 
-  // Sesimbra GeoJSON layer
-  const sesimbraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'sesimbra' || isGL);
+  // Sesimbra GeoJSON layer (always on map in zoningPane)
+  const sesimbraOn = _activeMunicipality === 'sesimbra' || isGL;
   sesimbraOn && zoomed ? _map.addLayer(_sesimbraLayer) : _map.removeLayer(_sesimbraLayer);
 
   // chip-sesimbra (GeoJSON layer — no maxZoom cap)
@@ -382,8 +393,8 @@ export function updateLayerVisibility() {
     }
   }
 
-  // Setúbal GeoJSON layer
-  const setubalOn = _activeLayer === 'zoning' && (_activeMunicipality === 'setubal' || isGL);
+  // Setúbal GeoJSON layer (always on map in zoningPane)
+  const setubalOn = _activeMunicipality === 'setubal' || isGL;
   setubalOn && zoomed ? _map.addLayer(_setubalLayer) : _map.removeLayer(_setubalLayer);
 
   // chip-setubal (GeoJSON layer — no maxZoom cap)
@@ -441,12 +452,19 @@ export function selectMunicipality(muni) {
 
 // ── Active layer selection ────────────────────────────────────
 
+// Tile-only municipality layers \u2014 GeoJSON layers are excluded because they live permanently
+// in zoningPane and are shown/hidden via CSS, not add/removeLayer.
+const _tileMuniLayers = () => [_cascaisLayer, _oeirasLayer, _louresLayer, _almadaLayer, _barreiroLayer, _vfxiraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer];
+
 export function handleLayerSelect(value) {
   _activeLayer = value;
   _callbacks.onUpdateLayersBtnLabel?.(value);
   setTimeout(() => _callbacks.onCloseLayersSheet?.(), 180);
 
+  const zoningPane = _map.getPane('zoningPane');
+
   if (value === 'zoning') {
+    if (zoningPane) zoningPane.style.display = '';
     _callbacks.onUpdateZoningOverlayChip?.();
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
@@ -454,14 +472,16 @@ export function handleLayerSelect(value) {
     }
     updateLayerVisibility();
   } else if (value === 'none') {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer, _montijoLayer, _palmelaLayer, _seixalLayer, _sesimbraLayer, _setubalLayer].forEach(l => _map.removeLayer(l));
+    if (zoningPane) zoningPane.style.display = 'none';
+    _tileMuniLayers().forEach(l => _map.removeLayer(l));
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
       if (_ovlState[def.id].leafletLayer) _map.removeLayer(_ovlState[def.id].leafletLayer);
     }
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
-    [_urbanLayer, _ruralLayer, _cascaisLayer, _oeirasLayer, _louresLayer, _amadoraLayer, _almadaLayer, _barreiroLayer, _lisboaLayer, _vfxiraLayer, _mafraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer, _montijoLayer, _palmelaLayer, _seixalLayer, _sesimbraLayer, _setubalLayer].forEach(l => _map.removeLayer(l));
+    if (zoningPane) zoningPane.style.display = 'none';
+    _tileMuniLayers().forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {

@@ -1205,6 +1205,7 @@ export async function loadOverlay(id, activeMunicipality) {
         opacity: def.opacity ?? 0.8,
         attribution: '',
         bounds: L.latLngBounds([38.55, -9.55], [39.00, -8.68]),
+        pane: 'cadastroPane',
       });
       wmsLayer.addTo(leafletLayer);
       st.leafletLayer = leafletLayer;
@@ -1315,7 +1316,7 @@ export async function loadOverlay(id, activeMunicipality) {
 export function initLayers(map, callbacks) {
   _map             = map;
   _callbacks       = callbacks;
-  _renderer        = L.svg({ padding: 1 });
+  _renderer        = L.svg({ padding: 1, pane: 'zoningPane' });
   _overlayRenderer = L.canvas({ padding: 0.5 });
 
   urbanLayer   = L.layerGroup().addTo(map);
