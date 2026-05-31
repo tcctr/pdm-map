@@ -232,11 +232,12 @@ export function openLayersSheet() {
 
 export function buildOverlayPanel() {
   const activeMunicipality = _getActiveMunicipality();
+  const activeLayer = _getActiveLayer();
   const body = document.getElementById('overlay-body');
   const visibleDefs = OVERLAY_DEFS.filter(d => d.muni === activeMunicipality || d.muni === 'both');
   const groups = [...new Set(visibleDefs.map(d => d.group))];
   let html = `<label class="overlay-item">
-    <input type="radio" name="active-layer" value="zoning" checked />
+    <input type="radio" name="active-layer" value="zoning" ${activeLayer === 'zoning' ? 'checked' : ''} />
     <span class="overlay-dot" style="background:linear-gradient(135deg,#e63946 33%,#1a9850 33% 66%,#f4a261 66%)"></span>
     <span class="overlay-name">Qualifica\u00e7\u00e3o do Solo</span>
   </label>`;
@@ -247,7 +248,7 @@ export function buildOverlayPanel() {
         ? `background:repeating-linear-gradient(45deg,${def.color}66,${def.color}66 2px,transparent 2px,transparent 7px),${def.color}22`
         : `background:${def.color}`;
       html += `<label class="overlay-item">
-        <input type="radio" name="active-layer" value="${def.id}" />
+        <input type="radio" name="active-layer" value="${def.id}" ${activeLayer === def.id ? 'checked' : ''} />
         <span class="overlay-dot" style="${dotBg}"></span>
         <span class="overlay-name">${def.name}</span>
         <span class="overlay-spinner" id="ovl-spin-${def.id}" style="display:none">&#x21BB;</span>

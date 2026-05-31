@@ -36,7 +36,7 @@ let _setubalLayer       = null;
 let _cadastroHighlight  = null;
 let _callbacks          = {};
 
-let _activeLayer        = 'zoning';
+let _activeLayer        = 'cadastro';
 let _activeMunicipality = 'sintra';
 
 // ── Active-state getters / setters ───────────────────────────
@@ -419,18 +419,16 @@ export function selectMunicipality(muni) {
     opt.classList.toggle('selected', opt.dataset.muni === muni);
   });
 
-  // Reset to zoning and clear all overlay cache
-  _activeLayer = 'zoning';
+  // Clear all overlay cache
   for (const def of OVERLAY_DEFS) {
     const st = _ovlState[def.id];
     if (st.leafletLayer) { _map.removeLayer(st.leafletLayer); st.leafletLayer = null; }
     st.loaded = false; st.loading = false; st.active = false; st.retries = 0;
   }
 
+  handleLayerSelect('cadastro');
   _callbacks.onBuildOverlayPanel?.();
   updateLayerVisibility();
-  _callbacks.onUpdateLayersBtnLabel?.('zoning');
-  _callbacks.onUpdateZoningOverlayChip?.();
 }
 
 // ── Active layer selection ────────────────────────────────────

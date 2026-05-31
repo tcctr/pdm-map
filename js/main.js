@@ -340,6 +340,7 @@ initMapHandlers({
 
 buildOverlayPanel();
 updateLayerVisibility();
+handleLayerSelect('cadastro');
 loadCacheMetadata();
 
 // ============================================================
