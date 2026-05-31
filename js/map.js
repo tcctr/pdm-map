@@ -419,14 +419,22 @@ export function selectMunicipality(muni) {
     opt.classList.toggle('selected', opt.dataset.muni === muni);
   });
 
-  // Clear all overlay cache
+  // Clear overlay cache; preserve 'both'-municipality overlays already on the map
   for (const def of OVERLAY_DEFS) {
     const st = _ovlState[def.id];
+    if (_activeLayer === def.id && def.muni === 'both' && st.leafletLayer) {
+      st.retries = 0;
+      continue;
+    }
     if (st.leafletLayer) { _map.removeLayer(st.leafletLayer); st.leafletLayer = null; }
     st.loaded = false; st.loading = false; st.active = false; st.retries = 0;
   }
 
-  handleLayerSelect('cadastro');
+  if (_ovlState['cadastro']?.leafletLayer) {
+    _callbacks.onUpdateLayersBtnLabel?.('cadastro');
+  } else {
+    handleLayerSelect('cadastro');
+  }
   _callbacks.onBuildOverlayPanel?.();
   updateLayerVisibility();
 }
