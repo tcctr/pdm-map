@@ -221,7 +221,7 @@ Nineteen `L.layerGroup()` instances (urbanLayer + ruralLayer for Sintra, one eac
 
 `activeLayer` tracks what's active: `'cadastro'` (default) or `'none'` (basemap only). The layers button (`#layers-btn`) in the bottom-left is a simple toggle between these two states — there is no overlay selection panel.
 
-- **Cadastro layer** (`id: 'cadastro'`): `L.tileLayer.wms` on `CADASTRO_WMS_URL` (DGT SNIC INSPIRE GeoServer); `cadastralparcel` layer; OGC WMS 1.3.0; bounds clipped to AML `[38.55,-9.55]→[39.00,-8.68]`; opacity 0.8; rendered in `cadastroPane` (z-index 500). Tiles are always live — DGT GeoServer ignores `SLD_BODY`, so colour cannot be overridden.
+- **Cadastro layer** (`id: 'cadastro'`): `L.tileLayer.wms` on `CADASTRO_WMS_URL` (DGT SNIC INSPIRE GeoServer); `cadastralparcel` layer; OGC WMS 1.3.0; bounds clipped to AML `[38.55,-9.55]→[39.00,-8.68]`; opacity 0.45; rendered in `cadastroPane` (z-index 500). Tiles are always live — DGT GeoServer ignores `SLD_BODY`, so colour cannot be overridden server-side. A CSS `filter: sepia(1) saturate(2) hue-rotate(90deg) brightness(1.4)` is applied to the `cadastroPane` element in `initMap()` to tint the grey tiles light green with black borders.
 
 **Parcel click flow (map.js):**
 1. Panel opens **immediately** (before any network response) with loading `…` indicators — no 1–3 s wait. The click guard is `!def` only — panel opens regardless of WMS tile layer load state.
@@ -326,7 +326,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | `updateSintraChip()` | `ui.js` | Updates Sintra status chip based on load state + zoom |
 | `showDetail(props, colorCfg, codeLabel)` | `ui.js` | Opens detail panel; shifts layers button, locate button, AND basemap button up to stay visible |
 | `closeDetail()` | `ui.js` | Closes detail panel; restores layers button, locate button, and basemap button position |
-| `showOverlayDetail(def, props, muni)` | `ui.js` | Adapts overlay properties for `showDetail`; for cadastro, injects async rows for Qualificação do Solo (with color dot), REN, RAN, and fire risk (Sintra only). Called with empty `{}` props immediately on click; WMS props are unused (no visible fields differ) |
+| `showOverlayDetail(def, props, muni)` | `ui.js` | Adapts overlay properties for `showDetail`; for cadastro, injects async rows for Qualificação do Solo (with color dot), REN, and RAN. Each row initialises with a `.row-spinner` spinning wheel (reuses the `spin` keyframe from `style.css`) that is replaced by the actual value once its query resolves. Called with empty `{}` props immediately on click. |
 | `updateDetailZoning(result)` | `ui.js` | Updates `#detail-zoning-val`; accepts `{label, fill}` object and renders a color dot, or plain string |
 | `updateDetailRow(id, value)` | `ui.js` | Updates `#detail-{id}-val` row; renders "Sim" green / "Não" muted / plain text |
 | `buildOverlayPanel()` | `ui.js` | **No-op** — overlay panel removed; function kept as an exported stub so `selectMunicipality` can still call it safely |
@@ -349,6 +349,9 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - **Search bar** (`#search-input`): magnifying glass icon on left; circle-X clear button on right (visible only when input has text)
 
 **CSS design system:** `--glass-bg`, `--glass-blur`, `--glass-border`, `--glass-shadow` CSS variables. Apple liquid glass dark mode: `rgba(10,10,20,0.62)` background, `blur(28px) saturate(160%)`. All panels use these tokens.
+
+**Shared CSS utilities:**
+- `.row-spinner` — 10 × 10 px inline ring spinner used in detail panel async rows; reuses the `@keyframes spin` that also drives `.chip-loading .dot`
 
 **Municipality picker:** dropdown in topbar. Selecting a municipality pans (no zoom change) to its center and resets overlays. **Exception: Grande Lisboa uses `setView` to also set zoom** (zoom 10, center ~`[38.756, -9.208]`) so the whole region fits in view. GPS auto-detection calls `selectMunicipality()` without panning and never selects Grande Lisboa. Centers/zooms in `MUNICIPALITIES` array.
 
@@ -430,7 +433,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - Sesimbra `Categoria_2021` values have trailing spaces (`'Espaço de Atividades Industriais '`) — handled with `.trim()`
 - Setúbal's own server (`sig.cm-setubal.pt`) is unreachable (DNS does not resolve); AML PDM_I_GERACAO has 327 Setúbal features but only 3 coarse Classe values — DGT WFS 1512_1 used instead (792 features, 2025-01-28 PDM)
 - Setúbal WFS requires **WFS 2.0.0** (`typeNames` parameter, not `typeName`) — unlike other DGT WFS endpoints which use 1.1.0
-- Cadastro WMS tile color cannot be overridden — DGT GeoServer (`snicws.dgterritorio.gov.pt`) ignores `SLD_BODY` parameter in WMS GetMap requests; tiles are always rendered in the server's default grey-with-black-borders style
+- Cadastro WMS tile color cannot be overridden server-side — DGT GeoServer (`snicws.dgterritorio.gov.pt`) ignores `SLD_BODY`; colour is controlled client-side via a CSS `filter` on the `cadastroPane` element in `initMap()`
 
 ---
 
