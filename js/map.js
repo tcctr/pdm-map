@@ -603,6 +603,72 @@ function queryZoningAtPoint(latlng) {
   const { lat, lng } = latlng;
   const muni = _activeMunicipality;
 
+  if (muni === 'grande-lisboa') {
+    return new Promise(resolve => {
+      let resolved = false;
+      let pending   = 8; // 7 tile queries + 1 GeoJSON block
+      const tryResolve = r => { if (!resolved && r != null) { resolved = true; resolve(r); } };
+      const tick       = () => { if (--pending === 0 && !resolved) resolve(null); };
+
+      const glTiles = [
+        { url: CASCAIS_BASE,  layers: 'all:2',  colors: CASCAIS_COLORS,  field: 'Categoria' },
+        { url: CASCAIS_BASE,  layers: 'all:3',  colors: OEIRAS_COLORS,   field: 'Categoria' },
+        { url: CASCAIS_BASE,  layers: 'all:4',  colors: MOITA_COLORS,    field: 'Categoria' },
+        { url: CASCAIS_BASE,  layers: 'all:6',  colors: LOURES_COLORS,   field: 'Categoria' },
+        { url: CASCAIS_BASE,  layers: 'all:8',  colors: ODIVELAS_COLORS, field: 'Categoria' },
+        { url: CASCAIS_BASE,  layers: 'all:10', colors: VFX_COLORS,      field: 'Classe'    },
+        { url: AML_PDM1_BASE, layers: 'all:2',  colors: ALMADA_COLORS,   field: 'Classe'    },
+      ];
+      glTiles.forEach(({ url, layers, colors, field }) => {
+        L.esri.identifyFeatures({ url }).on(_map).at(latlng).layers(layers).tolerance(0)
+          .run((err, fc) => {
+            if (!err && fc?.features?.length) {
+              const key = (fc.features[0].properties[field] || '').trim();
+              const cfg = colors[key];
+              tryResolve(cfg ? { label: cfg.label || key, fill: cfg.fill } : key ? { label: key, fill: '#888' } : null);
+            }
+            tick();
+          });
+      });
+
+      // GeoJSON PIP runs in parallel (deferred so network requests reach stack first)
+      setTimeout(() => {
+        if (!resolved) {
+          const coord = [lng, lat];
+          const glGeoJson = [
+            { layer: _urbanLayer,    field: 'CAT',            colors: URBAN_COLORS                             },
+            { layer: _ruralLayer,    field: 'Ord_Categ',      colors: RURAL_COLORS                             },
+            { layer: _amadoraLayer,  field: 'Categoria_2021', colors: AMADORA_COLORS                           },
+            { layer: _lisboaLayer,   field: 'Categoria',      colors: LISBOA_COLORS                            },
+            { layer: _mafraLayer,    field: 'Categoria',      colors: MAFRA_COLORS                             },
+            { layer: _montijoLayer,  field: 'Categoria_2021', colors: MONTIJO_COLORS, fallback: 'Classe_2021'  },
+            { layer: _palmelaLayer,  field: 'tipo',           colors: PALMELA_COLORS                           },
+            { layer: _seixalLayer,   field: 'designacao',     colors: SEIXAL_COLORS                            },
+            { layer: _sesimbraLayer, field: 'Categoria_2021', colors: SESIMBRA_COLORS, fallback: 'Classe_2021' },
+            { layer: _setubalLayer,  field: 'Categoria',      colors: SETUBAL_COLORS                           },
+          ];
+          for (const { layer, field, colors, fallback } of glGeoJson) {
+            let found = null;
+            layer.eachLayer(sub => {
+              if (found) return;
+              sub.eachLayer(fl => {
+                if (found) return;
+                const geom = fl.feature?.geometry;
+                if (!geom || !pointInPolygon(coord, geom)) return;
+                let key = (fl.feature.properties[field] || '').trim();
+                if ((!key || key === 'Não Atribuída') && fallback) key = (fl.feature.properties[fallback] || '').trim();
+                const cfg = colors[key];
+                found = cfg ? { label: cfg.label || key, fill: cfg.fill } : (key ? { label: key, fill: '#888' } : null);
+              });
+            });
+            if (found) { tryResolve(found); break; }
+          }
+        }
+        tick();
+      }, 0);
+    });
+  }
+
   const tileCfg = {
     cascais:   { url: CASCAIS_BASE,  layers: 'all:2',  colors: CASCAIS_COLORS,   field: 'Categoria' },
     oeiras:    { url: CASCAIS_BASE,  layers: 'all:3',  colors: OEIRAS_COLORS,    field: 'Categoria' },
@@ -749,7 +815,7 @@ export function initMapHandlers({
 
     if (_activeLayer === 'cadastro') {
       const def = OVERLAY_DEFS.find(d => d.id === 'cadastro');
-      if (!def || !_ovlState?.['cadastro']?.loaded) return;
+      if (!def) return;
 
       // Show panel immediately — don't wait for WMS response
       _callbacks.onShowOverlayDetail?.(def, {}, _activeMunicipality);

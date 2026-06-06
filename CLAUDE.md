@@ -178,7 +178,7 @@ python3 -m http.server 8080
 - No `layerDefs` filter needed (layer 8 is single-municipality)
 - Layer has no scale restrictions (minScale/maxScale both 0) — tiles show at all zoom levels
 - `ODIVELAS_COLORS` has 21 Categoria values (AML classification, not DR 15/2015)
-- Odivelas' own ArcGIS server (`sig.cm-odivelas.pt`) is unreachable; DGT WFS 1116_1 returns HTTP 502
+- Odivelas' own ArcGIS server (`sig.cm-odivelas.pt`) is unreachable; **`ODIVELAS_WFS` (DGT CRUS 1116_1, 222 features) is now defined in config.js and appears functional**, but `layers.js` still uses tile rendering — migration to GeoJSON pending
 
 **Overlay / Condicionantes layers — four servers:**
 - `RAN_BASE` = `https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_RAN/MapServer` (Sintra RAN only — frequently offline)
@@ -224,15 +224,14 @@ Nineteen `L.layerGroup()` instances (urbanLayer + ruralLayer for Sintra, one eac
 - **Cadastro layer** (`id: 'cadastro'`): `L.tileLayer.wms` on `CADASTRO_WMS_URL` (DGT SNIC INSPIRE GeoServer); `cadastralparcel` layer; OGC WMS 1.3.0; bounds clipped to AML `[38.55,-9.55]→[39.00,-8.68]`; opacity 0.8; rendered in `cadastroPane` (z-index 500). Tiles are always live — DGT GeoServer ignores `SLD_BODY`, so colour cannot be overridden.
 
 **Parcel click flow (map.js):**
-1. Panel opens **immediately** (before any network response) with loading `…` indicators — no 1–3 s wait.
+1. Panel opens **immediately** (before any network response) with loading `…` indicators — no 1–3 s wait. The click guard is `!def` only — panel opens regardless of WMS tile layer load state.
 2. `AbortController` cancels any in-flight WMS request from the previous click.
 3. `_cadastroClickId` (module-level counter) guards against stale results: each click increments the ID; callbacks discard results whose ID no longer matches.
 4. WMS `GetFeatureInfo` (`INFO_FORMAT=application/json`, `FEATURE_COUNT=1`) fetches the parcel geometry → adds a white highlight polygon to the map when it arrives.
-5. Four queries run in parallel immediately after the panel opens:
-   - `queryZoningAtPoint(latlng)` → fills "Qualificação do Solo" row (identifyFeatures for tile munis; async point-in-polygon via `setTimeout(0)` for GeoJSON munis to avoid blocking the main thread)
+5. Three queries run in parallel immediately after the panel opens:
+   - `queryZoningAtPoint(latlng)` → fills "Qualificação do Solo" row (identifyFeatures for tile munis; async PIP via `setTimeout(0)` for GeoJSON munis; for `grande-lisboa` fires all 7 tile + 10 GeoJSON sources in parallel)
    - `queryRENAtPoint(latlng)` → CASCAIS_BASE/11; fills "REN" row
    - `queryRANAtPoint(latlng)` → CONDICIONANTES_BASE/264 (Sintra) or CASCAIS_BASE/12 (others); fills "RAN" row
-   - `queryFireAtPoint(latlng)` → CONDICIONANTES_BASE/371; fills "Perigosidade de Incêndio" row (Sintra only)
 
 **`OVERLAY_DEFS` array** (config.js) still defines all overlay configs (RAN, REN, fire, patrimonio, etc.) for use by `loadOverlay()` in layers.js and as a config source for `loadOverlay`; only the `cadastro` entry is user-facing. The other defs are retained for potential future use.
 
@@ -319,7 +318,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | `updateLayerVisibility()` | `map.js` | Shows/hides zoning layers based on `activeLayer` and zoom level; handles per-municipality chip zoom warnings |
 | `handleLayerSelect(value)` | `map.js` | Switches active layer — meaningful values are `'cadastro'` and `'none'`; `'zoning'` and other overlay ids remain in the code but are not user-reachable |
 | `selectMunicipality(muni)` | `map.js` | Switches municipality, resets overlay cache, restores cadastro layer — does NOT pan |
-| `queryZoningAtPoint(latlng)` | `map.js` | Queries active municipality's zoning at a point; returns `Promise<{label, fill}\|null>` — uses `identifyFeatures` for tile munis; for GeoJSON munis runs point-in-polygon asynchronously via `setTimeout(0)` to avoid blocking the main thread |
+| `queryZoningAtPoint(latlng)` | `map.js` | Queries active municipality's zoning at a point; returns `Promise<{label, fill}\|null>` — uses `identifyFeatures` for tile munis; for GeoJSON munis runs point-in-polygon asynchronously via `setTimeout(0)`; for `grande-lisboa` fires all 7 tile identify queries in parallel plus GeoJSON PIP on all 10 GeoJSON municipalities simultaneously, resolving with first non-null result |
 | `queryRENAtPoint(latlng)` | `map.js` | Queries CASCAIS_BASE/11 (AML-wide REN) at point; returns `Promise<boolean>` |
 | `queryRANAtPoint(latlng)` | `map.js` | Queries CONDICIONANTES_BASE/264 (Sintra) or CASCAIS_BASE/12 (others) for RAN; returns `Promise<boolean>` |
 | `queryFireAtPoint(latlng)` | `map.js` | Queries CONDICIONANTES_BASE/371 for fire risk class; returns `Promise<string\|null>` |
@@ -416,7 +415,7 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - `ren-sintra` removed — no unified queryable REN boundary layer exists on Sintra's server
 - Cascais condicionantes risk layers not yet integrated — available at `sig.aml.pt/.../PMAAC_Riscos_Actuais` (layers 60–65) but need testing
 - No DGT WFS published for Vila Franca de Xira — tile-only source
-- Odivelas' own ArcGIS server (`sig.cm-odivelas.pt`) is unreachable; DGT WFS 1116_1 returns HTTP 502 — AML pdm_revisao layer 8 tile rendering used instead
+- Odivelas' own ArcGIS server (`sig.cm-odivelas.pt`) is unreachable; `ODIVELAS_WFS` (DGT CRUS 1116_1, 222 features) is now defined in config.js and appears functional — migration from tile rendering to GeoJSON not yet done in layers.js
 - Alcochete's own server (`sig.cm-alcochete.pt`) is unreachable; not on AML pdm_revisao; DGT WFS 1502 exists but has only granular 1997-era `Designacao_no_plano` field — AML PDM_I_GERACAO tiles used instead
 - Barreiro's own server (`sig.cm-barreiro.pt`) is firewalled/unreachable; not on AML pdm_revisao; DGT WFS 1504 returns HTTP 502 — AML PDM_I_GERACAO tiles used instead
 - Mafra's own ArcGIS server (`sig.cm-mafra.pt`) has TLS certificate issues
