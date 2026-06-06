@@ -100,6 +100,21 @@ export function updateSintraChip() {
 
 // ── Detail panel ──────────────────────────────────────────────
 
+function renderDocPills(props) {
+  const docs = [
+    { label: 'Regulamento', url: props.Regulamento, page: props.Pag_Regulamento },
+    { label: 'Guião',       url: props.Guiao,        page: props.Pag_Guiao       },
+    { label: 'Relatório',   url: props.Relatorio,    page: props.Pag_relatorio   },
+  ].filter(d => d.url);
+  if (!docs.length) return '';
+  return '<div class="doc-pills">' + docs.map(d =>
+    `<a class="doc-pill" href="${escHtml(d.url)}" target="_blank" rel="noopener noreferrer">` +
+    `${escHtml(d.label)}` +
+    (d.page ? `<span class="doc-pill-page">p.&nbsp;${escHtml(String(d.page))}</span>` : '') +
+    `</a>`
+  ).join('') + '</div>';
+}
+
 export function showDetail(props, colorCfg, codeLabel) {
   const panel = document.getElementById('detail-panel');
 
@@ -121,16 +136,35 @@ export function showDetail(props, colorCfg, codeLabel) {
   const metaItems = [];
   if (area) metaItems.push(`<strong>\u00c1rea:</strong> ${escHtml(parseFloat(area).toFixed(2))} ha`);
   if (props.Classe) metaItems.push(`<strong>Classe:</strong> ${escHtml(props.Classe)}`);
+  const rawDate = props.Data_PublicacaoPDM || props.Data_Pub_Origem || props.Data_PulicacaoPDM;
+  if (rawDate) {
+    const d = new Date(rawDate);
+    if (!isNaN(d)) metaItems.push(`<strong>PDM:</strong> ${d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })}`);
+  }
   if (metaItems.length) {
     html += `<div class="detail-row" style="margin-bottom:14px"><div class="detail-row-value" style="color:rgba(255,255,255,0.5);font-size:12px">${metaItems.join(' &nbsp;\u00b7&nbsp; ')}</div></div>`;
   }
 
-  // ── Document buttons (hidden for now) ──
-  // const docs = [
-  //   { label: 'Regulamento', url: props.Regulamento, page: props.Pag_Regulamento },
-  //   { label: 'Guião',       url: props.Guiao,        page: props.Pag_Guiao },
-  //   { label: 'Relatório',   url: props.Relatorio,    page: props.Pag_relatorio },
-  // ].filter(d => d.url);
+  // ── Seixal especificacao ──
+  const esp = (props.especificacao_particular_po || '').trim();
+  if (esp) {
+    html += `<div class="detail-row" style="margin-bottom:14px"><div class="detail-row-value" style="color:rgba(255,255,255,0.5);font-size:12px"><strong>Especifica\u00e7\u00e3o:</strong> ${escHtml(esp)}</div></div>`;
+  }
+
+  // ── Document buttons (Sintra has real URLs embedded per-feature) ──
+  const docs = [
+    { label: 'Regulamento', url: props.Regulamento, page: props.Pag_Regulamento },
+    { label: 'Guião',       url: props.Guiao,        page: props.Pag_Guiao       },
+    { label: 'Relatório',   url: props.Relatorio,    page: props.Pag_relatorio   },
+  ].filter(d => d.url);
+  if (docs.length) {
+    html += '<div class="doc-buttons">' + docs.map(d =>
+      `<a class="doc-btn" href="${escHtml(d.url)}" target="_blank" rel="noopener noreferrer">` +
+      `<span class="doc-btn-left"><span class="doc-btn-title">${escHtml(d.label)}</span>` +
+      (d.page ? `<span class="doc-btn-page">p. ${escHtml(String(d.page))}</span>` : '') +
+      `</span><span class="doc-btn-arrow">↗</span></a>`
+    ).join('') + '</div>';
+  }
 
   rowsEl.innerHTML = html;
   panel.classList.add('open');
@@ -170,6 +204,11 @@ export function showOverlayDetail(def, props, muni) {
     rowsEl.insertAdjacentHTML('beforeend', mkRow('zoning', 'Qualifica\u00e7\u00e3o do Solo', true));
     rowsEl.insertAdjacentHTML('beforeend', mkRow('ren',    'REN',                          false));
     rowsEl.insertAdjacentHTML('beforeend', mkRow('ran',    'RAN',                          false));
+    rowsEl.insertAdjacentHTML('beforeend',
+      `<div class="detail-row" id="detail-docs-row" style="display:none;margin-top:6px">` +
+      `<div class="detail-row-value" style="font-size:12px">` +
+      `<span id="detail-docs-val"></span></div></div>`
+    );
   }
 }
 
@@ -187,6 +226,18 @@ export function updateDetailZoning(result) {
       escHtml(label);
   } else {
     el.textContent = label;
+  }
+
+  // Reveal doc pills if zone props include regulation URLs (Sintra)
+  const props = typeof result === 'object' ? (result.props || null) : null;
+  const docsRow = document.getElementById('detail-docs-row');
+  const docsVal = document.getElementById('detail-docs-val');
+  if (docsRow && docsVal && props) {
+    const pillsHtml = renderDocPills(props);
+    if (pillsHtml) {
+      docsVal.innerHTML = pillsHtml;
+      docsRow.style.display = '';
+    }
   }
 }
 

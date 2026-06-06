@@ -659,7 +659,9 @@ function queryZoningAtPoint(latlng) {
                 let key = (fl.feature.properties[field] || '').trim();
                 if ((!key || key === 'Não Atribuída') && fallback) key = (fl.feature.properties[fallback] || '').trim();
                 const cfg = colors[key];
-                found = cfg ? { label: cfg.label || key, fill: cfg.fill } : (key ? { label: key, fill: '#888' } : null);
+                found = cfg
+                  ? { label: cfg.label || key, fill: cfg.fill, props: fl.feature.properties }
+                  : (key ? { label: key, fill: '#888', props: fl.feature.properties } : null);
               });
             });
             if (found) { tryResolve(found); break; }
@@ -725,7 +727,9 @@ function queryZoningAtPoint(latlng) {
             let key = (fl.feature.properties[field] || '').trim();
             if ((!key || key === 'Não Atribuída') && fallback) key = (fl.feature.properties[fallback] || '').trim();
             const cfg = colors[key];
-            found = cfg ? { label: cfg.label || key, fill: cfg.fill } : (key ? { label: key, fill: '#888' } : null);
+            found = cfg
+              ? { label: cfg.label || key, fill: cfg.fill, props: fl.feature.properties }
+              : (key ? { label: key, fill: '#888', props: fl.feature.properties } : null);
           });
         });
         if (found) return resolve(found);
