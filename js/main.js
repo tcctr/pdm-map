@@ -205,7 +205,7 @@ const sintraStatus = { urban: 'loading', urbanText: '', rural: 'loading', ruralT
 // ============================================================
 
 function toggleCadastro() {
-  handleLayerSelect(getActiveLayer() === 'cadastro' ? 'zoning' : 'cadastro');
+  handleLayerSelect(getActiveLayer() === 'cadastro' ? 'none' : 'cadastro');
 }
 
 function updateLayersBtnLabel(value) {

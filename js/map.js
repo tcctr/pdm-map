@@ -105,7 +105,7 @@ export function updateLayerVisibility() {
   louresOn && zoomed ? _map.addLayer(_louresLayer) : _map.removeLayer(_louresLayer);
 
   // Amadora GeoJSON layer (always on map in zoningPane; pane visibility controls display)
-  const amadoraOn = _activeMunicipality === 'amadora' || isGL;
+  const amadoraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'amadora' || isGL);
   amadoraOn && zoomed ? _map.addLayer(_amadoraLayer) : _map.removeLayer(_amadoraLayer);
 
   // chip-cascais
@@ -191,7 +191,7 @@ export function updateLayerVisibility() {
   }
 
   // Lisboa GeoJSON layer (always on map in zoningPane)
-  const lisboaOn = _activeMunicipality === 'lisboa' || isGL;
+  const lisboaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'lisboa' || isGL);
   lisboaOn && zoomed ? _map.addLayer(_lisboaLayer) : _map.removeLayer(_lisboaLayer);
 
   // chip-lisboa (GeoJSON layer — no maxZoom cap)
@@ -229,7 +229,7 @@ export function updateLayerVisibility() {
   }
 
   // Mafra GeoJSON layer (always on map in zoningPane)
-  const mafraOn = _activeMunicipality === 'mafra' || isGL;
+  const mafraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'mafra' || isGL);
   mafraOn && zoomed ? _map.addLayer(_mafraLayer) : _map.removeLayer(_mafraLayer);
 
   // chip-mafra (GeoJSON layer — no maxZoom cap)
@@ -307,7 +307,7 @@ export function updateLayerVisibility() {
   }
 
   // Montijo GeoJSON layer (always on map in zoningPane)
-  const montijoOn = _activeMunicipality === 'montijo' || isGL;
+  const montijoOn = _activeLayer === 'zoning' && (_activeMunicipality === 'montijo' || isGL);
   montijoOn && zoomed ? _map.addLayer(_montijoLayer) : _map.removeLayer(_montijoLayer);
 
   // chip-montijo (GeoJSON layer — no maxZoom cap)
@@ -345,7 +345,7 @@ export function updateLayerVisibility() {
   }
 
   // Palmela GeoJSON layer (always on map in zoningPane)
-  const palmelaOn = _activeMunicipality === 'palmela' || isGL;
+  const palmelaOn = _activeLayer === 'zoning' && (_activeMunicipality === 'palmela' || isGL);
   palmelaOn && zoomed ? _map.addLayer(_palmelaLayer) : _map.removeLayer(_palmelaLayer);
 
   // chip-palmela (GeoJSON layer — no maxZoom cap)
@@ -363,7 +363,7 @@ export function updateLayerVisibility() {
   }
 
   // Seixal GeoJSON layer (always on map in zoningPane)
-  const seixalOn = _activeMunicipality === 'seixal' || isGL;
+  const seixalOn = _activeLayer === 'zoning' && (_activeMunicipality === 'seixal' || isGL);
   seixalOn && zoomed ? _map.addLayer(_seixalLayer) : _map.removeLayer(_seixalLayer);
 
   // chip-seixal (GeoJSON layer — no maxZoom cap)
@@ -381,7 +381,7 @@ export function updateLayerVisibility() {
   }
 
   // Sesimbra GeoJSON layer (always on map in zoningPane)
-  const sesimbraOn = _activeMunicipality === 'sesimbra' || isGL;
+  const sesimbraOn = _activeLayer === 'zoning' && (_activeMunicipality === 'sesimbra' || isGL);
   sesimbraOn && zoomed ? _map.addLayer(_sesimbraLayer) : _map.removeLayer(_sesimbraLayer);
 
   // chip-sesimbra (GeoJSON layer — no maxZoom cap)
@@ -399,7 +399,7 @@ export function updateLayerVisibility() {
   }
 
   // Setúbal GeoJSON layer (always on map in zoningPane)
-  const setubalOn = _activeMunicipality === 'setubal' || isGL;
+  const setubalOn = _activeLayer === 'zoning' && (_activeMunicipality === 'setubal' || isGL);
   setubalOn && zoomed ? _map.addLayer(_setubalLayer) : _map.removeLayer(_setubalLayer);
 
   // chip-setubal (GeoJSON layer — no maxZoom cap)
@@ -486,9 +486,8 @@ export function handleLayerSelect(value) {
     }
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
-    // 'cadastro' — keep zones visible beneath the WMS overlay; pass through clicks
-    if (zoningPane) { zoningPane.style.display = ''; zoningPane.style.pointerEvents = 'none'; }
-    updateLayerVisibility();
+    if (zoningPane) { zoningPane.style.display = 'none'; zoningPane.style.pointerEvents = ''; }
+    _tileMuniLayers().forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {
