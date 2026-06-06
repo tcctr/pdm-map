@@ -600,15 +600,15 @@ function queryZoningAtPoint(latlng) {
   const muni = _activeMunicipality;
 
   const tileCfg = {
-    cascais:   { url: CASCAIS_BASE,  layers: 'visible:2',  colors: CASCAIS_COLORS,   field: 'Categoria' },
-    oeiras:    { url: CASCAIS_BASE,  layers: 'visible:3',  colors: OEIRAS_COLORS,    field: 'Categoria' },
-    loures:    { url: CASCAIS_BASE,  layers: 'visible:6',  colors: LOURES_COLORS,    field: 'Categoria' },
-    almada:    { url: AML_PDM1_BASE, layers: 'all:2',      colors: ALMADA_COLORS,    field: 'Classe'    },
-    barreiro:  { url: AML_PDM1_BASE, layers: 'all:2',      colors: BARREIRO_COLORS,  field: 'Classe'    },
-    alcochete: { url: AML_PDM1_BASE, layers: 'all:2',      colors: ALCOCHETE_COLORS, field: 'Classe'    },
-    vfxira:    { url: CASCAIS_BASE,  layers: 'visible:10', colors: VFX_COLORS,       field: 'Classe'    },
-    odivelas:  { url: CASCAIS_BASE,  layers: 'visible:8',  colors: ODIVELAS_COLORS,  field: 'Categoria' },
-    moita:     { url: CASCAIS_BASE,  layers: 'visible:4',  colors: MOITA_COLORS,     field: 'Categoria' },
+    cascais:   { url: CASCAIS_BASE,  layers: 'all:2',  colors: CASCAIS_COLORS,   field: 'Categoria' },
+    oeiras:    { url: CASCAIS_BASE,  layers: 'all:3',  colors: OEIRAS_COLORS,    field: 'Categoria' },
+    loures:    { url: CASCAIS_BASE,  layers: 'all:6',  colors: LOURES_COLORS,    field: 'Categoria' },
+    almada:    { url: AML_PDM1_BASE, layers: 'all:2',  colors: ALMADA_COLORS,    field: 'Classe'    },
+    barreiro:  { url: AML_PDM1_BASE, layers: 'all:2',  colors: BARREIRO_COLORS,  field: 'Classe'    },
+    alcochete: { url: AML_PDM1_BASE, layers: 'all:2',  colors: ALCOCHETE_COLORS, field: 'Classe'    },
+    vfxira:    { url: CASCAIS_BASE,  layers: 'all:10', colors: VFX_COLORS,       field: 'Classe'    },
+    odivelas:  { url: CASCAIS_BASE,  layers: 'all:8',  colors: ODIVELAS_COLORS,  field: 'Categoria' },
+    moita:     { url: CASCAIS_BASE,  layers: 'all:4',  colors: MOITA_COLORS,     field: 'Categoria' },
   };
   if (tileCfg[muni]) {
     const { url, layers, colors, field } = tileCfg[muni];
