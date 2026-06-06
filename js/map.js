@@ -77,7 +77,7 @@ export function initMap(containerId) {
   map.createPane('cadastroPane');
   map.getPane('cadastroPane').style.zIndex = '500';
   map.getPane('cadastroPane').style.pointerEvents = 'none';
-  map.getPane('cadastroPane').style.filter = 'sepia(1) saturate(6) hue-rotate(320deg)';
+  map.getPane('cadastroPane').style.filter = 'sepia(1) saturate(2) hue-rotate(90deg) brightness(1.4)';
   map.createPane('highlightPane');
   map.getPane('highlightPane').style.zIndex = '550';
   map.getPane('highlightPane').style.pointerEvents = 'none';
