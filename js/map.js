@@ -33,8 +33,10 @@ let _palmelaLayer   = null;
 let _seixalLayer    = null;
 let _sesimbraLayer  = null;
 let _setubalLayer       = null;
-let _cadastroHighlight  = null;
-let _callbacks          = {};
+let _cadastroHighlight       = null;
+let _cadastroAbortController = null;
+let _cadastroClickId         = 0;
+let _callbacks               = {};
 
 let _activeLayer        = 'cadastro';
 let _activeMunicipality = 'sintra';
@@ -636,24 +638,30 @@ function queryZoningAtPoint(latlng) {
   const layerCfgs = geojsonCfg[muni];
   if (!layerCfgs) return Promise.resolve(null);
 
-  const coord = [lng, lat];
-  for (const { layer, field, colors, fallback } of layerCfgs) {
-    let found = null;
-    layer.eachLayer(sub => {
-      if (found) return;
-      sub.eachLayer(fl => {
-        if (found) return;
-        const geom = fl.feature?.geometry;
-        if (!geom || !pointInPolygon(coord, geom)) return;
-        let key = (fl.feature.properties[field] || '').trim();
-        if ((!key || key === 'Não Atribuída') && fallback) key = (fl.feature.properties[fallback] || '').trim();
-        const cfg = colors[key];
-        found = cfg ? { label: cfg.label || key, fill: cfg.fill } : (key ? { label: key, fill: '#888' } : null);
-      });
-    });
-    if (found) return Promise.resolve(found);
-  }
-  return Promise.resolve(null);
+  // Defer synchronous PIP loop via setTimeout so fetch() and panel-show
+  // reach the network stack before the CPU-heavy scan runs.
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const coord = [lng, lat];
+      for (const { layer, field, colors, fallback } of layerCfgs) {
+        let found = null;
+        layer.eachLayer(sub => {
+          if (found) return;
+          sub.eachLayer(fl => {
+            if (found) return;
+            const geom = fl.feature?.geometry;
+            if (!geom || !pointInPolygon(coord, geom)) return;
+            let key = (fl.feature.properties[field] || '').trim();
+            if ((!key || key === 'Não Atribuída') && fallback) key = (fl.feature.properties[fallback] || '').trim();
+            const cfg = colors[key];
+            found = cfg ? { label: cfg.label || key, fill: cfg.fill } : (key ? { label: key, fill: '#888' } : null);
+          });
+        });
+        if (found) return resolve(found);
+      }
+      resolve(null);
+    }, 0);
+  });
 }
 
 function queryRENAtPoint(latlng) {
@@ -744,8 +752,72 @@ export function initMapHandlers({
   _map.on('zoomend', updateLayerVisibility);
 
   _map.on('click', e => {
-    _callbacks.onCloseDetail?.();
     if (_cadastroHighlight) { _map.removeLayer(_cadastroHighlight); _cadastroHighlight = null; }
+
+    if (_activeLayer === 'cadastro') {
+      const def = OVERLAY_DEFS.find(d => d.id === 'cadastro');
+      if (!def || !_ovlState?.['cadastro']?.loaded) return;
+
+      // Show panel immediately — don't wait for WMS response
+      _callbacks.onShowOverlayDetail?.(def, {}, _activeMunicipality);
+
+      // Cancel any in-flight WMS request from a previous click
+      if (_cadastroAbortController) _cadastroAbortController.abort();
+      _cadastroAbortController = new AbortController();
+
+      // Click ID guards against stale results overwriting a newer click
+      const clickId = ++_cadastroClickId;
+
+      const mapSize = _map.getSize();
+      const bounds  = _map.getBounds();
+      const pt      = _map.latLngToContainerPoint(e.latlng);
+      const bbox    = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
+      const url     = `${def.wmsUrl}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo` +
+        `&LAYERS=cadastralparcel&QUERY_LAYERS=cadastralparcel` +
+        `&INFO_FORMAT=application%2Fjson&FEATURE_COUNT=1` +
+        `&WIDTH=${mapSize.x}&HEIGHT=${mapSize.y}` +
+        `&CRS=EPSG%3A4326&BBOX=${bbox}` +
+        `&I=${Math.round(pt.x)}&J=${Math.round(pt.y)}&STYLES=`;
+
+      const zoningPromise = queryZoningAtPoint(e.latlng);
+      const renPromise    = queryRENAtPoint(e.latlng);
+      const ranPromise    = queryRANAtPoint(e.latlng);
+      const firePromise   = _activeMunicipality === 'sintra'
+        ? queryFireAtPoint(e.latlng)
+        : Promise.resolve(null);
+
+      // WMS fetch — only adds highlight geometry; panel already open
+      fetch(url, { signal: _cadastroAbortController.signal })
+        .then(r => r.json())
+        .then(fc => {
+          if (clickId !== _cadastroClickId) return;
+          if (!fc?.features?.length) return;
+          const feature = fc.features[0];
+          if (feature.geometry) {
+            _cadastroHighlight = L.geoJSON(feature, {
+              style: { color: '#ffffff', weight: 2.5, opacity: 0.85, fillColor: '#ffffff', fillOpacity: 0.06 },
+            }).addTo(_map);
+          }
+        })
+        .catch(err => { if (err.name !== 'AbortError') console.error(err); });
+
+      zoningPromise
+        .then(r  => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailZoning?.(r); })
+        .catch(() => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailZoning?.(null); });
+      renPromise
+        .then(v  => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.('ren',  v ? 'Sim' : 'Não'); })
+        .catch(() => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.('ren',  '—'); });
+      ranPromise
+        .then(v  => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.('ran',  v ? 'Sim' : 'Não'); })
+        .catch(() => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.('ran',  '—'); });
+      firePromise
+        .then(v  => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.('fire', v || '—'); })
+        .catch(() => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.('fire', '—'); });
+      return;
+    }
+
+    _callbacks.onCloseDetail?.();
+
     if (_activeLayer === 'zoning' && _activeMunicipality === 'grande-lisboa') {
       // Fire all tile identify queries in parallel; show first non-empty result
       let shown = false;
@@ -871,50 +943,6 @@ export function initMapHandlers({
           const cfg = MOITA_COLORS[cat] || { fill: '#888888', label: cat };
           _callbacks.onShowDetail?.(p, cfg, cat);
         });
-    } else if (_activeLayer === 'cadastro') {
-      const def = OVERLAY_DEFS.find(d => d.id === 'cadastro');
-      if (!def || !_ovlState?.['cadastro']?.loaded) return;
-      const mapSize = _map.getSize();
-      const bounds  = _map.getBounds();
-      const pt      = _map.latLngToContainerPoint(e.latlng);
-      const bbox    = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
-      const url     = `${def.wmsUrl}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo` +
-        `&LAYERS=cadastralparcel&QUERY_LAYERS=cadastralparcel` +
-        `&INFO_FORMAT=application%2Fjson&FEATURE_COUNT=1` +
-        `&WIDTH=${mapSize.x}&HEIGHT=${mapSize.y}` +
-        `&CRS=EPSG%3A4326&BBOX=${bbox}` +
-        `&I=${Math.round(pt.x)}&J=${Math.round(pt.y)}&STYLES=`;
-      const zoningPromise = queryZoningAtPoint(e.latlng);
-      const renPromise    = queryRENAtPoint(e.latlng);
-      const ranPromise    = queryRANAtPoint(e.latlng);
-      const firePromise   = _activeMunicipality === 'sintra'
-        ? queryFireAtPoint(e.latlng)
-        : Promise.resolve(null);
-      fetch(url)
-        .then(r => r.json())
-        .then(fc => {
-          if (!fc?.features?.length) return;
-          const feature = fc.features[0];
-          if (feature.geometry) {
-            _cadastroHighlight = L.geoJSON(feature, {
-              style: { color: '#ffffff', weight: 2.5, opacity: 0.85, fillColor: '#ffffff', fillOpacity: 0.06 },
-            }).addTo(_map);
-          }
-          _callbacks.onShowOverlayDetail?.(def, feature.properties, _activeMunicipality);
-          zoningPromise
-            .then(r  => _callbacks.onUpdateDetailZoning?.(r))
-            .catch(() => _callbacks.onUpdateDetailZoning?.(null));
-          renPromise
-            .then(v  => _callbacks.onUpdateDetailRow?.('ren',  v ? 'Sim' : 'Não'))
-            .catch(() => _callbacks.onUpdateDetailRow?.('ren',  '—'));
-          ranPromise
-            .then(v  => _callbacks.onUpdateDetailRow?.('ran',  v ? 'Sim' : 'Não'))
-            .catch(() => _callbacks.onUpdateDetailRow?.('ran',  '—'));
-          firePromise
-            .then(v  => _callbacks.onUpdateDetailRow?.('fire', v || '—'))
-            .catch(() => _callbacks.onUpdateDetailRow?.('fire', '—'));
-        })
-        .catch(() => {});
     } else if (_activeLayer === 'incendio') {
       const def = OVERLAY_DEFS.find(d => d.id === 'incendio');
       L.esri.identifyFeatures({ url: CONDICIONANTES_BASE })
