@@ -503,6 +503,15 @@ html, body {
   white-space: nowrap;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+.row-spinner {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-top-color: rgba(255,255,255,0.5);
+  animation: spin 0.75s linear infinite;
+  vertical-align: middle;
+}
 
 /* Leaflet popup overrides */
 .leaflet-popup-content-wrapper {

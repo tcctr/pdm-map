@@ -164,7 +164,7 @@ export function showOverlayDetail(def, props, muni) {
         : 'margin-top:4px';
       return `<div class="detail-row" style="${style}">` +
         `<div class="detail-row-value" style="font-size:12px;color:rgba(255,255,255,0.5)">` +
-        `<strong>${label}:</strong> <span id="detail-${id}-val" style="font-style:italic">\u2026</span>` +
+        `<strong>${label}:</strong> <span id="detail-${id}-val"><span class="row-spinner"></span></span>` +
         `</div></div>`;
     };
     rowsEl.insertAdjacentHTML('beforeend', mkRow('zoning', 'Qualifica\u00e7\u00e3o do Solo', true));
