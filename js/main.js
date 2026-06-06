@@ -2,7 +2,7 @@
 // MAIN — app entry point
 // ============================================================
 
-import { OVERLAY_DEFS, MUNICIPALITIES } from './config.js';
+import { OVERLAY_DEFS } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
 import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer, seixalLayer, sesimbraLayer, setubalLayer } from './layers.js';
 import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, buildOverlayPanel, updateDetailZoning, updateDetailRow } from './ui.js';
@@ -59,7 +59,6 @@ function onGpsSuccess(pos) {
   if (firstFix) {
     map.setView(latlng, 15);
     firstFix = false;
-    reverseGeocode(lat, lng).then(muni => { if (muni) selectMunicipality(muni); });
   }
 
   setChip('chip-gps', 'gps', `GPS \u00b1${Math.round(acc)}m`);
@@ -91,35 +90,6 @@ function locateUser() {
   }
 }
 
-// ============================================================
-// MUNICIPALITY PICKER
-// ============================================================
-
-function updateMuniScrollFade() {
-  const dd = document.getElementById('muni-dropdown');
-  const canScrollMore = dd.scrollHeight - dd.scrollTop - dd.clientHeight > 4;
-  dd.classList.toggle('has-scroll', canScrollMore);
-}
-
-function toggleMuniDropdown() {
-  const btn  = document.getElementById('muni-picker-btn');
-  const dd   = document.getElementById('muni-dropdown');
-  const open = dd.classList.toggle('open');
-  btn.classList.toggle('open', open);
-  if (open) requestAnimationFrame(updateMuniScrollFade);
-}
-
-function closeMuniDropdown() {
-  document.getElementById('muni-dropdown').classList.remove('open');
-  document.getElementById('muni-picker-btn').classList.remove('open');
-}
-
-function pickMunicipality(muni) {
-  closeMuniDropdown();
-  selectMunicipality(muni);
-  const cfg = MUNICIPALITIES.find(m => m.id === muni);
-  if (cfg) map.setView(cfg.center, cfg.zoom);
-}
 
 // ============================================================
 // OVERLAY CHIP + ZONING STATUS
@@ -235,7 +205,7 @@ const sintraStatus = { urban: 'loading', urbanText: '', rural: 'loading', ruralT
 // ============================================================
 
 function toggleCadastro() {
-  handleLayerSelect(getActiveLayer() === 'cadastro' ? 'none' : 'cadastro');
+  handleLayerSelect(getActiveLayer() === 'cadastro' ? 'zoning' : 'cadastro');
 }
 
 function updateLayersBtnLabel(value) {
@@ -255,7 +225,6 @@ const map = initMap('map');
 initBasemapToggle(map);
 
 initSearch(map, {
-  onMunicipalityDetected: muni => selectMunicipality(muni),
   getGpsLocation: () => gpsMarker ? gpsMarker.getLatLng() : null,
 });
 startGPS();
@@ -331,24 +300,14 @@ initMapHandlers({
   onUpdateDetailRow:          updateDetailRow,
 });
 
-updateLayerVisibility();
+selectMunicipality('grande-lisboa');
+map.setView([38.756, -9.208], 10);
 handleLayerSelect('cadastro');
 loadCacheMetadata();
 
 // ============================================================
 // EVENT WIRING — replaces inline onclick/onchange attributes
 // ============================================================
-
-// Municipality picker
-document.getElementById('muni-picker-btn').addEventListener('click', toggleMuniDropdown);
-document.getElementById('muni-dropdown').addEventListener('scroll', updateMuniScrollFade, { passive: true });
-document.getElementById('muni-dropdown').addEventListener('click', e => {
-  const opt = e.target.closest('.muni-option');
-  if (opt) pickMunicipality(opt.dataset.muni);
-});
-document.addEventListener('click', e => {
-  if (!document.getElementById('muni-picker').contains(e.target)) closeMuniDropdown();
-});
 
 // Cadastro toggle button
 document.getElementById('layers-btn').addEventListener('click', toggleCadastro);

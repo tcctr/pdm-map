@@ -39,7 +39,7 @@ let _cadastroClickId         = 0;
 let _callbacks               = {};
 
 let _activeLayer        = 'cadastro';
-let _activeMunicipality = 'sintra';
+let _activeMunicipality = 'grande-lisboa';
 
 // ── Active-state getters / setters ───────────────────────────
 
@@ -77,6 +77,9 @@ export function initMap(containerId) {
   map.createPane('cadastroPane');
   map.getPane('cadastroPane').style.zIndex = '500';
   map.getPane('cadastroPane').style.pointerEvents = 'none';
+  map.createPane('highlightPane');
+  map.getPane('highlightPane').style.zIndex = '550';
+  map.getPane('highlightPane').style.pointerEvents = 'none';
 
   return map;
 }
@@ -427,7 +430,8 @@ export function selectMunicipality(muni) {
   _activeMunicipality = muni;
 
   const cfg = MUNICIPALITIES.find(m => m.id === muni);
-  document.getElementById('muni-picker-label').textContent = cfg ? cfg.label : muni;
+  const _lbl = document.getElementById('muni-picker-label');
+  if (_lbl) _lbl.textContent = cfg ? cfg.label : muni;
   document.querySelectorAll('.muni-option').forEach(opt => {
     opt.classList.toggle('selected', opt.dataset.muni === muni);
   });
@@ -466,7 +470,7 @@ export function handleLayerSelect(value) {
   const zoningPane = _map.getPane('zoningPane');
 
   if (value === 'zoning') {
-    if (zoningPane) zoningPane.style.display = '';
+    if (zoningPane) { zoningPane.style.display = ''; zoningPane.style.pointerEvents = ''; }
     _callbacks.onUpdateZoningOverlayChip?.();
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
@@ -474,7 +478,7 @@ export function handleLayerSelect(value) {
     }
     updateLayerVisibility();
   } else if (value === 'none') {
-    if (zoningPane) zoningPane.style.display = 'none';
+    if (zoningPane) { zoningPane.style.display = 'none'; zoningPane.style.pointerEvents = ''; }
     _tileMuniLayers().forEach(l => _map.removeLayer(l));
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
@@ -482,8 +486,9 @@ export function handleLayerSelect(value) {
     }
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
-    if (zoningPane) zoningPane.style.display = 'none';
-    _tileMuniLayers().forEach(l => _map.removeLayer(l));
+    // 'cadastro' — keep zones visible beneath the WMS overlay; pass through clicks
+    if (zoningPane) { zoningPane.style.display = ''; zoningPane.style.pointerEvents = 'none'; }
+    updateLayerVisibility();
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {
@@ -782,6 +787,7 @@ export function initMapHandlers({
           if (feature.geometry) {
             _cadastroHighlight = L.geoJSON(feature, {
               style: { color: '#ffffff', weight: 2.5, opacity: 0.85, fillColor: '#ffffff', fillOpacity: 0.06 },
+              pane: 'highlightPane',
             }).addTo(_map);
           }
         })
