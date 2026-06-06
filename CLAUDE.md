@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Mapear** — a web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for eighteen municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete, Moita, Montijo, Palmela, Seixal, Sesimbra, Setúbal), plus a **Grande Lisboa** region view that renders all eighteen simultaneously. Renders interactive zoning polygons on a Leaflet + OpenStreetMap map with live GPS, address search, and a unified layer selector.
+**Mapear** — a web app that visualizes PDM (Plano Diretor Municipal) zoning data and land-use restrictions for eighteen municipalities in the Lisbon metro area (Sintra, Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete, Moita, Montijo, Palmela, Seixal, Sesimbra, Setúbal), plus a **Grande Lisboa** region view that renders all eighteen simultaneously. The primary layer is **Cadastro Predial** (national land registry WMS), which the user can toggle on or off. Tapping a parcel shows zoning, REN, RAN, and fire-risk data for that location in a detail panel.
 
 The app is publicly accessible at `/` and `/app` (`app.html`).
 
@@ -18,7 +18,7 @@ No build step, no bundler. The map app uses pure ES modules loaded directly by t
 - `js/config.js` — all constants, color maps, `OVERLAY_DEFS`, `MUNICIPALITIES`, base URLs
 - `js/map.js` — Leaflet map init, base layers, municipality switching, layer visibility, map event handlers
 - `js/layers.js` — `loadLayerData`, `fetchAllFeatures`, overlay lazy-loading, retry logic
-- `js/ui.js` — detail panel, chips, layers sheet, cache date indicator, swipe gestures
+- `js/ui.js` — detail panel, chips, cache date indicator, swipe gestures
 - `js/search.js` — Nominatim address search and reverse geocode
 - `js/main.js` — entry point, wires all modules together, GPS tracking, event listeners
 - `css/style.css` — all styles for the map app
@@ -217,58 +217,29 @@ Nineteen `L.layerGroup()` instances (urbanLayer + ruralLayer for Sintra, one eac
 | `sesimbraLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
 | `setubalLayer` | GeoJSON (SVG renderer) | DGT CRUS WFS |
 
-### Overlay layers (`OVERLAY_DEFS` array)
-Radio-button selection — only one layer active at a time. Selecting any overlay hides the zoning. Selecting "Qualificação do Solo" restores it. Layers are **lazy-loaded** on first selection and cached in `ovlState`.
+### Cadastro Predial (the only user-facing overlay)
 
-`activeLayer` variable tracks what's selected: `'zoning'`, a def id, or `'none'` (all layers hidden — basemap only).
+`activeLayer` tracks what's active: `'cadastro'` (default) or `'none'` (basemap only). The layers button (`#layers-btn`) in the bottom-left is a simple toggle between these two states — there is no overlay selection panel.
+
+- **Cadastro layer** (`id: 'cadastro'`): `L.tileLayer.wms` on `CADASTRO_WMS_URL` (DGT SNIC INSPIRE GeoServer); `cadastralparcel` layer; OGC WMS 1.3.0; bounds clipped to AML `[38.55,-9.55]→[39.00,-8.68]`; opacity 0.8; rendered in `cadastroPane` (z-index 500). Tiles are always live — DGT GeoServer ignores `SLD_BODY`, so colour cannot be overridden.
+
+**Parcel click flow (map.js):**
+1. Panel opens **immediately** (before any network response) with loading `…` indicators — no 1–3 s wait.
+2. `AbortController` cancels any in-flight WMS request from the previous click.
+3. `_cadastroClickId` (module-level counter) guards against stale results: each click increments the ID; callbacks discard results whose ID no longer matches.
+4. WMS `GetFeatureInfo` (`INFO_FORMAT=application/json`, `FEATURE_COUNT=1`) fetches the parcel geometry → adds a white highlight polygon to the map when it arrives.
+5. Four queries run in parallel immediately after the panel opens:
+   - `queryZoningAtPoint(latlng)` → fills "Qualificação do Solo" row (identifyFeatures for tile munis; async point-in-polygon via `setTimeout(0)` for GeoJSON munis to avoid blocking the main thread)
+   - `queryRENAtPoint(latlng)` → CASCAIS_BASE/11; fills "REN" row
+   - `queryRANAtPoint(latlng)` → CONDICIONANTES_BASE/264 (Sintra) or CASCAIS_BASE/12 (others); fills "RAN" row
+   - `queryFireAtPoint(latlng)` → CONDICIONANTES_BASE/371; fills "Perigosidade de Incêndio" row (Sintra only)
+
+**`OVERLAY_DEFS` array** (config.js) still defines all overlay configs (RAN, REN, fire, patrimonio, etc.) for use by `loadOverlay()` in layers.js and as a config source for `loadOverlay`; only the `cadastro` entry is user-facing. The other defs are retained for potential future use.
 
 **Renderers:**
 - All GeoJSON municipality zoning layers (Sintra, Amadora, Lisboa, Mafra, Montijo, Palmela, Seixal, Sesimbra, Setúbal): `renderer = L.svg({ padding: 1 })`
-- Overlay GeoJSON with hatch patterns: `renderer` (SVG — canvas can't render `url()` fills)
-- Overlay GeoJSON without hatch: `overlayRenderer = L.canvas({ padding: 0.5 })`
 - Fire risk + tile municipalities: `L.esri.dynamicMapLayer` (server tiles, no GeoJSON download)
-
-**Current overlay layers:**
-
-| id | Name | muni | Server | Layer ID | Cached file | Style |
-|----|------|------|--------|----------|-------------|-------|
-| `ran` | RAN — Reserva Agrícola | both | CONDICIONANTES_BASE (Sintra) / CASCAIS_BASE (others) | 264 / 12 | `ran-sintra.geojson`, `ran-cascais.geojson` | brown hatch (`hatch-ran`) |
-| `ren-cascais` | REN — Reserva Ecológica | cascais | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-oeiras` | REN — Reserva Ecológica | oeiras | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-loures` | REN — Reserva Ecológica | loures | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-amadora` | REN — Reserva Ecológica | amadora | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-almada` | REN — Reserva Ecológica | almada | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-lisboa` | REN — Reserva Ecológica | lisboa | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-vfxira` | REN — Reserva Ecológica | vfxira | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-mafra` | REN — Reserva Ecológica | mafra | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-odivelas` | REN — Reserva Ecológica | odivelas | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-alcochete` | REN — Reserva Ecológica | alcochete | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-barreiro` | REN — Reserva Ecológica | barreiro | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-moita` | REN — Reserva Ecológica | moita | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-montijo` | REN — Reserva Ecológica | montijo | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-palmela` | REN — Reserva Ecológica | palmela | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-seixal` | REN — Reserva Ecológica | seixal | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-sesimbra` | REN — Reserva Ecológica | sesimbra | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-setubal` | REN — Reserva Ecológica | setubal | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `ren-grande-lisboa` | REN — Reserva Ecológica | grande-lisboa | CASCAIS_BASE | 11 | `ren-cascais.geojson` | green hatch (`hatch-ren`) |
-| `faixa` | Faixa Costeira | sintra | REN_BASE | 2 | `faixa.geojson` | blue fill |
-| `praias` | Praias | sintra | REN_BASE | 3 | `praias.geojson` | yellow fill |
-| `vertentes` | Instabilidade de Vertentes | sintra | REN_BASE | 12 | `vertentes.geojson` | red hatch (`hatch-risk-red`) |
-| `erosao` | Erosão Hídrica | sintra | REN_BASE | 13 | `erosao.geojson` | orange hatch (`hatch-risk-orange`) |
-| `mar` | Ameaça Costeira (Mar) | sintra | REN_BASE | 11 | `mar.geojson` | blue fill |
-| `cheias` | Zonas de Cheias | sintra | REN_BASE | 10 | `cheias.geojson` | dark blue fill |
-| `incendio` | Perigosidade de Incêndio | sintra | CONDICIONANTES_BASE | 371 | — (always live tiles) | dynamicMapLayer; CLASSE field → `FIRE_COLORS` |
-| `patrimonio` | Bens Imóveis Classificados | sintra | CONDICIONANTES_BASE | 299 | `patrimonio.geojson` | purple fill |
-| `zep` | Zona Especial de Proteção | sintra | CONDICIONANTES_BASE | 302 | `zep.geojson` | violet fill |
-| `perigosos` | Equipamentos Perigosos | sintra | CONDICIONANTES_BASE | 368 | `perigosos.geojson` | gray fill |
-| `cadastro` | Cadastro Predial | both | CADASTRO_WMS_URL (SNIC GeoServer) | `cadastralparcel` | — (always live WMS) | `L.tileLayer.wms` v1.3.0; bounds clipped to AML `[38.55,-9.55]→[39.00,-8.68]`; click → WMS GetFeatureInfo; parcel highlight + parallel REN/RAN/fire queries |
-
-**Notes:**
-- `ren-sintra` was removed — no unified queryable REN boundary layer exists on Sintra's server.
-- `ren-cascais.geojson` is AML-wide and covers all non-Sintra municipalities (Cascais, Oeiras, Loures, Amadora, Almada, Barreiro, Lisboa, Vila Franca de Xira, Mafra, Odivelas, Alcochete). Reused by `ren-grande-lisboa`.
-- **RAN** (`muni: 'both'`) uses `sintraSource` / `cascaisSource` fields: Sintra → CONDICIONANTES_BASE/264, all others (including Grande Lisboa) → CASCAIS_BASE/12.
-- **SVG hatch patterns** are defined in a hidden `<svg>` in the HTML body: `hatch-ran`, `hatch-ren`, `hatch-risk-red`, `hatch-risk-orange`.
-- Overlay panel for Grande Lisboa shows only: Qualificação do Solo + RAN (`muni: 'both'`) + REN (`ren-grande-lisboa`). All Sintra-specific overlays are hidden.
+- SVG hatch patterns (`hatch-ran`, `hatch-ren`, `hatch-risk-red`, `hatch-risk-orange`) remain defined in the HTML body `<svg>` in case overlays are re-enabled in future.
 
 ---
 
@@ -346,9 +317,9 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | `initBasemapToggle(map)` | `map.js` | Wires `#basemap-btn` to swap street ↔ satellite basemap; satellite is default on load |
 | `initMapHandlers(options)` | `map.js` | Wires zoom and click handlers after layers/UI are ready |
 | `updateLayerVisibility()` | `map.js` | Shows/hides zoning layers based on `activeLayer` and zoom level; handles per-municipality chip zoom warnings |
-| `handleLayerSelect(value)` | `map.js` | Switches active layer — handles `'zoning'`, `'none'`, and overlay def ids |
-| `selectMunicipality(muni)` | `map.js` | Switches municipality, resets overlay cache, rebuilds overlay panel — does NOT pan |
-| `queryZoningAtPoint(latlng)` | `map.js` | Queries active municipality's zoning at a point; returns `Promise<{label, fill}\|null>` — uses `identifyFeatures` for tile munis, point-in-polygon for GeoJSON munis |
+| `handleLayerSelect(value)` | `map.js` | Switches active layer — meaningful values are `'cadastro'` and `'none'`; `'zoning'` and other overlay ids remain in the code but are not user-reachable |
+| `selectMunicipality(muni)` | `map.js` | Switches municipality, resets overlay cache, restores cadastro layer — does NOT pan |
+| `queryZoningAtPoint(latlng)` | `map.js` | Queries active municipality's zoning at a point; returns `Promise<{label, fill}\|null>` — uses `identifyFeatures` for tile munis; for GeoJSON munis runs point-in-polygon asynchronously via `setTimeout(0)` to avoid blocking the main thread |
 | `queryRENAtPoint(latlng)` | `map.js` | Queries CASCAIS_BASE/11 (AML-wide REN) at point; returns `Promise<boolean>` |
 | `queryRANAtPoint(latlng)` | `map.js` | Queries CONDICIONANTES_BASE/264 (Sintra) or CASCAIS_BASE/12 (others) for RAN; returns `Promise<boolean>` |
 | `queryFireAtPoint(latlng)` | `map.js` | Queries CONDICIONANTES_BASE/371 for fire risk class; returns `Promise<string\|null>` |
@@ -356,11 +327,11 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 | `updateSintraChip()` | `ui.js` | Updates Sintra status chip based on load state + zoom |
 | `showDetail(props, colorCfg, codeLabel)` | `ui.js` | Opens detail panel; shifts layers button, locate button, AND basemap button up to stay visible |
 | `closeDetail()` | `ui.js` | Closes detail panel; restores layers button, locate button, and basemap button position |
-| `showOverlayDetail(def, props, muni)` | `ui.js` | Adapts overlay properties for `showDetail`; for cadastro, injects async rows for Qualificação do Solo (with color dot), REN, RAN, and fire risk (Sintra only) |
+| `showOverlayDetail(def, props, muni)` | `ui.js` | Adapts overlay properties for `showDetail`; for cadastro, injects async rows for Qualificação do Solo (with color dot), REN, RAN, and fire risk (Sintra only). Called with empty `{}` props immediately on click; WMS props are unused (no visible fields differ) |
 | `updateDetailZoning(result)` | `ui.js` | Updates `#detail-zoning-val`; accepts `{label, fill}` object and renders a color dot, or plain string |
 | `updateDetailRow(id, value)` | `ui.js` | Updates `#detail-{id}-val` row; renders "Sim" green / "Não" muted / plain text |
-| `buildOverlayPanel()` | `ui.js` | Generates the layers radio list HTML from `OVERLAY_DEFS`, filtered by active municipality |
-| `openLayersSheet()` | `ui.js` | Positions popup above button's current screen location (accounts for button shift) |
+| `buildOverlayPanel()` | `ui.js` | **No-op** — overlay panel removed; function kept as an exported stub so `selectMunicipality` can still call it safely |
+| `openLayersSheet()` | `ui.js` | **No-op** — overlay sheet removed; stub kept for compatibility |
 | `setChipLoaded(id, state, text)` | `ui.js` | Saves chip state to `chipLoadedState` so it restores after zoom-out |
 
 ---
@@ -371,10 +342,8 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - **Favicon:** `favicon.svg` — coral red (`#e63946`) map pin with white inner circle; linked via `<link rel="icon" type="image/svg+xml">`
 - **Top bar** (`#topbar`): municipality picker dropdown + address search (Nominatim)
 - **Status bar** (`#statusbar`): GPS chip → active municipality chip (one of: `chip-sintra`, `chip-cascais`, `chip-oeiras`, `chip-loures`, `chip-amadora`, `chip-almada`, `chip-barreiro`, `chip-lisboa`, `chip-vfxira`, `chip-mafra`, `chip-odivelas`, `chip-alcochete`, `chip-grande-lisboa`) → Solo overlay chip (`chip-overlay`). In Grande Lisboa mode, `chip-grande-lisboa` replaces all individual municipality chips and always shows 'ok'.
-- **Layers button** (`#layers-btn`): bottom-left floating pill labeled **"Mapeamento"** (default); slides up when detail panel is open; opens layers popup
-- **Layers popup** (`#layers-sheet`): compact popup anchored above the layers button (positioned dynamically via `getBoundingClientRect`); header row has "Camadas" title (left) + "Limpar" text button (right); contains overlay radio list below
-- **Limpar button** (`#layers-clear`): top-right of layers popup; sets `activeLayer = 'none'`, removes all layers, deselects all radios — shows just the basemap
-- **Detail panel** (`#detail-panel`): full-width bottom sheet, slides up on polygon tap, swipe-down to close; liquid glass style
+- **Cadastro toggle button** (`#layers-btn`): bottom-left floating pill labeled **"Cadastro"**; slides up when detail panel is open; click toggles `activeLayer` between `'cadastro'` and `'none'`; has CSS class `active` when Cadastro is on (full opacity) and no class when off (dimmed)
+- **Detail panel** (`#detail-panel`): full-width bottom sheet; opens **immediately** on parcel tap (before WMS response); swipe-down to close; liquid glass style
 - **Locate button** (`#locate-btn`): bottom-right, re-centers on GPS; slides up with layers button when detail panel opens
 - **Basemap toggle** (`#basemap-btn`): bottom-right, stacked 54px above locate button; swaps street ↔ satellite basemap; satellite is default; slides up when detail panel opens
 - **Cache date** (`#cache-date`): subtle fixed label centered at bottom of map; shows sync date from `sync-metadata.json`
@@ -426,10 +395,9 @@ Failed overlay loads retry automatically via `RETRY_DELAYS = [15000, 30000, 6000
 - `updateLayerVisibility` checks `isGL = _activeMunicipality === 'grande-lisboa'` and adds all eighteen `xOn` conditions with `|| isGL`, making every layer group visible simultaneously.
 - `updateSintraChip` in `ui.js` extends its `on` check to include `grande-lisboa` so Sintra urban/rural layers are also added to the map. The Sintra chip itself is still hidden (only shown for `activeMunicipality === 'sintra'`).
 - `pickMunicipality` uses `map.setView(cfg.center, cfg.zoom)` instead of `panTo` so zoom resets to 10.
-- In Grande Lisboa mode, clicking fires all tile identify queries in parallel (7 queries: 6 CASCAIS_BASE layers — Cascais/2, Oeiras/3, Moita/4, Loures/6, Odivelas/8, VFXira/10 — + 1 AML_PDM1_BASE layer 2 covering Almada/Barreiro/Alcochete) and shows the first non-empty result. GeoJSON polygon clicks (Sintra, Amadora, Lisboa, Mafra, Montijo, Palmela, Seixal, Sesimbra) also work via Leaflet's built-in feature events. All 18 municipalities are clickable in region view.
+- In Grande Lisboa mode with `_activeLayer === 'zoning'`, clicking fires all tile identify queries in parallel (7 queries: 6 CASCAIS_BASE layers — Cascais/2, Oeiras/3, Moita/4, Loures/6, Odivelas/8, VFXira/10 — + 1 AML_PDM1_BASE layer 2 covering Almada/Barreiro/Alcochete) and shows the first non-empty result. GeoJSON polygon clicks (Sintra, Amadora, Lisboa, Mafra, Montijo, Palmela, Seixal, Sesimbra) also work via Leaflet's built-in feature events. All 18 municipalities are clickable. When `_activeLayer === 'cadastro'`, parcel clicks work as normal (panel opens immediately; zoning query identifies which municipality the click falls in).
 - `chip-grande-lisboa` shows 'ok' immediately; all per-municipality chips are hidden.
 - `updateZoningOverlayChip` shows `setOverlayChip('ok', 'Solo')` immediately.
-- Overlay panel: only **Qualificação do Solo**, **RAN** (`muni: 'both'`, uses `ran-cascais.geojson`), and **REN** (`ren-grande-lisboa`, uses `ren-cascais.geojson`). All Sintra-specific layers are filtered out by `buildOverlayPanel`.
 
 ---
 
