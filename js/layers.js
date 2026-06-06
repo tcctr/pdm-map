@@ -231,19 +231,15 @@ async function loadSintraRural() {
 
 function loadCascais(attempt = 0) {
   cascaisLayer.clearLayers();
-  _callbacks.onCascaisStatus?.('loading', 'Cascais…');
   try {
     const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [2], opacity: 0.55, maxZoom: 15 });
     layer.addTo(cascaisLayer);
-    layer.once('load', () => {
-      _cascaisReady = true;
-      _callbacks.onCascaisLoaded?.('ok', 'Cascais');
-    });
     layer.once('loaderror', () => {
       _callbacks.onCascaisStatus?.('error', 'Cascais: erro');
       if (attempt < RETRY_DELAYS.length) setTimeout(() => loadCascais(attempt + 1), RETRY_DELAYS[attempt]);
     });
     _cascaisReady = true;
+    _callbacks.onCascaisLoaded?.('ok', 'Cascais');
   } catch (e) {
     console.error('Cascais error:', e);
     _callbacks.onCascaisStatus?.('error', 'Cascais: indisponível');
@@ -255,19 +251,15 @@ function loadCascais(attempt = 0) {
 
 function loadOeiras(attempt = 0) {
   oeirasLayer.clearLayers();
-  _callbacks.onOeirasStatus?.('loading', 'Oeiras\u2026');
   try {
     const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [3], opacity: 0.55, maxZoom: 15 });
     layer.addTo(oeirasLayer);
-    layer.once('load', () => {
-      _oeirasReady = true;
-      _callbacks.onOeirasLoaded?.('ok', 'Oeiras');
-    });
     layer.once('loaderror', () => {
       _callbacks.onOeirasStatus?.('error', 'Oeiras: erro');
       if (attempt < RETRY_DELAYS.length) setTimeout(() => loadOeiras(attempt + 1), RETRY_DELAYS[attempt]);
     });
     _oeirasReady = true;
+    _callbacks.onOeirasLoaded?.('ok', 'Oeiras');
   } catch (e) {
     console.error('Oeiras error:', e);
     _callbacks.onOeirasStatus?.('error', 'Oeiras: indispon\u00edvel');
@@ -279,19 +271,15 @@ function loadOeiras(attempt = 0) {
 
 function loadLoures(attempt = 0) {
   louresLayer.clearLayers();
-  _callbacks.onLouresStatus?.('loading', 'Loures\u2026');
   try {
     const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [6], opacity: 0.55, maxZoom: 15 });
     layer.addTo(louresLayer);
-    layer.once('load', () => {
-      _louresReady = true;
-      _callbacks.onLouresLoaded?.('ok', 'Loures');
-    });
     layer.once('loaderror', () => {
       _callbacks.onLouresStatus?.('error', 'Loures: erro');
       if (attempt < RETRY_DELAYS.length) setTimeout(() => loadLoures(attempt + 1), RETRY_DELAYS[attempt]);
     });
     _louresReady = true;
+    _callbacks.onLouresLoaded?.('ok', 'Loures');
   } catch (e) {
     console.error('Loures error:', e);
     _callbacks.onLouresStatus?.('error', 'Loures: indispon\u00edvel');
@@ -390,19 +378,15 @@ async function loadAmadora(attempt = 0) {
 
 function loadAlmada(attempt = 0) {
   almadaLayer.clearLayers();
-  _callbacks.onAlmadaStatus?.('loading', 'Almada\u2026');
   try {
     const layer = L.esri.dynamicMapLayer({ url: AML_PDM1_BASE, layers: [2], opacity: 0.55, maxZoom: 14, layerDefs: { 2: "Concelho = 'ALMADA'" } });
     layer.addTo(almadaLayer);
-    layer.once('load', () => {
-      _almadaReady = true;
-      _callbacks.onAlmadaLoaded?.('ok', 'Almada');
-    });
     layer.once('loaderror', () => {
       _callbacks.onAlmadaStatus?.('error', 'Almada: erro');
       if (attempt < RETRY_DELAYS.length) setTimeout(() => loadAlmada(attempt + 1), RETRY_DELAYS[attempt]);
     });
     _almadaReady = true;
+    _callbacks.onAlmadaLoaded?.('ok', 'Almada');
   } catch (e) {
     console.error('Almada error:', e);
     _callbacks.onAlmadaStatus?.('error', 'Almada: indispon\u00edvel');
@@ -499,19 +483,15 @@ async function loadLisboa(attempt = 0) {
 
 function loadVfxira(attempt = 0) {
   vfxiraLayer.clearLayers();
-  _callbacks.onVfxiraStatus?.('loading', 'VF Xira\u2026');
   try {
     const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [10], opacity: 0.55, maxZoom: 15 });
     layer.addTo(vfxiraLayer);
-    layer.once('load', () => {
-      _vfxiraReady = true;
-      _callbacks.onVfxiraLoaded?.('ok', 'VF Xira');
-    });
     layer.once('loaderror', () => {
       _callbacks.onVfxiraStatus?.('error', 'VF Xira: erro');
       if (attempt < RETRY_DELAYS.length) setTimeout(() => loadVfxira(attempt + 1), RETRY_DELAYS[attempt]);
     });
     _vfxiraReady = true;
+    _callbacks.onVfxiraLoaded?.('ok', 'VF Xira');
   } catch (e) {
     console.error('VF Xira error:', e);
     _callbacks.onVfxiraStatus?.('error', 'VF Xira: indispon\u00edvel');
@@ -609,19 +589,15 @@ async function loadMafra(attempt = 0) {
 
 function loadOdivelas(attempt = 0) {
   odivelaLayer.clearLayers();
-  _callbacks.onOdivelasStatus?.('loading', 'Odivelas\u2026');
   try {
     const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [8], opacity: 0.55, maxZoom: 15 });
     layer.addTo(odivelaLayer);
-    layer.once('load', () => {
-      _odivelaReady = true;
-      _callbacks.onOdivelasLoaded?.('ok', 'Odivelas');
-    });
     layer.once('loaderror', () => {
       _callbacks.onOdivelasStatus?.('error', 'Odivelas: erro');
       if (attempt < RETRY_DELAYS.length) setTimeout(() => loadOdivelas(attempt + 1), RETRY_DELAYS[attempt]);
     });
     _odivelaReady = true;
+    _callbacks.onOdivelasLoaded?.('ok', 'Odivelas');
   } catch (e) {
     console.error('Odivelas error:', e);
     _callbacks.onOdivelasStatus?.('error', 'Odivelas: indispon\u00edvel');
@@ -636,19 +612,15 @@ function loadOdivelas(attempt = 0) {
 
 function loadAlcochete(attempt = 0) {
   alcocheteLayer.clearLayers();
-  _callbacks.onAlcocheteStatus?.('loading', 'Alcochete\u2026');
   try {
     const layer = L.esri.dynamicMapLayer({ url: AML_PDM1_BASE, layers: [2], opacity: 0.55, maxZoom: 14, layerDefs: { 2: "Concelho = 'ALCOCHETE'" } });
     layer.addTo(alcocheteLayer);
-    layer.once('load', () => {
-      _alcocheteReady = true;
-      _callbacks.onAlcocheteLoaded?.('ok', 'Alcochete');
-    });
     layer.once('loaderror', () => {
       _callbacks.onAlcocheteStatus?.('error', 'Alcochete: erro');
       if (attempt < RETRY_DELAYS.length) setTimeout(() => loadAlcochete(attempt + 1), RETRY_DELAYS[attempt]);
     });
     _alcocheteReady = true;
+    _callbacks.onAlcocheteLoaded?.('ok', 'Alcochete');
   } catch (e) {
     console.error('Alcochete error:', e);
     _callbacks.onAlcocheteStatus?.('error', 'Alcochete: indispon\u00edvel');
@@ -664,19 +636,15 @@ function loadAlcochete(attempt = 0) {
 
 function loadBarreiro(attempt = 0) {
   barreiroLayer.clearLayers();
-  _callbacks.onBarreiroStatus?.('loading', 'Barreiro\u2026');
   try {
     const layer = L.esri.dynamicMapLayer({ url: AML_PDM1_BASE, layers: [2], opacity: 0.55, maxZoom: 14, layerDefs: { 2: "Concelho = 'BARREIRO'" } });
     layer.addTo(barreiroLayer);
-    layer.once('load', () => {
-      _barreiroReady = true;
-      _callbacks.onBarreiroLoaded?.('ok', 'Barreiro');
-    });
     layer.once('loaderror', () => {
       _callbacks.onBarreiroStatus?.('error', 'Barreiro: erro');
       if (attempt < RETRY_DELAYS.length) setTimeout(() => loadBarreiro(attempt + 1), RETRY_DELAYS[attempt]);
     });
     _barreiroReady = true;
+    _callbacks.onBarreiroLoaded?.('ok', 'Barreiro');
   } catch (e) {
     console.error('Barreiro error:', e);
     _callbacks.onBarreiroStatus?.('error', 'Barreiro: indispon\u00edvel');
@@ -691,19 +659,15 @@ function loadBarreiro(attempt = 0) {
 
 function loadMoita(attempt = 0) {
   moitaLayer.clearLayers();
-  _callbacks.onMoitaStatus?.('loading', 'Moita\u2026');
   try {
     const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [4], opacity: 0.55, maxZoom: 15 });
     layer.addTo(moitaLayer);
-    layer.once('load', () => {
-      _moitaReady = true;
-      _callbacks.onMoitaLoaded?.('ok', 'Moita');
-    });
     layer.once('loaderror', () => {
       _callbacks.onMoitaStatus?.('error', 'Moita: erro');
       if (attempt < RETRY_DELAYS.length) setTimeout(() => loadMoita(attempt + 1), RETRY_DELAYS[attempt]);
     });
     _moitaReady = true;
+    _callbacks.onMoitaLoaded?.('ok', 'Moita');
   } catch (e) {
     console.error('Moita error:', e);
     _callbacks.onMoitaStatus?.('error', 'Moita: indispon\u00edvel');
