@@ -4,7 +4,7 @@
 
 import {
   MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM,
-  CASCAIS_BASE, CASCAIS_COLORS, OEIRAS_COLORS, LOURES_COLORS, CONDICIONANTES_BASE,
+  CASCAIS_BASE, CASCAIS_COLORS, OEIRAS_COLORS, LOURES_COLORS, CONDICIONANTES_BASE, REN_BASE,
   AML_PDM1_BASE, ALMADA_COLORS, BARREIRO_COLORS, ALCOCHETE_COLORS, ODIVELAS_COLORS, VFX_COLORS, MOITA_COLORS,
   URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, LISBOA_COLORS, MAFRA_COLORS,
   MONTIJO_COLORS, PALMELA_COLORS, SEIXAL_COLORS, SESIMBRA_COLORS, SETUBAL_COLORS,
@@ -694,6 +694,14 @@ function queryFireAtPoint(latlng) {
   });
 }
 
+function queryBoolAtPoint(url, layerId, latlng) {
+  return new Promise(resolve => {
+    L.esri.identifyFeatures({ url })
+      .on(_map).at(latlng).layers(`all:${layerId}`).tolerance(0)
+      .run((err, fc) => resolve(!err && fc?.features?.length > 0));
+  });
+}
+
 export function initMapHandlers({
   ovlState,
   urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer, seixalLayer, sesimbraLayer, setubalLayer,
@@ -779,12 +787,21 @@ export function initMapHandlers({
         `&CRS=EPSG%3A4326&BBOX=${bbox}` +
         `&I=${Math.round(pt.x)}&J=${Math.round(pt.y)}&STYLES=`;
 
-      const zoningPromise = queryZoningAtPoint(e.latlng);
-      const renPromise    = queryRENAtPoint(e.latlng);
-      const ranPromise    = queryRANAtPoint(e.latlng);
-      const firePromise   = _activeMunicipality === 'sintra'
-        ? queryFireAtPoint(e.latlng)
-        : Promise.resolve(null);
+      const isSintra = _activeMunicipality === 'sintra';
+
+      const zoningPromise     = queryZoningAtPoint(e.latlng);
+      const renPromise        = queryRENAtPoint(e.latlng);
+      const ranPromise        = queryRANAtPoint(e.latlng);
+      const firePromise       = isSintra ? queryFireAtPoint(e.latlng)                          : Promise.resolve('n/a');
+      const patrimonioPromise = isSintra ? queryBoolAtPoint(CONDICIONANTES_BASE, 299, e.latlng) : Promise.resolve('n/a');
+      const zepPromise        = isSintra ? queryBoolAtPoint(CONDICIONANTES_BASE, 302, e.latlng) : Promise.resolve('n/a');
+      const perigososPromise  = isSintra ? queryBoolAtPoint(CONDICIONANTES_BASE, 368, e.latlng) : Promise.resolve('n/a');
+      const faixaPromise      = isSintra ? queryBoolAtPoint(REN_BASE, 2,  e.latlng)             : Promise.resolve('n/a');
+      const praiasPromise     = isSintra ? queryBoolAtPoint(REN_BASE, 3,  e.latlng)             : Promise.resolve('n/a');
+      const cheiasPromise     = isSintra ? queryBoolAtPoint(REN_BASE, 10, e.latlng)             : Promise.resolve('n/a');
+      const marPromise        = isSintra ? queryBoolAtPoint(REN_BASE, 11, e.latlng)             : Promise.resolve('n/a');
+      const vertentesPromise  = isSintra ? queryBoolAtPoint(REN_BASE, 12, e.latlng)             : Promise.resolve('n/a');
+      const erosaoPromise     = isSintra ? queryBoolAtPoint(REN_BASE, 13, e.latlng)             : Promise.resolve('n/a');
 
       // WMS fetch — only adds highlight geometry; panel already open
       fetch(url, { signal: _cadastroAbortController.signal })
@@ -811,8 +828,23 @@ export function initMapHandlers({
         .then(v  => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.('ran',  v ? 'Sim' : 'Não'); })
         .catch(() => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.('ran',  '—'); });
       firePromise
-        .then(v  => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.('fire', v || '—'); })
+        .then(v  => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.('fire', v === 'n/a' ? 'n/a' : (v || '—')); })
         .catch(() => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.('fire', '—'); });
+
+      const boolRow = (promise, id) => {
+        promise
+          .then(v  => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.(id, v === 'n/a' ? 'n/a' : (v ? 'Sim' : 'Não')); })
+          .catch(() => { if (clickId === _cadastroClickId) _callbacks.onUpdateDetailRow?.(id, '—'); });
+      };
+      boolRow(patrimonioPromise, 'patrimonio');
+      boolRow(zepPromise,        'zep');
+      boolRow(perigososPromise,  'perigosos');
+      boolRow(faixaPromise,      'faixa');
+      boolRow(praiasPromise,     'praias');
+      boolRow(cheiasPromise,     'cheias');
+      boolRow(marPromise,        'mar');
+      boolRow(vertentesPromise,  'vertentes');
+      boolRow(erosaoPromise,     'erosao');
       return;
     }
 

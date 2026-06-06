@@ -169,12 +169,19 @@ export function showOverlayDetail(def, props, muni) {
         `<strong>${label}:</strong> <span id="detail-${id}-val" style="font-style:italic">\u2026</span>` +
         `</div></div>`;
     };
-    rowsEl.insertAdjacentHTML('beforeend', mkRow('zoning', 'Qualifica\u00e7\u00e3o do Solo', true));
-    rowsEl.insertAdjacentHTML('beforeend', mkRow('ren', 'REN', false));
-    rowsEl.insertAdjacentHTML('beforeend', mkRow('ran', 'RAN', false));
-    if (muni === 'sintra') {
-      rowsEl.insertAdjacentHTML('beforeend', mkRow('fire', 'Perigosidade de Inc\u00eandio', false));
-    }
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('zoning',     'Qualifica\u00e7\u00e3o do Solo',    true));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('ren',        'REN',                               false));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('ran',        'RAN',                               false));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('fire',       'Perigosidade de Inc\u00eandio',     false));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('patrimonio', 'Bens Im. Classificados',            false));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('zep',        'ZEP',                              false));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('perigosos',  'Equip. Perigosos',                  false));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('faixa',      'Faixa Costeira',                    false));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('praias',     'Praias',                            false));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('cheias',     'Zonas de Cheias',                   false));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('mar',        'Amea\u00e7a Costeira',              false));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('vertentes',  'Inst. de Vertentes',                false));
+    rowsEl.insertAdjacentHTML('beforeend', mkRow('erosao',     'Eros\u00e3o H\u00eddrica',          false));
   }
 }
 
@@ -203,6 +210,9 @@ export function updateDetailRow(id, value) {
     el.innerHTML = '<span style="color:#68d391">Sim</span>';
   } else if (value === 'N\u00e3o') {
     el.innerHTML = '<span style="color:rgba(255,255,255,0.35)">N\u00e3o</span>';
+  } else if (value === 'n/a') {
+    el.style.fontStyle = 'italic';
+    el.innerHTML = '<span style="color:rgba(255,255,255,0.25)">N\u00e3o dispon\u00edvel</span>';
   } else {
     el.textContent = value || '\u2014';
   }
