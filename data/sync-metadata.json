@@ -5,21 +5,21 @@
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer/55/query?where=1%3D1&outFields=CAT%2CDescricao%2CRegulamento%2CPag_Regulamento%2CGuiao%2CPag_Guiao%2CRelatorio%2CPag_relatorio%2Carea_ha&outSR=4326",
       "featureCount": 985,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:48:52.297Z"
+      "lastSuccessfulSync": "2026-09-07T11:40:56.604Z"
     },
     "sintra-rural.geojson": {
       "filename": "sintra-rural.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Ordenamento/MapServer/54/query?where=1%3D1&outFields=Ord_Categ%2CDescricao%2CRegulamento%2CPag_Regulamento%2CGuiao%2CPag_Guiao%2CRelatorio%2CPag_relatorio%2CArea_Ha&outSR=4326",
       "featureCount": 1316,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:48:59.237Z"
+      "lastSuccessfulSync": "2026-09-07T11:41:03.498Z"
     },
     "ran-sintra.geojson": {
       "filename": "ran-sintra.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer/264/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 169,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:49:00.875Z"
+      "lastSuccessfulSync": "2026-09-07T11:41:05.085Z"
     },
     "ran-cascais.geojson": {
       "filename": "ran-cascais.geojson",
@@ -54,49 +54,49 @@
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer/12/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 315,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:50:09.393Z"
+      "lastSuccessfulSync": "2026-09-07T11:42:11.893Z"
     },
     "erosao.geojson": {
       "filename": "erosao.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer/13/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 1,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:50:11.129Z"
+      "lastSuccessfulSync": "2026-09-07T11:42:13.830Z"
     },
     "mar.geojson": {
       "filename": "mar.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer/11/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 1,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:50:12.294Z"
+      "lastSuccessfulSync": "2026-09-07T11:42:15.056Z"
     },
     "cheias.geojson": {
       "filename": "cheias.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_SRUP_REN_CMS/MapServer/10/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 48,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:50:13.643Z"
+      "lastSuccessfulSync": "2026-09-07T11:42:16.517Z"
     },
     "patrimonio.geojson": {
       "filename": "patrimonio.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer/299/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 79,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:50:14.965Z"
+      "lastSuccessfulSync": "2026-09-07T11:42:17.869Z"
     },
     "zep.geojson": {
       "filename": "zep.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer/302/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 13,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:50:16.136Z"
+      "lastSuccessfulSync": "2026-09-07T11:42:19.229Z"
     },
     "perigosos.geojson": {
       "filename": "perigosos.geojson",
       "sourceUrl": "https://sig.cm-sintra.pt/arcgis/rest/services/WMS_Inspire/WMS_PDM20_Condicionantes/MapServer/368/query?where=1%3D1&outFields=*&outSR=4326&maxAllowableOffset=0.0001",
       "featureCount": 2,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:50:17.291Z"
+      "lastSuccessfulSync": "2026-09-07T11:42:20.503Z"
     },
     "ren-sintra.geojson": {
       "filename": "ren-sintra.geojson",
@@ -110,14 +110,14 @@
       "sourceUrl": "https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1115_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Amadora_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326",
       "featureCount": 82,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:50:28.861Z"
+      "lastSuccessfulSync": "2026-09-07T11:42:34.197Z"
     },
     "lisboa-zoning.geojson": {
       "filename": "lisboa-zoning.geojson",
       "sourceUrl": "https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1106_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Lisboa_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326",
       "featureCount": 861,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:50:40.405Z"
+      "lastSuccessfulSync": "2026-09-07T11:42:50.659Z"
     },
     "vfxira-zoning.geojson": {
       "filename": "vfxira-zoning.geojson",
@@ -131,14 +131,14 @@
       "sourceUrl": "https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1109_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Mafra_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326",
       "featureCount": 1709,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:51:00.264Z"
+      "lastSuccessfulSync": "2026-09-07T11:43:23.847Z"
     },
     "montijo-zoning.geojson": {
       "filename": "montijo-zoning.geojson",
       "sourceUrl": "https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1507_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Montijo_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326",
       "featureCount": 532,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:51:13.257Z"
+      "lastSuccessfulSync": "2026-09-07T11:43:40.776Z"
     },
     "palmela-zoning.geojson": {
       "filename": "palmela-zoning.geojson",
@@ -152,24 +152,24 @@
       "sourceUrl": "https://sig.cm-seixal.pt/arcgis/rest/services/Hosted/PDM_PO_Classificacao_Solo/FeatureServer/27/query?where=1%3D1&outFields=*&outSR=4326",
       "featureCount": 903,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:51:20.981Z"
+      "lastSuccessfulSync": "2026-09-07T11:43:51.802Z"
     },
     "sesimbra-zoning.geojson": {
       "filename": "sesimbra-zoning.geojson",
       "sourceUrl": "https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1511_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Sesimbra_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326",
       "featureCount": 126,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:51:36.182Z"
+      "lastSuccessfulSync": "2026-09-07T11:44:07.175Z"
     },
     "setubal-zoning.geojson": {
       "filename": "setubal-zoning.geojson",
       "sourceUrl": "https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1512_1/WFService.aspx?service=WFS&version=2.0.0&request=GetFeature&typeNames=gmgml:CRUS_Setubal_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326",
       "featureCount": 792,
       "status": "success",
-      "lastSuccessfulSync": "2026-08-31T12:51:50.384Z"
+      "lastSuccessfulSync": "2026-09-07T11:44:21.317Z"
     }
   },
-  "lastRun": "2026-08-31T12:48:47.385Z",
+  "lastRun": "2026-09-07T11:40:51.038Z",
   "lastRunSucceeded": 17,
   "lastRunFailed": 5
 }
