@@ -205,7 +205,7 @@ const sintraStatus = { urban: 'loading', urbanText: '', rural: 'loading', ruralT
 // ============================================================
 
 function toggleCadastro() {
-  handleLayerSelect(getActiveLayer() === 'cadastro' ? 'none' : 'cadastro');
+  handleLayerSelect(getActiveLayer() === 'cadastro' ? 'zoning' : 'cadastro');
 }
 
 function updateLayersBtnLabel(value) {
@@ -302,7 +302,6 @@ initMapHandlers({
 
 selectMunicipality('grande-lisboa');
 map.setView([38.756, -9.208], 10);
-handleLayerSelect('cadastro');
 loadCacheMetadata();
 
 // ============================================================

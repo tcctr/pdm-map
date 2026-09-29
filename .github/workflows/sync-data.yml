@@ -20,10 +20,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Run sync script
         # continue-on-error so partial failures (e.g. one server down) don't abort the job.

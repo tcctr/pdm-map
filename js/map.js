@@ -38,7 +38,7 @@ let _cadastroAbortController = null;
 let _cadastroClickId         = 0;
 let _callbacks               = {};
 
-let _activeLayer        = 'cadastro';
+let _activeLayer        = 'zoning';
 let _activeMunicipality = 'grande-lisboa';
 
 // ── Active-state getters / setters ───────────────────────────
@@ -88,6 +88,8 @@ export function initMap(containerId) {
 // ── Layer visibility ──────────────────────────────────────────
 
 export function updateLayerVisibility() {
+  // Loaders can report status before initMapHandlers has wired the layers
+  if (!_cascaisLayer) return;
   _callbacks.onUpdateSintraChip?.();
 
   const zoomed = _map.getZoom() >= MIN_DATA_ZOOM;
@@ -448,10 +450,10 @@ export function selectMunicipality(muni) {
     st.loaded = false; st.loading = false; st.active = false; st.retries = 0;
   }
 
-  if (_ovlState['cadastro']?.leafletLayer) {
+  if (_activeLayer === 'cadastro' && _ovlState['cadastro']?.leafletLayer) {
     _callbacks.onUpdateLayersBtnLabel?.('cadastro');
   } else {
-    handleLayerSelect('cadastro');
+    handleLayerSelect(_activeLayer);
   }
   _callbacks.onBuildOverlayPanel?.();
   updateLayerVisibility();
