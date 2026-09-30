@@ -254,11 +254,58 @@ export function updateDetailRow(id, value) {
   }
 }
 
-// ── Overlay panel builder (no-op — overlay panel removed) ────
+// ── Layers sheet ──────────────────────────────────────────────
 
-export function buildOverlayPanel() {}
+function updateScrollFade() {
+  const body  = document.getElementById('overlay-body');
+  const sheet = document.getElementById('layers-sheet');
+  if (!body || !sheet) return;
+  const canScrollMore = body.scrollHeight - body.scrollTop - body.clientHeight > 4;
+  sheet.classList.toggle('has-scroll', canScrollMore);
+}
 
-export function openLayersSheet() {}
+export function openLayersSheet() {
+  const btn   = document.getElementById('layers-btn');
+  const sheet = document.getElementById('layers-sheet');
+  const rect  = btn.getBoundingClientRect();
+  sheet.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+  sheet.classList.add('open');
+  document.getElementById('layers-backdrop').classList.add('open');
+  btn.classList.add('open');
+  // Check after transition so height is final
+  requestAnimationFrame(updateScrollFade);
+}
+
+// ── Overlay panel builder ─────────────────────────────────────
+
+export function buildOverlayPanel() {
+  const activeMunicipality = _getActiveMunicipality();
+  const activeLayer = _getActiveLayer();
+  const body = document.getElementById('overlay-body');
+  const visibleDefs = OVERLAY_DEFS.filter(d => d.muni === activeMunicipality || d.muni === 'both');
+  const groups = [...new Set(visibleDefs.map(d => d.group))];
+  let html = `<label class="overlay-item">
+    <input type="radio" name="active-layer" value="zoning" ${activeLayer === 'zoning' ? 'checked' : ''} />
+    <span class="overlay-dot" style="background:linear-gradient(135deg,#e63946 33%,#1a9850 33% 66%,#f4a261 66%)"></span>
+    <span class="overlay-name">Qualifica\u00e7\u00e3o do Solo</span>
+  </label>`;
+  for (const grp of groups) {
+    html += `<div class="overlay-group-title">${grp}</div>`;
+    for (const def of visibleDefs.filter(d => d.group === grp)) {
+      const dotBg = def.hatch
+        ? `background:repeating-linear-gradient(45deg,${def.color}66,${def.color}66 2px,transparent 2px,transparent 7px),${def.color}22`
+        : `background:${def.color}`;
+      html += `<label class="overlay-item">
+        <input type="radio" name="active-layer" value="${def.id}" ${activeLayer === def.id ? 'checked' : ''} />
+        <span class="overlay-dot" style="${dotBg}"></span>
+        <span class="overlay-name">${def.name}</span>
+        <span class="overlay-spinner" id="ovl-spin-${def.id}" style="display:none">&#x21BB;</span>
+      </label>`;
+    }
+  }
+  body.innerHTML = html;
+  requestAnimationFrame(updateScrollFade);
+}
 
 // ── initUI ────────────────────────────────────────────────────
 // Call after initLayers so urbanLayer/ruralLayer are set.
@@ -292,6 +339,9 @@ export function initUI({
   _getActiveLayer            = getActiveLayer;
   _getActiveMunicipality     = getActiveMunicipality;
   _onZoningOverlayChipUpdate = onZoningOverlayChipUpdate;
+
+  // Scroll fade on overlay list
+  document.getElementById('overlay-body').addEventListener('scroll', updateScrollFade, { passive: true });
 
   // Swipe down to close detail panel
   let touchStartY = 0;

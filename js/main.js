@@ -5,7 +5,7 @@
 import { OVERLAY_DEFS } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
 import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer, seixalLayer, sesimbraLayer, setubalLayer } from './layers.js';
-import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, buildOverlayPanel, updateDetailZoning, updateDetailRow } from './ui.js';
+import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel, updateDetailZoning, updateDetailRow } from './ui.js';
 import { initMap, initMapHandlers, initBasemapToggle, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './map.js';
 
 // ============================================================
@@ -201,20 +201,26 @@ function updateZoningOverlayChip() {
 const sintraStatus = { urban: 'loading', urbanText: '', rural: 'loading', ruralText: '' };
 
 // ============================================================
-// CADASTRO TOGGLE
+// LAYERS SHEET
 // ============================================================
 
-function toggleCadastro() {
-  handleLayerSelect(getActiveLayer() === 'cadastro' ? 'zoning' : 'cadastro');
+function closeLayersSheet() {
+  document.getElementById('layers-sheet').classList.remove('open');
+  document.getElementById('layers-backdrop').classList.remove('open');
+  document.getElementById('layers-btn').classList.remove('open');
+  document.getElementById('overlay-body').scrollTop = 0;
+}
+
+function toggleLayersSheet() {
+  document.getElementById('layers-sheet').classList.contains('open')
+    ? closeLayersSheet()
+    : openLayersSheet();
 }
 
 function updateLayersBtnLabel(value) {
-  const btn = document.getElementById('layers-btn');
-  if (value === 'cadastro') {
-    btn.classList.add('active');
-  } else {
-    btn.classList.remove('active');
-  }
+  if (value === 'none') { document.getElementById('layers-btn-label').textContent = 'Mapa base'; return; }
+  const def = OVERLAY_DEFS.find(d => d.id === value);
+  document.getElementById('layers-btn-label').textContent = def ? def.name : 'Qualifica\u00e7\u00e3o do Solo';
 }
 
 // ============================================================
@@ -295,6 +301,7 @@ initMapHandlers({
   onShowOverlayDetail:        showOverlayDetail,
   onBuildOverlayPanel:        buildOverlayPanel,
   onUpdateLayersBtnLabel:     updateLayersBtnLabel,
+  onCloseLayersSheet:         closeLayersSheet,
   onUpdateZoningOverlayChip:  updateZoningOverlayChip,
   onUpdateDetailZoning:       updateDetailZoning,
   onUpdateDetailRow:          updateDetailRow,
@@ -308,8 +315,29 @@ loadCacheMetadata();
 // EVENT WIRING — replaces inline onclick/onchange attributes
 // ============================================================
 
-// Cadastro toggle button
-document.getElementById('layers-btn').addEventListener('click', toggleCadastro);
+// Layers sheet
+document.getElementById('layers-btn').addEventListener('click', toggleLayersSheet);
+document.getElementById('layers-backdrop').addEventListener('click', closeLayersSheet);
+
+// Layers sheet swipe-to-close
+let layersTouchStartY = 0;
+document.getElementById('layers-sheet').addEventListener('touchstart', e => {
+  layersTouchStartY = e.touches[0].clientY;
+}, { passive: true });
+document.getElementById('layers-sheet').addEventListener('touchend', e => {
+  if (e.changedTouches[0].clientY - layersTouchStartY > 60) closeLayersSheet();
+}, { passive: true });
+
+// Overlay radio buttons — event delegation handles dynamically generated radios
+document.getElementById('overlay-body').addEventListener('change', e => {
+  if (e.target.name === 'active-layer') handleLayerSelect(e.target.value);
+});
+
+// Layers clear button
+document.getElementById('layers-clear').addEventListener('click', () => {
+  handleLayerSelect('none');
+  document.querySelectorAll('#overlay-body input[type=radio]').forEach(r => r.checked = false);
+});
 
 // Detail panel close button
 document.getElementById('detail-close').addEventListener('click', closeDetail);

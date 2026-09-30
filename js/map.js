@@ -677,7 +677,7 @@ export function initMapHandlers({
   overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady,
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
-  onBuildOverlayPanel, onUpdateLayersBtnLabel,
+  onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet,
   onUpdateZoningOverlayChip, onUpdateDetailZoning, onUpdateDetailRow,
 }) {
   _ovlState     = ovlState;
@@ -710,6 +710,7 @@ export function initMapHandlers({
     onShowOverlayDetail,
     onBuildOverlayPanel,
     onUpdateLayersBtnLabel,
+    onCloseLayersSheet,
     onUpdateZoningOverlayChip,
     onUpdateDetailZoning,
     onUpdateDetailRow,

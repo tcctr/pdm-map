@@ -12,6 +12,7 @@ import {
 let _map             = null;
 let _renderer        = null;
 let _overlayRenderer = null;
+let _hatchRenderer   = null;
 let _callbacks       = {};
 
 // Exported live bindings — assigned inside initLayers, visible to importers.
@@ -1135,7 +1136,7 @@ export async function loadOverlay(id, activeMunicipality) {
     if (!result) throw new Error('Both cache and live failed');
     const allFeatures = result.features;
     L.geoJSON({ type: 'FeatureCollection', features: allFeatures }, {
-      renderer: def.hatch ? _renderer : _overlayRenderer,
+      renderer: def.hatch ? _hatchRenderer : _overlayRenderer,
       style: () => makeOverlayStyle(def),
       filter: f => !!f.geometry,
       onEachFeature(feature, layer) {
@@ -1195,6 +1196,8 @@ export function initLayers(map, callbacks) {
   _callbacks       = callbacks;
   _renderer        = L.svg({ padding: 1, pane: 'zoningPane' });
   _overlayRenderer = L.canvas({ padding: 0.5 });
+  // Hatched overlays need SVG (pattern fills) but can't share _renderer: zoningPane is hidden while an overlay is active
+  _hatchRenderer   = L.svg({ padding: 1 });
 
   urbanLayer   = L.layerGroup().addTo(map);
   ruralLayer   = L.layerGroup().addTo(map);
