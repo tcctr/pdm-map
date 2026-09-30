@@ -13,12 +13,6 @@ export const CONDICIONANTES_BASE = 'https://sig.cm-sintra.pt/arcgis/rest/service
 // DGT publishes the CRUS (Carta do Regime de Uso do Solo) derived from the 1994 PDM.
 export const AMADORA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1115_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Amadora_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
-// Almada zoning — AML PDM_I_GERACAO MapServer (1st-gen PDM, tile rendering only).
-// Almada's own server is down/firewalled; Almada is NOT on pdm_revisao (2nd-gen AML server).
-// PDM_I_GERACAO layer 2 has maxScale:25000 — tiles only render at zoom ≥ 15.
-// Field: Classe → "Solo Rural" | "Urbanizável" | "Urbanizado".
-export const AML_PDM1_BASE = 'https://sig.aml.pt/arcgis/rest/services/PlaneamentoOrdenamento/PDM_I_GERACAO/MapServer';
-
 // Lisboa zoning — DGT CRUS WFS (public, CC BY 4.0). GeoJSON output.
 // Lisboa's own ArcGIS server requires authentication; DGT publishes CRUS from the current PDM.
 export const LISBOA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1106_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Lisboa_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
@@ -54,10 +48,18 @@ export const PALMELA_BASE = 'https://sig.cm-palmela.pt/arcgis/rest/services/PMOT
 // some values have trailing spaces/newlines from source data). layer field → Descricao.
 export const SEIXAL_BASE = 'https://sig.cm-seixal.pt/arcgis/rest/services/Hosted/PDM_PO_Classificacao_Solo/FeatureServer';
 
-// Odivelas zoning — DGT CRUS WFS (public, CC BY 4.0). 222 features, GeoJSON output.
-// Odivelas' own ArcGIS server (sig.cm-odivelas.pt) is unreachable; AML pdm_revisao layer 8
-// blocks geometry export. DGT publishes CRUS from the current PDM. Field: Categoria.
+// DGT CRUS WFS for the municipalities that used to come from sig.aml.pt tiles.
+// sig.aml.pt stopped serving ArcGIS in mid-2026 (wrong TLS cert, 404 on every path).
+// DGT is slow (30-120 s per request), so these are always served from data/ first.
+export const CASCAIS_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1105_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Cascais_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+export const OEIRAS_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1110_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Oeiras_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+export const LOURES_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1107_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Loures_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 export const ODIVELAS_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1116_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Odivelas_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+export const VFXIRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1114_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Vila_Franca_de_Xira_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+export const ALMADA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1503_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Almada_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+export const BARREIRO_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1504_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Barreiro_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+export const ALCOCHETE_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1502_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Alcochete_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+export const MOITA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1506_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Moita_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
 // Cadastro Predial — DGT public WMS (INSPIRE CP.CadastralParcel)
 export const CADASTRO_WMS_URL = 'https://snicws.dgterritorio.gov.pt/geoserver/inspire/ows';
@@ -91,59 +93,6 @@ export const RURAL_COLORS = {
   I:   { fill: '#6a4c93', label: 'Atividades Industriais' },
   ER:  { fill: '#c77dff', label: 'Recursos Geol\u00f3gicos' },
   AR:  { fill: '#9e9e9e', label: 'Aglomerado Rural' },
-};
-
-// Color palette for Cascais zones (Categoria field, layer 2)
-export const CASCAIS_COLORS = {
-  'Espa\u00e7o Canal':                        { fill: '#555555', label: 'Canal' },
-  'Espa\u00e7o Central':                      { fill: '#c1121f', label: 'Central' },
-  'Espa\u00e7o Natural':                      { fill: '#74c69d', label: 'Natural' },
-  'Espa\u00e7o Residencial':                  { fill: '#f4845f', label: 'Residencial' },
-  'Espa\u00e7o Verde':                        { fill: '#52b788', label: 'Verde' },
-  'Espa\u00e7o de Aglomerados Rurais':        { fill: '#9e9e9e', label: 'Aglomerados Rurais' },
-  'Espa\u00e7o de Atividades Econ\u00f3micas':         { fill: '#9b5de5', label: 'Atividades Econ\u00f3micas' },
-  'Espa\u00e7o de Atividades Econ\u00f3micas Proposto':{ fill: '#c77dff', label: 'At. Econ. Proposto' },
-  'Espa\u00e7o de Equipamento':               { fill: '#4895ef', label: 'Equipamento' },
-  'Espa\u00e7o de Ocupa\u00e7\u00e3o Tur\u00edstica':  { fill: '#43aa8b', label: 'Ocupa\u00e7\u00e3o Tur\u00edstica' },
-  'Espa\u00e7o de Recursos Geol\u00f3gicos':  { fill: '#c77dff', label: 'Recursos Geol\u00f3gicos' },
-  'Espa\u00e7o de Uso Especial':              { fill: '#e9c46a', label: 'Uso Especial' },
-  'Espa\u00e7o de Uso Especial Proposto':     { fill: '#ffe8a1', label: 'Uso Especial Proposto' },
-  'PMOT em vigor':                            { fill: '#cccccc', label: 'PMOT em vigor' },
-};
-
-// Color palette for Oeiras zones (Categoria field, layer 3 — same AML server as Cascais)
-export const OEIRAS_COLORS = {
-  'Espa\u00e7o Canal':                                  { fill: '#555555', label: 'Canal' },
-  'Espa\u00e7o Central':                                { fill: '#c1121f', label: 'Central' },
-  'Espa\u00e7o Natural':                                { fill: '#74c69d', label: 'Natural' },
-  'Espa\u00e7o Residencial':                            { fill: '#f4845f', label: 'Residencial' },
-  'Espa\u00e7o Verde':                                  { fill: '#52b788', label: 'Verde' },
-  'Espa\u00e7o de Actividades Econ\u00f3micas':         { fill: '#9b5de5', label: 'Actividades Econ\u00f3micas' },
-  'Espa\u00e7o de Atividades Econ\u00f3micas':          { fill: '#9b5de5', label: 'Atividades Econ\u00f3micas' },
-  'Espa\u00e7o de Equipamento':                         { fill: '#4895ef', label: 'Equipamento' },
-  'Espa\u00e7o de Ocupa\u00e7\u00e3o Tur\u00edstica':  { fill: '#43aa8b', label: 'Ocupa\u00e7\u00e3o Tur\u00edstica' },
-  'Espa\u00e7o de Uso Especial':                        { fill: '#e9c46a', label: 'Uso Especial' },
-  'Espa\u00e7o de Uso Especial - Equipamentos':         { fill: '#4895ef', label: 'Uso Especial - Equipamentos' },
-  'Espa\u00e7o de Uso Especial - Turismo':              { fill: '#43aa8b', label: 'Uso Especial - Turismo' },
-  'Espa\u00e7o de Uso Especial Proposto':               { fill: '#ffe8a1', label: 'Uso Especial Proposto' },
-  'Solo Rural':                                         { fill: '#74c69d', label: 'Solo Rural' },
-  'Solo urbaniz\u00e1vel sem categoria associada':      { fill: '#f4a261', label: 'Solo Urbaniz\u00e1vel' },
-  'PMOT em vigor':                                      { fill: '#cccccc', label: 'PMOT em vigor' },
-};
-
-// Color palette for Loures zones (Categoria field, layer 6 — same AML server as Cascais/Oeiras)
-export const LOURES_COLORS = {
-  'Rio Tejo':                                                  { fill: '#0070ff', label: 'Rio Tejo' },
-  'Aglomerados Rurais':                                        { fill: '#003f7d', label: 'Aglomerados Rurais' },
-  'Espa\u00e7o destinado a Equipamentos e Outras Estruturas':  { fill: '#4895ef', label: 'Equipamentos e Estruturas' },
-  'Espa\u00e7os Afectos a Actividades Industriais':            { fill: '#884aaa', label: 'Actividades Industriais' },
-  'Espa\u00e7os Afectos \u00e0 Explora\u00e7\u00e3o de Recursos Geol\u00f3gicos': { fill: '#6c757d', label: 'Recursos Geol\u00f3gicos' },
-  'Espa\u00e7os Agr\u00edcolas e Florestais':                  { fill: '#1a9850', label: 'Agr\u00edcola e Florestal' },
-  'Espa\u00e7os Naturais':                                     { fill: '#74c69d', label: 'Natural' },
-  'Espa\u00e7os de Ocupa\u00e7\u00e3o Turistica':              { fill: '#43aa8b', label: 'Ocupa\u00e7\u00e3o Tur\u00edstica' },
-  'Sistemas de Circula\u00e7\u00e3o e Mobilidade':             { fill: '#658a42', label: 'Circula\u00e7\u00e3o e Mobilidade' },
-  'Solo Urbanizado':                                           { fill: '#c1121f', label: 'Solo Urbanizado' },
-  'Solo Urbaniz\u00e1vel':                                     { fill: '#f4845f', label: 'Solo Urbaniz\u00e1vel' },
 };
 
 // Color palette for Amadora zones (Categoria_2021 field — DGT CRUS DR 15/2015 classification)
@@ -185,25 +134,28 @@ export const LISBOA_COLORS = {
   'N\u00e3o Atribu\u00edda':                                          { fill: '#adb5bd', label: 'N\u00e3o Atribu\u00edda' },
 };
 
-// Color palette for Almada zones (Classe field — PDM_I_GERACAO AML layer 2, 1st-gen DGT classification)
-export const ALMADA_COLORS = {
-  'Solo Rural':    { fill: '#1a9850', label: 'Solo Rural' },
-  'Urbaniz\u00e1vel': { fill: '#f4a261', label: 'Solo Urbaniz\u00e1vel' },
-  'Urbanizado':    { fill: '#c1121f', label: 'Solo Urbanizado' },
-};
-
-// Color palette for Alcochete zones (Classe field — PDM_I_GERACAO AML layer 2, same classification as Almada)
-export const ALCOCHETE_COLORS = {
-  'Solo Rural':    { fill: '#1a9850', label: 'Solo Rural' },
-  'Urbaniz\u00e1vel': { fill: '#f4a261', label: 'Solo Urbaniz\u00e1vel' },
-  'Urbanizado':    { fill: '#c1121f', label: 'Solo Urbanizado' },
-};
-
-// Color palette for Barreiro zones (Classe field — PDM_I_GERACAO AML layer 2, same 3-value schema as Almada/Alcochete)
-export const BARREIRO_COLORS = {
-  'Solo Rural':    { fill: '#1a9850', label: 'Solo Rural' },
-  'Urbaniz\u00e1vel': { fill: '#f4a261', label: 'Solo Urbaniz\u00e1vel' },
-  'Urbanizado':    { fill: '#c1121f', label: 'Solo Urbanizado' },
+// Shared palette for the DR 15/2015 categories used by the DGT CRUS datasets
+// (Categoria / Categoria_2021), plus Classe fallbacks for 'Não Atribuída'.
+export const CRUS_COLORS = {
+  'Espaço Central':                                                                  { fill: '#c1121f', label: 'Central' },
+  'Espaço Habitacional':                                                             { fill: '#f4845f', label: 'Habitacional' },
+  'Espaço Urbano de Baixa Densidade':                                                { fill: '#e9c46a', label: 'Baixa Densidade' },
+  'Área de Edificação Dispersa':                                          { fill: '#f4a261', label: 'Edif. Dispersa' },
+  'Aglomerado Rural':                                                                      { fill: '#9e9e9e', label: 'Aglomerado Rural' },
+  'Espaço Verde':                                                                    { fill: '#52b788', label: 'Verde' },
+  'Espaço Natural e Paisagístico':                                             { fill: '#74c69d', label: 'Natural e Paisag.' },
+  'Espaço Agrícola':                                                            { fill: '#d4a017', label: 'Agrícola' },
+  'Espaço Florestal':                                                                { fill: '#2d6a4f', label: 'Florestal' },
+  'Espaço de Atividades Económicas':                                           { fill: '#9b5de5', label: 'Atividades Econ.' },
+  'Espaço de Atividades Industriais':                                                { fill: '#884aaa', label: 'Atividades Industriais' },
+  'Espaço de Uso Especial Equipamentos e Infraestruturas':                           { fill: '#4895ef', label: 'Equip. Especial' },
+  'Espaço de Equipamentos e Infraestruturas':                                        { fill: '#457b9d', label: 'Equipamentos e Infra.' },
+  'Espaço de Uso Especial - Turístico':                                        { fill: '#fb8500', label: 'Turístico Espec.' },
+  'Espaço de Ocupação Turística':                                   { fill: '#43aa8b', label: 'Ocupação Turística' },
+  'Espaço de Exploração de Recursos Energéticos e Geológicos': { fill: '#6c757d', label: 'Rec. Energ./Geol.' },
+  'Solo Urbano':                                                                           { fill: '#c1121f', label: 'Urbano' },
+  'Solo Urbano (urbanizável – transitório)':                             { fill: '#f4845f', label: 'Urbanizável' },
+  'Solo Rústico':                                                                    { fill: '#1a9850', label: 'Rústico' },
 };
 
 // Color palette for Mafra zones (Categoria field — DGT CRUS WFS, 2023 PDM)
@@ -220,31 +172,6 @@ export const MAFRA_COLORS = {
   'Espa\u00e7o de Equipamentos e Infraestruturas':           { fill: '#4895ef', label: 'Equipamentos e Infra.' },
   'Espa\u00e7o de Explora\u00e7\u00e3o de Recursos Energ\u00e9ticos e Geol\u00f3gicos': { fill: '#6c757d', label: 'Recursos Energ. e Geol.' },
   'Espa\u00e7o de Uso Especial Equipamentos e Infraestruturas': { fill: '#0d47a1', label: 'Uso Esp. Equip. e Infra.' },
-};
-
-// Color palette for Odivelas zones (Categoria field — AML pdm_revisao layer 8)
-export const ODIVELAS_COLORS = {
-  'Urbanizado - Central - N1':                                               { fill: '#c1121f', label: 'Urbanizado Central' },
-  'Urbanizado - Central - N2':                                               { fill: '#c1121f', label: 'Urbanizado Central' },
-  'Urbanizado - Residencial - N1':                                           { fill: '#f4845f', label: 'Urbanizado Residencial' },
-  'Urbanizado - Residencial - N2':                                           { fill: '#f4845f', label: 'Urbanizado Residencial' },
-  'Urbanizado - Residencial - N3':                                           { fill: '#f4845f', label: 'Urbanizado Residencial' },
-  'Urbanizado Actividades Economicas':                                       { fill: '#9b5de5', label: 'Ativ. Econ\u00f3micas' },
-  'Urbanizado Actividades Economicas Requalificar':                          { fill: '#9b5de5', label: 'Ativ. Econ. Requalificar' },
-  'Urbanizado Espaco de Uso Especial - Equipamentos e Infraestruturas':      { fill: '#4895ef', label: 'Equipamentos e Infra.' },
-  'Urbanizado Residencial Reconverter':                                      { fill: '#f4845f', label: 'Residencial Reconverter' },
-  'Urbanizado Verde':                                                        { fill: '#52b788', label: 'Verde Urbano' },
-  'Urbanizavel - Central - N1':                                              { fill: '#e05c5c', label: 'Urbaniz\u00e1vel Central' },
-  'Urbanizavel - Central - N2':                                              { fill: '#e05c5c', label: 'Urbaniz\u00e1vel Central' },
-  'Urbanizavel - Residencial - N1':                                          { fill: '#f4a261', label: 'Urbaniz\u00e1vel Residencial' },
-  'Urbanizavel - Residencial - N2':                                          { fill: '#f4a261', label: 'Urbaniz\u00e1vel Residencial' },
-  'Urbanizavel Actividades Economicas':                                      { fill: '#c77dff', label: 'Urbaniz\u00e1vel Ativ. Econ.' },
-  'Urbanizavel Verde':                                                       { fill: '#95d5b2', label: 'Urbaniz\u00e1vel Verde' },
-  'Aglomerado Rural':                                                        { fill: '#74c69d', label: 'Aglomerado Rural' },
-  'Agro - pastoril':                                                         { fill: '#d4a017', label: 'Agro-Pastoril' },
-  'Florestal Producao':                                                      { fill: '#2d6a4f', label: 'Florestal' },
-  'Naturalizado Proteccao ou Enquadramento':                                 { fill: '#1a9850', label: 'Natural/Prote\u00e7\u00e3o' },
-  'Equipamentos e Outras Estruturas':                                        { fill: '#adb5bd', label: 'Equipamentos' },
 };
 
 // Color palette for Montijo zones (Categoria_2021 + Classe_2021 fallback — DGT CRUS WFS 1507)
@@ -376,27 +303,6 @@ export const PALMELA_COLORS = {
   'Unidades Operativas de Planeamento e Gest\u00e3o - \u00c1reas Apoiadas no Eixo Industrial da EN252':        { fill: '#886644', label: 'UOPG Eixo Industrial' },
   'Unidades Operativas de Planeamento e Gest\u00e3o - Zona Poente':                                                                       { fill: '#997755', label: 'UOPG Zona Poente' },
   ' ':                                                                                                                                     { fill: '#adb5bd', label: 'Compromissos' },
-};
-
-// Color palette for Moita zones (Categoria field — pdm_revisao AML layer 4)
-// 1st-generation PDM classification (pre-DR 15/2015). No scale restriction (minScale/maxScale both 0).
-export const MOITA_COLORS = {
-  'Solo urbanizado':                                    { fill: '#c1121f', label: 'Solo Urbanizado' },
-  'Solo urbanizado programado':                         { fill: '#f4845f', label: 'Urbanizado Programado' },
-  'Solo urbanizado - Solo urbanizado programado':       { fill: '#e05c5c', label: 'Urbanizado/Programado' },
-  'Espa\u00e7os agr\u00edcolas periurbanos':            { fill: '#d4a017', label: 'Agr\u00edcola Periurbano' },
-  'Espa\u00e7os agro-pecu\u00e1rios':                  { fill: '#a0785a', label: 'Agro-Pecu\u00e1rio' },
-  'Rio Tejo':                                           { fill: '#0070ff', label: 'Rio Tejo' },
-  'Geral':                                              { fill: '#adb5bd', label: 'Geral' },
-  'N\u00e3o disponibilizado':                           { fill: '#888888', label: 'N\u00e3o Disponibilizado' },
-};
-
-// Color palette for Vila Franca de Xira zones (Classe field — pdm_revisao AML layer 10)
-export const VFX_COLORS = {
-  'Solo Rural':               { fill: '#1a9850', label: 'Solo Rural' },
-  'Solo Urbano':              { fill: '#c1121f', label: 'Solo Urbano' },
-  'Outras Infraestruturas':   { fill: '#555555', label: 'Infraestruturas' },
-  'Valores Culturais':        { fill: '#9b5de5', label: 'Valores Culturais' },
 };
 
 // Fire hazard classes → colors (PMDFCI CLASSE field)

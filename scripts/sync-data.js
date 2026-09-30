@@ -30,6 +30,17 @@ const MAFRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1109_1/WFServ
 // INE code 1507. Urban areas (Categoria_2021='Não Atribuída') styled via Classe_2021 fallback.
 const MONTIJO_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1507_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Montijo_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
 
+// Former sig.aml.pt tile municipalities — DGT CRUS WFS. DGT is slow (30-120 s per request).
+const CASCAIS_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1105_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Cascais_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+const OEIRAS_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1110_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Oeiras_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+const LOURES_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1107_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Loures_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+const ODIVELAS_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1116_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Odivelas_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+const VFXIRA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1114_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Vila_Franca_de_Xira_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+const ALMADA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1503_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Almada_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+const BARREIRO_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1504_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Barreiro_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+const ALCOCHETE_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1502_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Alcochete_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+const MOITA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1506_1/WFService.aspx?service=WFS&version=1.1.0&request=GetFeature&typeName=gmgml:CRUS_Moita_V&outputFormat=application/vnd.geo%2Bjson&srsName=EPSG:4326';
+
 // Palmela — sig.cm-palmela.pt ArcGIS REST (public). 928 features. maxRecordCount: 50000.
 // PMOTs/MapServer/17 (PDM Ordenamento polígonos). Field: tipo (43 values); design = granular name.
 const PALMELA_BASE = 'https://sig.cm-palmela.pt/arcgis/rest/services/PMOTs/MapServer';
@@ -183,6 +194,61 @@ const LAYERS = [
     type: 'wfs',
     wfsUrl: SETUBAL_WFS,
     timeoutMs: 60000,
+  },
+  // Cascais, Oeiras, Loures, Odivelas, VFXira, Almada, Barreiro, Alcochete, Moita
+  {
+    filename: 'cascais-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: CASCAIS_WFS,
+    timeoutMs: 180000,
+  },
+  {
+    filename: 'oeiras-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: OEIRAS_WFS,
+    timeoutMs: 180000,
+  },
+  {
+    filename: 'loures-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: LOURES_WFS,
+    timeoutMs: 180000,
+  },
+  {
+    filename: 'odivelas-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: ODIVELAS_WFS,
+    timeoutMs: 180000,
+  },
+  {
+    filename: 'vfxira-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: VFXIRA_WFS,
+    timeoutMs: 180000,
+  },
+  {
+    filename: 'almada-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: ALMADA_WFS,
+    timeoutMs: 180000,
+  },
+  {
+    filename: 'barreiro-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: BARREIRO_WFS,
+    timeoutMs: 180000,
+  },
+  {
+    filename: 'alcochete-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: ALCOCHETE_WFS,
+    timeoutMs: 180000,
+  },
+  {
+    filename: 'moita-zoning.geojson',
+    type: 'wfs',
+    wfsUrl: MOITA_WFS,
+    timeoutMs: 180000,
   },
 ];
 

@@ -16,7 +16,7 @@ It's built for mobile first but works on desktop too.
 
 ## Data
 
-The data comes from public sources: the municipalities' own ArcGIS servers, the AML (Área Metropolitana de Lisboa) GIS server, DGT's CRUS WFS services and DGT's SNIC cadastre WMS. Where a server allows it, the zoning is downloaded to `data/` as GeoJSON and refreshed every week by a GitHub Action. The rest is loaded live.
+The data comes from public sources: DGT's CRUS (Carta do Regime de Uso do Solo) WFS services, a few municipalities' own ArcGIS servers (Sintra, Palmela, Seixal) and DGT's SNIC cadastre WMS. The zoning is downloaded to `data/` as GeoJSON and refreshed every week by a GitHub Action, so the map doesn't depend on those servers being up. The cadastre is loaded live.
 
 This is not an official source. The PDMs change and some of the public services are out of date or go down now and then, so always check with the câmara before making any decision based on this map.
 

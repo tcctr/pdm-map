@@ -3,8 +3,9 @@
 // ============================================================
 
 import {
-  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, AML_PDM1_BASE, LISBOA_WFS, MAFRA_WFS, MONTIJO_WFS, SESIMBRA_WFS, SETUBAL_WFS, PALMELA_BASE, SEIXAL_BASE,
-  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, ALMADA_COLORS, BARREIRO_COLORS, LISBOA_COLORS, MAFRA_COLORS, MONTIJO_COLORS, SESIMBRA_COLORS, SETUBAL_COLORS, PALMELA_COLORS, SEIXAL_COLORS, ODIVELAS_COLORS, ALCOCHETE_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  SINTRA_BASE, CASCAIS_BASE, CONDICIONANTES_BASE, AMADORA_WFS, LISBOA_WFS, MAFRA_WFS, MONTIJO_WFS, SESIMBRA_WFS, SETUBAL_WFS, PALMELA_BASE, SEIXAL_BASE,
+  OVERLAY_DEFS, URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, LISBOA_COLORS, MAFRA_COLORS, MONTIJO_COLORS, SESIMBRA_COLORS, SETUBAL_COLORS, PALMELA_COLORS, SEIXAL_COLORS, CRUS_COLORS, FIRE_COLORS, RETRY_DELAYS,
+  CASCAIS_WFS, OEIRAS_WFS, LOURES_WFS, ODIVELAS_WFS, VFXIRA_WFS, ALMADA_WFS, BARREIRO_WFS, ALCOCHETE_WFS, MOITA_WFS,
 } from './config.js';
 
 // ── Module-level state (set by initLayers) ─────────────────
@@ -227,66 +228,6 @@ async function loadSintraRural() {
   _callbacks.onSintraStatus?.({ rural: 'ok', ruralText: `Rústico (${result.features.length})` });
 }
 
-// ── Cascais layer loader ─────────────────────────────────────
-
-function loadCascais(attempt = 0) {
-  cascaisLayer.clearLayers();
-  try {
-    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [2], opacity: 0.55, maxZoom: 15 });
-    layer.addTo(cascaisLayer);
-    layer.once('loaderror', () => {
-      _callbacks.onCascaisStatus?.('error', 'Cascais: erro');
-      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadCascais(attempt + 1), RETRY_DELAYS[attempt]);
-    });
-    _cascaisReady = true;
-    _callbacks.onCascaisLoaded?.('ok', 'Cascais');
-  } catch (e) {
-    console.error('Cascais error:', e);
-    _callbacks.onCascaisStatus?.('error', 'Cascais: indisponível');
-    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadCascais(attempt + 1), RETRY_DELAYS[attempt]);
-  }
-}
-
-// ── Oeiras layer loader ──────────────────────────────────────
-
-function loadOeiras(attempt = 0) {
-  oeirasLayer.clearLayers();
-  try {
-    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [3], opacity: 0.55, maxZoom: 15 });
-    layer.addTo(oeirasLayer);
-    layer.once('loaderror', () => {
-      _callbacks.onOeirasStatus?.('error', 'Oeiras: erro');
-      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadOeiras(attempt + 1), RETRY_DELAYS[attempt]);
-    });
-    _oeirasReady = true;
-    _callbacks.onOeirasLoaded?.('ok', 'Oeiras');
-  } catch (e) {
-    console.error('Oeiras error:', e);
-    _callbacks.onOeirasStatus?.('error', 'Oeiras: indispon\u00edvel');
-    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadOeiras(attempt + 1), RETRY_DELAYS[attempt]);
-  }
-}
-
-// ── Loures layer loader ──────────────────────────────────────
-
-function loadLoures(attempt = 0) {
-  louresLayer.clearLayers();
-  try {
-    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [6], opacity: 0.55, maxZoom: 15 });
-    layer.addTo(louresLayer);
-    layer.once('loaderror', () => {
-      _callbacks.onLouresStatus?.('error', 'Loures: erro');
-      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadLoures(attempt + 1), RETRY_DELAYS[attempt]);
-    });
-    _louresReady = true;
-    _callbacks.onLouresLoaded?.('ok', 'Loures');
-  } catch (e) {
-    console.error('Loures error:', e);
-    _callbacks.onLouresStatus?.('error', 'Loures: indispon\u00edvel');
-    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadLoures(attempt + 1), RETRY_DELAYS[attempt]);
-  }
-}
-
 // ── Amadora layer loader ─────────────────────────────────────
 
 function getAmadoraStyle(props) {
@@ -374,26 +315,6 @@ async function loadAmadora(attempt = 0) {
   _callbacks.onAmadoraLoaded?.('ok', 'Amadora');
 }
 
-// ── Almada layer loader ──────────────────────────────────────
-
-function loadAlmada(attempt = 0) {
-  almadaLayer.clearLayers();
-  try {
-    const layer = L.esri.dynamicMapLayer({ url: AML_PDM1_BASE, layers: [2], opacity: 0.55, maxZoom: 14, layerDefs: { 2: "Concelho = 'ALMADA'" } });
-    layer.addTo(almadaLayer);
-    layer.once('loaderror', () => {
-      _callbacks.onAlmadaStatus?.('error', 'Almada: erro');
-      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadAlmada(attempt + 1), RETRY_DELAYS[attempt]);
-    });
-    _almadaReady = true;
-    _callbacks.onAlmadaLoaded?.('ok', 'Almada');
-  } catch (e) {
-    console.error('Almada error:', e);
-    _callbacks.onAlmadaStatus?.('error', 'Almada: indispon\u00edvel');
-    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadAlmada(attempt + 1), RETRY_DELAYS[attempt]);
-  }
-}
-
 // ── Lisboa layer loader ──────────────────────────────────────
 
 function getLisboaStyle(props) {
@@ -476,27 +397,6 @@ async function loadLisboa(attempt = 0) {
 
   _lisboaReady = true;
   _callbacks.onLisboaLoaded?.('ok', 'Lisboa');
-}
-
-// ── Vila Franca de Xira layer loader ────────────────────────
-// AML pdm_revisao layer 10 — geometry blocked by server, tile rendering only.
-
-function loadVfxira(attempt = 0) {
-  vfxiraLayer.clearLayers();
-  try {
-    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [10], opacity: 0.55, maxZoom: 15 });
-    layer.addTo(vfxiraLayer);
-    layer.once('loaderror', () => {
-      _callbacks.onVfxiraStatus?.('error', 'VF Xira: erro');
-      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadVfxira(attempt + 1), RETRY_DELAYS[attempt]);
-    });
-    _vfxiraReady = true;
-    _callbacks.onVfxiraLoaded?.('ok', 'VF Xira');
-  } catch (e) {
-    console.error('VF Xira error:', e);
-    _callbacks.onVfxiraStatus?.('error', 'VF Xira: indispon\u00edvel');
-    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadVfxira(attempt + 1), RETRY_DELAYS[attempt]);
-  }
 }
 
 // ── Mafra layer loader ───────────────────────────────────────
@@ -583,96 +483,109 @@ async function loadMafra(attempt = 0) {
   _callbacks.onMafraLoaded?.('ok', 'Mafra');
 }
 
-// ── Odivelas layer loader ─────────────────────────────────────
-// AML pdm_revisao layer 8 — geometry blocked by server, tile rendering only.
-// No scale restriction (minScale/maxScale both 0), no layerDefs needed (single-municipality layer).
+// ── DGT CRUS municipalities ──────────────────────────────────
+// Cascais, Oeiras, Loures, Odivelas, VFXira, Almada, Barreiro, Alcochete and Moita
+// used to be tiles from sig.aml.pt. They now all load the same way: cached GeoJSON
+// from data/, with the DGT CRUS WFS as live fallback.
+// Newer PDMs use Categoria/Classe, older ones Categoria_2021/Classe_2021, and
+// Alcochete only has the original 1997 plan names (Designacao_no_plano).
 
-function loadOdivelas(attempt = 0) {
-  odivelaLayer.clearLayers();
-  try {
-    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [8], opacity: 0.55, maxZoom: 15 });
-    layer.addTo(odivelaLayer);
-    layer.once('loaderror', () => {
-      _callbacks.onOdivelasStatus?.('error', 'Odivelas: erro');
-      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadOdivelas(attempt + 1), RETRY_DELAYS[attempt]);
-    });
-    _odivelaReady = true;
-    _callbacks.onOdivelasLoaded?.('ok', 'Odivelas');
-  } catch (e) {
-    console.error('Odivelas error:', e);
-    _callbacks.onOdivelasStatus?.('error', 'Odivelas: indispon\u00edvel');
-    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadOdivelas(attempt + 1), RETRY_DELAYS[attempt]);
-  }
+function alcocheteKey(des) {
+  const d = des.toLowerCase();
+  if (d.includes('atividades econ') || d.includes('industrial') || d.includes('empresa') || d.includes('l.da') || d.includes(', sa')) return 'Espaço de Atividades Económicas';
+  if (d.includes('urbanizável')) return 'Solo Urbano (urbanizável – transitório)';
+  if (d.includes('natural') || d.includes('cultural')) return 'Espaço Natural e Paisagístico';
+  if (d.includes('agro-florestal')) return 'Espaço Florestal';
+  if (d.includes('agrícola')) return 'Espaço Agrícola';
+  if (d.includes('recreio')) return 'Espaço Verde';
+  if (d.includes('militar')) return 'Espaço de Uso Especial Equipamentos e Infraestruturas';
+  if (d.includes('urbano')) return 'Solo Urbano';
+  return '';
 }
 
-// ── Alcochete layer loader ────────────────────────────────────
-// AML PDM_I_GERACAO layer 2 — geometry blocked by server, tile rendering only.
-// layerDefs filter required: layer 2 covers 18 AML municipalities.
-// identifyFeatures must use 'all:2' (same quirk as Almada).
-
-function loadAlcochete(attempt = 0) {
-  alcocheteLayer.clearLayers();
-  try {
-    const layer = L.esri.dynamicMapLayer({ url: AML_PDM1_BASE, layers: [2], opacity: 0.55, maxZoom: 14, layerDefs: { 2: "Concelho = 'ALCOCHETE'" } });
-    layer.addTo(alcocheteLayer);
-    layer.once('loaderror', () => {
-      _callbacks.onAlcocheteStatus?.('error', 'Alcochete: erro');
-      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadAlcochete(attempt + 1), RETRY_DELAYS[attempt]);
-    });
-    _alcocheteReady = true;
-    _callbacks.onAlcocheteLoaded?.('ok', 'Alcochete');
-  } catch (e) {
-    console.error('Alcochete error:', e);
-    _callbacks.onAlcocheteStatus?.('error', 'Alcochete: indispon\u00edvel');
-    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadAlcochete(attempt + 1), RETRY_DELAYS[attempt]);
-  }
+export function crusKey(p) {
+  const cat = (p.Categoria ?? p.Categoria_2021 ?? '').trim();
+  if (CRUS_COLORS[cat]) return cat;
+  const cls = (p.Classe ?? p.Classe_2021 ?? '').trim();
+  if (CRUS_COLORS[cls]) return cls;
+  if (p.Designacao_no_plano && !p.Categoria_2021) return alcocheteKey(p.Designacao_no_plano) || cat;
+  return cat || cls;
 }
 
-// ── Barreiro layer loader ─────────────────────────────────────
-// AML PDM_I_GERACAO layer 2 — geometry blocked by server, tile rendering only.
-// layerDefs filter required: layer 2 covers 18 AML municipalities.
-// identifyFeatures must use 'all:2' (same quirk as Almada/Alcochete).
-// DGT WFS (code 1504) exists but returns HTTP 502 — tile-only for now.
+const CRUS_MUNIS = [
+  { id: 'cascais',   name: 'Cascais',   file: 'cascais-zoning.geojson',   wfs: () => CASCAIS_WFS,   layer: () => cascaisLayer,   ready: () => { _cascaisReady = true; },   status: 'onCascaisStatus',   loaded: 'onCascaisLoaded'   },
+  { id: 'oeiras',    name: 'Oeiras',    file: 'oeiras-zoning.geojson',    wfs: () => OEIRAS_WFS,    layer: () => oeirasLayer,    ready: () => { _oeirasReady = true; },    status: 'onOeirasStatus',    loaded: 'onOeirasLoaded'    },
+  { id: 'loures',    name: 'Loures',    file: 'loures-zoning.geojson',    wfs: () => LOURES_WFS,    layer: () => louresLayer,    ready: () => { _louresReady = true; },    status: 'onLouresStatus',    loaded: 'onLouresLoaded'    },
+  { id: 'odivelas',  name: 'Odivelas',  file: 'odivelas-zoning.geojson',  wfs: () => ODIVELAS_WFS,  layer: () => odivelaLayer,   ready: () => { _odivelaReady = true; },   status: 'onOdivelasStatus',  loaded: 'onOdivelasLoaded'  },
+  { id: 'vfxira',    name: 'VF Xira',   file: 'vfxira-zoning.geojson',    wfs: () => VFXIRA_WFS,    layer: () => vfxiraLayer,    ready: () => { _vfxiraReady = true; },    status: 'onVfxiraStatus',    loaded: 'onVfxiraLoaded'    },
+  { id: 'almada',    name: 'Almada',    file: 'almada-zoning.geojson',    wfs: () => ALMADA_WFS,    layer: () => almadaLayer,    ready: () => { _almadaReady = true; },    status: 'onAlmadaStatus',    loaded: 'onAlmadaLoaded'    },
+  { id: 'barreiro',  name: 'Barreiro',  file: 'barreiro-zoning.geojson',  wfs: () => BARREIRO_WFS,  layer: () => barreiroLayer,  ready: () => { _barreiroReady = true; },  status: 'onBarreiroStatus',  loaded: 'onBarreiroLoaded'  },
+  { id: 'alcochete', name: 'Alcochete', file: 'alcochete-zoning.geojson', wfs: () => ALCOCHETE_WFS, layer: () => alcocheteLayer, ready: () => { _alcocheteReady = true; }, status: 'onAlcocheteStatus', loaded: 'onAlcocheteLoaded' },
+  { id: 'moita',     name: 'Moita',     file: 'moita-zoning.geojson',     wfs: () => MOITA_WFS,     layer: () => moitaLayer,     ready: () => { _moitaReady = true; },     status: 'onMoitaStatus',     loaded: 'onMoitaLoaded'     },
+];
 
-function loadBarreiro(attempt = 0) {
-  barreiroLayer.clearLayers();
+async function loadCrusMuni(m, attempt = 0) {
+  _callbacks[m.status]?.('loading', m.name + '…');
+
+  let features = null;
   try {
-    const layer = L.esri.dynamicMapLayer({ url: AML_PDM1_BASE, layers: [2], opacity: 0.55, maxZoom: 14, layerDefs: { 2: "Concelho = 'BARREIRO'" } });
-    layer.addTo(barreiroLayer);
-    layer.once('loaderror', () => {
-      _callbacks.onBarreiroStatus?.('error', 'Barreiro: erro');
-      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadBarreiro(attempt + 1), RETRY_DELAYS[attempt]);
-    });
-    _barreiroReady = true;
-    _callbacks.onBarreiroLoaded?.('ok', 'Barreiro');
+    const res = await fetch('/data/' + m.file, { signal: AbortSignal.timeout(20000) });
+    if (res.ok) {
+      const f = (await res.json()).features || [];
+      if (f.length > 0) features = f;
+      else console.warn(`[cache] ${m.file} returned 0 features — falling back to live`);
+    } else {
+      console.warn(`[cache] ${m.file} → HTTP ${res.status} — falling back to live`);
+    }
   } catch (e) {
-    console.error('Barreiro error:', e);
-    _callbacks.onBarreiroStatus?.('error', 'Barreiro: indispon\u00edvel');
-    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadBarreiro(attempt + 1), RETRY_DELAYS[attempt]);
+    console.warn(`[cache] ${m.file} failed (${e.message}) — falling back to live`);
   }
-}
 
-// ── Moita layer loader ────────────────────────────────────────
-// AML pdm_revisao layer 4 — geometry blocked by server, tile rendering only.
-// No scale restriction (minScale/maxScale both 0), no layerDefs needed (single-municipality layer).
-// Field: Categoria (8 values). DGT WFS _1505_1 returns HTTP 500 — tile-only source.
-
-function loadMoita(attempt = 0) {
-  moitaLayer.clearLayers();
-  try {
-    const layer = L.esri.dynamicMapLayer({ url: CASCAIS_BASE, layers: [4], opacity: 0.55, maxZoom: 15 });
-    layer.addTo(moitaLayer);
-    layer.once('loaderror', () => {
-      _callbacks.onMoitaStatus?.('error', 'Moita: erro');
-      if (attempt < RETRY_DELAYS.length) setTimeout(() => loadMoita(attempt + 1), RETRY_DELAYS[attempt]);
-    });
-    _moitaReady = true;
-    _callbacks.onMoitaLoaded?.('ok', 'Moita');
-  } catch (e) {
-    console.error('Moita error:', e);
-    _callbacks.onMoitaStatus?.('error', 'Moita: indispon\u00edvel');
-    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadMoita(attempt + 1), RETRY_DELAYS[attempt]);
+  if (!features) {
+    try {
+      const res = await fetch(m.wfs(), { signal: AbortSignal.timeout(150000) });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const f = (await res.json()).features || [];
+      if (f.length > 0) {
+        features = f;
+        liveFallbackCount++;
+        _callbacks.onFallback?.();
+      } else {
+        console.error(`[live] ${m.name} WFS returned 0 features`);
+      }
+    } catch (e) {
+      console.error(`[live] ${m.name} WFS failed:`, e.message);
+    }
   }
+
+  if (!features) {
+    _callbacks[m.status]?.('error', m.name + ': erro');
+    if (attempt < RETRY_DELAYS.length) setTimeout(() => loadCrusMuni(m, attempt + 1), RETRY_DELAYS[attempt]);
+    return;
+  }
+
+  L.geoJSON({ type: 'FeatureCollection', features }, {
+    renderer: _renderer,
+    style: f => makeStyle((CRUS_COLORS[crusKey(f.properties)] || { fill: '#adb5bd' }).fill),
+    onEachFeature(feature, layer) {
+      layer.on('click', e => {
+        L.DomEvent.stopPropagation(e);
+        const p   = feature.properties;
+        const key = crusKey(p);
+        const cfg = CRUS_COLORS[key] || { fill: '#adb5bd', label: key };
+        const displayProps = {
+          ...p,
+          Descricao: p.Designacao_PlantaOrdenamento || p.Designacao_no_plano,
+          Classe:    p.Classe || p.Classe_2021,
+          area_ha:   p.Area_Ha || p.AREA_HA,
+        };
+        _callbacks.onFeatureClick?.(displayProps, cfg, key + (cfg.label && cfg.label !== key ? ' — ' + cfg.label : ''));
+      });
+    },
+  }).addTo(m.layer());
+
+  m.ready();
+  _callbacks[m.loaded]?.('ok', m.name);
 }
 
 // ── Montijo layer loader ──────────────────────────────────────
@@ -1309,18 +1222,10 @@ export function initLayers(map, callbacks) {
 
   loadSintraUrban();
   loadSintraRural();
-  loadCascais();
-  loadOeiras();
-  loadLoures();
   loadAmadora();
-  loadAlmada();
   loadLisboa();
-  loadVfxira();
   loadMafra();
-  loadOdivelas();
-  loadAlcochete();
-  loadBarreiro();
-  loadMoita();
+  CRUS_MUNIS.forEach(m => loadCrusMuni(m));
   loadMontijo();
   loadPalmela();
   loadSeixal();

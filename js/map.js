@@ -4,11 +4,11 @@
 
 import {
   MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM,
-  CASCAIS_BASE, CASCAIS_COLORS, OEIRAS_COLORS, LOURES_COLORS, CONDICIONANTES_BASE,
-  AML_PDM1_BASE, ALMADA_COLORS, BARREIRO_COLORS, ALCOCHETE_COLORS, ODIVELAS_COLORS, VFX_COLORS, MOITA_COLORS,
+  CONDICIONANTES_BASE, CRUS_COLORS,
   URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, LISBOA_COLORS, MAFRA_COLORS,
   MONTIJO_COLORS, PALMELA_COLORS, SEIXAL_COLORS, SESIMBRA_COLORS, SETUBAL_COLORS,
 } from './config.js';
+import { crusKey } from './layers.js';
 
 // ── Module-level state ───────────────────────────────────────
 let _map            = null;
@@ -118,8 +118,6 @@ export function updateLayerVisibility() {
     if (_activeMunicipality === 'cascais' && _activeLayer === 'zoning' && !cascaisEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-cascais', 'warn', 'Cascais: zoom');
-      } else if (_map.getZoom() > 15) {
-        _callbacks.onSetChip?.('chip-cascais', 'warn', 'Cascais: recuar zoom');
       } else {
         const s = _callbacks.onGetChipLoadedState?.('chip-cascais');
         if (s) _callbacks.onSetChip?.('chip-cascais', s.state, s.text);
@@ -134,8 +132,6 @@ export function updateLayerVisibility() {
     if (_activeMunicipality === 'oeiras' && _activeLayer === 'zoning' && !oeirasEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-oeiras', 'warn', 'Oeiras: zoom');
-      } else if (_map.getZoom() > 15) {
-        _callbacks.onSetChip?.('chip-oeiras', 'warn', 'Oeiras: recuar zoom');
       } else {
         const s = _callbacks.onGetChipLoadedState?.('chip-oeiras');
         if (s) _callbacks.onSetChip?.('chip-oeiras', s.state, s.text);
@@ -150,8 +146,6 @@ export function updateLayerVisibility() {
     if (_activeMunicipality === 'loures' && _activeLayer === 'zoning' && !louresEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-loures', 'warn', 'Loures: zoom');
-      } else if (_map.getZoom() > 15) {
-        _callbacks.onSetChip?.('chip-loures', 'warn', 'Loures: recuar zoom');
       } else {
         const s = _callbacks.onGetChipLoadedState?.('chip-loures');
         if (s) _callbacks.onSetChip?.('chip-loures', s.state, s.text);
@@ -184,8 +178,6 @@ export function updateLayerVisibility() {
     if (_activeMunicipality === 'almada' && _activeLayer === 'zoning' && !almadaEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-almada', 'warn', 'Almada: zoom');
-      } else if (_map.getZoom() > 14) {
-        _callbacks.onSetChip?.('chip-almada', 'warn', 'Almada: recuar zoom');
       } else {
         const s = _callbacks.onGetChipLoadedState?.('chip-almada');
         if (s) _callbacks.onSetChip?.('chip-almada', s.state, s.text);
@@ -222,8 +214,6 @@ export function updateLayerVisibility() {
     if (_activeMunicipality === 'vfxira' && _activeLayer === 'zoning' && !vfxiraEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-vfxira', 'warn', 'VF Xira: zoom');
-      } else if (_map.getZoom() > 15) {
-        _callbacks.onSetChip?.('chip-vfxira', 'warn', 'VF Xira: recuar zoom');
       } else {
         const s = _callbacks.onGetChipLoadedState?.('chip-vfxira');
         if (s) _callbacks.onSetChip?.('chip-vfxira', s.state, s.text);
@@ -260,8 +250,6 @@ export function updateLayerVisibility() {
     if (_activeMunicipality === 'odivelas' && _activeLayer === 'zoning' && !odivelaEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-odivelas', 'warn', 'Odivelas: zoom');
-      } else if (_map.getZoom() > 15) {
-        _callbacks.onSetChip?.('chip-odivelas', 'warn', 'Odivelas: recuar zoom');
       } else {
         const s = _callbacks.onGetChipLoadedState?.('chip-odivelas');
         if (s) _callbacks.onSetChip?.('chip-odivelas', s.state, s.text);
@@ -280,8 +268,6 @@ export function updateLayerVisibility() {
     if (_activeMunicipality === 'alcochete' && _activeLayer === 'zoning' && !alcocheteEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-alcochete', 'warn', 'Alcochete: zoom');
-      } else if (_map.getZoom() > 14) {
-        _callbacks.onSetChip?.('chip-alcochete', 'warn', 'Alcochete: recuar zoom');
       } else {
         const s = _callbacks.onGetChipLoadedState?.('chip-alcochete');
         if (s) _callbacks.onSetChip?.('chip-alcochete', s.state, s.text);
@@ -300,8 +286,6 @@ export function updateLayerVisibility() {
     if (_activeMunicipality === 'barreiro' && _activeLayer === 'zoning' && !barreiroEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-barreiro', 'warn', 'Barreiro: zoom');
-      } else if (_map.getZoom() > 14) {
-        _callbacks.onSetChip?.('chip-barreiro', 'warn', 'Barreiro: recuar zoom');
       } else {
         const s = _callbacks.onGetChipLoadedState?.('chip-barreiro');
         if (s) _callbacks.onSetChip?.('chip-barreiro', s.state, s.text);
@@ -338,8 +322,6 @@ export function updateLayerVisibility() {
     if (_activeMunicipality === 'moita' && _activeLayer === 'zoning' && !moitaEl.classList.contains('chip-loading')) {
       if (!zoomed) {
         _callbacks.onSetChip?.('chip-moita', 'warn', 'Moita: zoom');
-      } else if (_map.getZoom() > 15) {
-        _callbacks.onSetChip?.('chip-moita', 'warn', 'Moita: recuar zoom');
       } else {
         const s = _callbacks.onGetChipLoadedState?.('chip-moita');
         if (s) _callbacks.onSetChip?.('chip-moita', s.state, s.text);
@@ -461,10 +443,6 @@ export function selectMunicipality(muni) {
 
 // ── Active layer selection ────────────────────────────────────
 
-// Tile-only municipality layers \u2014 GeoJSON layers are excluded because they live permanently
-// in zoningPane and are shown/hidden via CSS, not add/removeLayer.
-const _tileMuniLayers = () => [_cascaisLayer, _oeirasLayer, _louresLayer, _almadaLayer, _barreiroLayer, _vfxiraLayer, _odivelaLayer, _alcocheteLayer, _moitaLayer];
-
 export function handleLayerSelect(value) {
   _activeLayer = value;
   _callbacks.onUpdateLayersBtnLabel?.(value);
@@ -482,7 +460,6 @@ export function handleLayerSelect(value) {
     updateLayerVisibility();
   } else if (value === 'none') {
     if (zoningPane) { zoningPane.style.display = 'none'; zoningPane.style.pointerEvents = ''; }
-    _tileMuniLayers().forEach(l => _map.removeLayer(l));
     for (const def of OVERLAY_DEFS) {
       _ovlState[def.id].active = false;
       if (_ovlState[def.id].leafletLayer) _map.removeLayer(_ovlState[def.id].leafletLayer);
@@ -490,7 +467,6 @@ export function handleLayerSelect(value) {
     _callbacks.onUpdateZoningOverlayChip?.();
   } else {
     if (zoningPane) { zoningPane.style.display = 'none'; zoningPane.style.pointerEvents = ''; }
-    _tileMuniLayers().forEach(l => _map.removeLayer(l));
     const def = OVERLAY_DEFS.find(d => d.id === value);
     _callbacks.onSetOverlayChip?.('loading', _callbacks.onOverlayShortName?.(def) + '\u2026');
     for (const def of OVERLAY_DEFS) {
@@ -600,163 +576,98 @@ function pointInPolygon(coord, geometry) {
   return false;
 }
 
-// Queries the active municipality's zoning at a given latlng.
-// Returns a Promise<string|null> resolving to the zoning label.
-function queryZoningAtPoint(latlng) {
-  const { lat, lng } = latlng;
-  const muni = _activeMunicipality;
-
-  if (muni === 'grande-lisboa') {
-    return new Promise(resolve => {
-      let resolved = false;
-      let pending   = 8; // 7 tile queries + 1 GeoJSON block
-      const tryResolve = r => { if (!resolved && r != null) { resolved = true; resolve(r); } };
-      const tick       = () => { if (--pending === 0 && !resolved) resolve(null); };
-
-      const glTiles = [
-        { url: CASCAIS_BASE,  layers: 'all:2',  colors: CASCAIS_COLORS,  field: 'Categoria' },
-        { url: CASCAIS_BASE,  layers: 'all:3',  colors: OEIRAS_COLORS,   field: 'Categoria' },
-        { url: CASCAIS_BASE,  layers: 'all:4',  colors: MOITA_COLORS,    field: 'Categoria' },
-        { url: CASCAIS_BASE,  layers: 'all:6',  colors: LOURES_COLORS,   field: 'Categoria' },
-        { url: CASCAIS_BASE,  layers: 'all:8',  colors: ODIVELAS_COLORS, field: 'Categoria' },
-        { url: CASCAIS_BASE,  layers: 'all:10', colors: VFX_COLORS,      field: 'Classe'    },
-        { url: AML_PDM1_BASE, layers: 'all:2',  colors: ALMADA_COLORS,   field: 'Classe'    },
-      ];
-      glTiles.forEach(({ url, layers, colors, field }) => {
-        L.esri.identifyFeatures({ url }).on(_map).at(latlng).layers(layers).tolerance(0)
-          .run((err, fc) => {
-            if (!err && fc?.features?.length) {
-              const key = (fc.features[0].properties[field] || '').trim();
-              const cfg = colors[key];
-              tryResolve(cfg ? { label: cfg.label || key, fill: cfg.fill } : key ? { label: key, fill: '#888' } : null);
-            }
-            tick();
-          });
-      });
-
-      // GeoJSON PIP runs in parallel (deferred so network requests reach stack first)
-      setTimeout(() => {
-        if (!resolved) {
-          const coord = [lng, lat];
-          const glGeoJson = [
-            { layer: _urbanLayer,    field: 'CAT',            colors: URBAN_COLORS                             },
-            { layer: _ruralLayer,    field: 'Ord_Categ',      colors: RURAL_COLORS                             },
-            { layer: _amadoraLayer,  field: 'Categoria_2021', colors: AMADORA_COLORS                           },
-            { layer: _lisboaLayer,   field: 'Categoria',      colors: LISBOA_COLORS                            },
-            { layer: _mafraLayer,    field: 'Categoria',      colors: MAFRA_COLORS                             },
-            { layer: _montijoLayer,  field: 'Categoria_2021', colors: MONTIJO_COLORS, fallback: 'Classe_2021'  },
-            { layer: _palmelaLayer,  field: 'tipo',           colors: PALMELA_COLORS                           },
-            { layer: _seixalLayer,   field: 'designacao',     colors: SEIXAL_COLORS                            },
-            { layer: _sesimbraLayer, field: 'Categoria_2021', colors: SESIMBRA_COLORS, fallback: 'Classe_2021' },
-            { layer: _setubalLayer,  field: 'Categoria',      colors: SETUBAL_COLORS                           },
-          ];
-          for (const { layer, field, colors, fallback } of glGeoJson) {
-            let found = null;
-            layer.eachLayer(sub => {
-              if (found) return;
-              sub.eachLayer(fl => {
-                if (found) return;
-                const geom = fl.feature?.geometry;
-                if (!geom || !pointInPolygon(coord, geom)) return;
-                let key = (fl.feature.properties[field] || '').trim();
-                if ((!key || key === 'Não Atribuída') && fallback) key = (fl.feature.properties[fallback] || '').trim();
-                const cfg = colors[key];
-                found = cfg
-                  ? { label: cfg.label || key, fill: cfg.fill, props: fl.feature.properties }
-                  : (key ? { label: key, fill: '#888', props: fl.feature.properties } : null);
-              });
-            });
-            if (found) { tryResolve(found); break; }
-          }
+// Point-in-polygon scan over the loaded GeoJSON layers.
+// cfg: { layer, field, colors, fallback } or { layer, crus: true } for DGT CRUS layers.
+function scanZoning(latlng, cfgs) {
+  const coord = [latlng.lng, latlng.lat];
+  for (const { layer, field, colors, fallback, crus } of cfgs) {
+    let found = null;
+    layer.eachLayer(sub => {
+      if (found) return;
+      sub.eachLayer(fl => {
+        if (found) return;
+        const geom = fl.feature?.geometry;
+        if (!geom || !pointInPolygon(coord, geom)) return;
+        const props = fl.feature.properties;
+        let key, cfg;
+        if (crus) {
+          key = crusKey(props);
+          cfg = CRUS_COLORS[key];
+        } else {
+          key = (props[field] || '').trim();
+          if ((!key || key === 'Não Atribuída') && fallback) key = (props[fallback] || '').trim();
+          cfg = colors[key];
         }
-        tick();
-      }, 0);
+        found = cfg
+          ? { label: cfg.label || key, fill: cfg.fill, props }
+          : (key ? { label: key, fill: '#888', props } : null);
+      });
     });
+    if (found) return found;
   }
+  return null;
+}
 
-  const tileCfg = {
-    cascais:   { url: CASCAIS_BASE,  layers: 'all:2',  colors: CASCAIS_COLORS,   field: 'Categoria' },
-    oeiras:    { url: CASCAIS_BASE,  layers: 'all:3',  colors: OEIRAS_COLORS,    field: 'Categoria' },
-    loures:    { url: CASCAIS_BASE,  layers: 'all:6',  colors: LOURES_COLORS,    field: 'Categoria' },
-    almada:    { url: AML_PDM1_BASE, layers: 'all:2',  colors: ALMADA_COLORS,    field: 'Classe'    },
-    barreiro:  { url: AML_PDM1_BASE, layers: 'all:2',  colors: BARREIRO_COLORS,  field: 'Classe'    },
-    alcochete: { url: AML_PDM1_BASE, layers: 'all:2',  colors: ALCOCHETE_COLORS, field: 'Classe'    },
-    vfxira:    { url: CASCAIS_BASE,  layers: 'all:10', colors: VFX_COLORS,       field: 'Classe'    },
-    odivelas:  { url: CASCAIS_BASE,  layers: 'all:8',  colors: ODIVELAS_COLORS,  field: 'Categoria' },
-    moita:     { url: CASCAIS_BASE,  layers: 'all:4',  colors: MOITA_COLORS,     field: 'Categoria' },
-  };
-  if (tileCfg[muni]) {
-    const { url, layers, colors, field } = tileCfg[muni];
-    return new Promise(resolve => {
-      L.esri.identifyFeatures({ url }).on(_map).at(latlng).layers(layers).tolerance(0)
-        .run((err, fc) => {
-          if (err || !fc?.features?.length) return resolve(null);
-          const key = (fc.features[0].properties[field] || '').trim();
-          const cfg = colors[key];
-          resolve(cfg ? { label: cfg.label || key, fill: cfg.fill } : (key ? { label: key, fill: '#888' } : null));
-        });
-    });
-  }
-
+// Queries the active municipality's zoning at a given latlng.
+// Returns a Promise<{label, fill, props}|null>. The scan runs in a setTimeout so the
+// detail panel and the network requests go out before the CPU-heavy loop.
+function queryZoningAtPoint(latlng) {
   const geojsonCfg = {
-    sintra:   [{ layer: _urbanLayer,   field: 'CAT',            colors: URBAN_COLORS    },
-               { layer: _ruralLayer,   field: 'Ord_Categ',      colors: RURAL_COLORS    }],
-    amadora:  [{ layer: _amadoraLayer,  field: 'Categoria_2021', colors: AMADORA_COLORS  }],
-    lisboa:   [{ layer: _lisboaLayer,   field: 'Categoria',      colors: LISBOA_COLORS   }],
-    mafra:    [{ layer: _mafraLayer,    field: 'Categoria',      colors: MAFRA_COLORS    }],
-    montijo:  [{ layer: _montijoLayer,  field: 'Categoria_2021', colors: MONTIJO_COLORS, fallback: 'Classe_2021' }],
-    palmela:  [{ layer: _palmelaLayer,  field: 'tipo',           colors: PALMELA_COLORS  }],
-    seixal:   [{ layer: _seixalLayer,   field: 'designacao',     colors: SEIXAL_COLORS   }],
-    sesimbra: [{ layer: _sesimbraLayer, field: 'Categoria_2021', colors: SESIMBRA_COLORS, fallback: 'Classe_2021' }],
-    setubal:  [{ layer: _setubalLayer,  field: 'Categoria',      colors: SETUBAL_COLORS  }],
+    sintra:    [{ layer: _urbanLayer,    field: 'CAT',            colors: URBAN_COLORS    },
+                { layer: _ruralLayer,    field: 'Ord_Categ',      colors: RURAL_COLORS    }],
+    amadora:   [{ layer: _amadoraLayer,  field: 'Categoria_2021', colors: AMADORA_COLORS  }],
+    lisboa:    [{ layer: _lisboaLayer,   field: 'Categoria',      colors: LISBOA_COLORS   }],
+    mafra:     [{ layer: _mafraLayer,    field: 'Categoria',      colors: MAFRA_COLORS    }],
+    montijo:   [{ layer: _montijoLayer,  field: 'Categoria_2021', colors: MONTIJO_COLORS, fallback: 'Classe_2021' }],
+    palmela:   [{ layer: _palmelaLayer,  field: 'tipo',           colors: PALMELA_COLORS  }],
+    seixal:    [{ layer: _seixalLayer,   field: 'designacao',     colors: SEIXAL_COLORS   }],
+    sesimbra:  [{ layer: _sesimbraLayer, field: 'Categoria_2021', colors: SESIMBRA_COLORS, fallback: 'Classe_2021' }],
+    setubal:   [{ layer: _setubalLayer,  field: 'Categoria',      colors: SETUBAL_COLORS  }],
+    cascais:   [{ layer: _cascaisLayer,   crus: true }],
+    oeiras:    [{ layer: _oeirasLayer,    crus: true }],
+    loures:    [{ layer: _louresLayer,    crus: true }],
+    odivelas:  [{ layer: _odivelaLayer,   crus: true }],
+    vfxira:    [{ layer: _vfxiraLayer,    crus: true }],
+    almada:    [{ layer: _almadaLayer,    crus: true }],
+    barreiro:  [{ layer: _barreiroLayer,  crus: true }],
+    alcochete: [{ layer: _alcocheteLayer, crus: true }],
+    moita:     [{ layer: _moitaLayer,     crus: true }],
   };
-  const layerCfgs = geojsonCfg[muni];
-  if (!layerCfgs) return Promise.resolve(null);
+  const cfgs = _activeMunicipality === 'grande-lisboa'
+    ? Object.values(geojsonCfg).flat()
+    : geojsonCfg[_activeMunicipality];
+  if (!cfgs) return Promise.resolve(null);
+  return new Promise(resolve => setTimeout(() => resolve(scanZoning(latlng, cfgs)), 0));
+}
 
-  // Defer synchronous PIP loop via setTimeout so fetch() and panel-show
-  // reach the network stack before the CPU-heavy scan runs.
-  return new Promise(resolve => {
-    setTimeout(() => {
-      const coord = [lng, lat];
-      for (const { layer, field, colors, fallback } of layerCfgs) {
-        let found = null;
-        layer.eachLayer(sub => {
-          if (found) return;
-          sub.eachLayer(fl => {
-            if (found) return;
-            const geom = fl.feature?.geometry;
-            if (!geom || !pointInPolygon(coord, geom)) return;
-            let key = (fl.feature.properties[field] || '').trim();
-            if ((!key || key === 'Não Atribuída') && fallback) key = (fl.feature.properties[fallback] || '').trim();
-            const cfg = colors[key];
-            found = cfg
-              ? { label: cfg.label || key, fill: cfg.fill, props: fl.feature.properties }
-              : (key ? { label: key, fill: '#888', props: fl.feature.properties } : null);
-          });
-        });
-        if (found) return resolve(found);
-      }
-      resolve(null);
-    }, 0);
-  });
+// REN and RAN for the whole AML come from the pdm_revisao layers 11/12, which are only
+// available as the cached files now that sig.aml.pt is gone. Loaded on first parcel click.
+const _condCache = {};
+function loadCondicionante(file) {
+  if (!_condCache[file]) {
+    _condCache[file] = fetch('/data/' + file)
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(fc => fc.features || [])
+      .catch(err => { delete _condCache[file]; throw err; });
+  }
+  return _condCache[file];
+}
+
+function pointInCondicionante(latlng, file) {
+  const coord = [latlng.lng, latlng.lat];
+  return loadCondicionante(file).then(features => features.some(f => f.geometry && pointInPolygon(coord, f.geometry)));
 }
 
 function queryRENAtPoint(latlng) {
-  return new Promise(resolve => {
-    L.esri.identifyFeatures({ url: CASCAIS_BASE })
-      .on(_map).at(latlng).layers('all:11').tolerance(0)
-      .run((err, fc) => resolve(!err && fc?.features?.length > 0));
-  });
+  return pointInCondicionante(latlng, 'ren-cascais.geojson');
 }
 
 function queryRANAtPoint(latlng) {
-  const isSintra = _activeMunicipality === 'sintra';
-  const url      = isSintra ? CONDICIONANTES_BASE : CASCAIS_BASE;
-  const layerId  = isSintra ? 264 : 12;
-  return new Promise(resolve => {
-    L.esri.identifyFeatures({ url })
-      .on(_map).at(latlng).layers(`all:${layerId}`).tolerance(0)
-      .run((err, fc) => resolve(!err && fc?.features?.length > 0));
+  if (_activeMunicipality !== 'sintra') return pointInCondicionante(latlng, 'ran-cascais.geojson');
+  return new Promise((resolve, reject) => {
+    L.esri.identifyFeatures({ url: CONDICIONANTES_BASE })
+      .on(_map).at(latlng).layers('all:264').tolerance(0)
+      .run((err, fc) => err ? reject(err) : resolve(fc?.features?.length > 0));
   });
 }
 
@@ -879,132 +790,7 @@ export function initMapHandlers({
 
     _callbacks.onCloseDetail?.();
 
-    if (_activeLayer === 'zoning' && _activeMunicipality === 'grande-lisboa') {
-      // Fire all tile identify queries in parallel; show first non-empty result
-      let shown = false;
-      const show = (p, cfg, key) => { if (!shown) { shown = true; _callbacks.onShowDetail?.(p, cfg, key); } };
-      // CASCAIS_BASE layers
-      const cascaisQueries = [
-        { layer: _cascaisLayer,  spec: 'visible:2',  colors: CASCAIS_COLORS,  field: 'Categoria' },
-        { layer: _oeirasLayer,   spec: 'visible:3',  colors: OEIRAS_COLORS,   field: 'Categoria' },
-        { layer: _moitaLayer,    spec: 'visible:4',  colors: MOITA_COLORS,    field: 'Categoria' },
-        { layer: _louresLayer,   spec: 'visible:6',  colors: LOURES_COLORS,   field: 'Categoria' },
-        { layer: _odivelaLayer,  spec: 'visible:8',  colors: ODIVELAS_COLORS, field: 'Categoria' },
-        { layer: _vfxiraLayer,   spec: 'visible:10', colors: VFX_COLORS,      field: 'Classe'    },
-      ];
-      cascaisQueries.forEach(({ layer, spec, colors, field }) => {
-        if (!_map.hasLayer(layer)) return;
-        L.esri.identifyFeatures({ url: CASCAIS_BASE })
-          .on(_map).at(e.latlng).layers(spec).tolerance(2)
-          .run((err, fc) => {
-            if (err || !fc || !fc.features.length) return;
-            const p = fc.features[0].properties;
-            const key = p[field] || '';
-            show(p, colors[key] || { fill: '#888888', label: key }, key);
-          });
-      });
-      // AML_PDM1_BASE layer 2 — Almada, Barreiro, Alcochete (identical color maps)
-      if (_map.hasLayer(_almadaLayer) || _map.hasLayer(_barreiroLayer) || _map.hasLayer(_alcocheteLayer)) {
-        L.esri.identifyFeatures({ url: AML_PDM1_BASE })
-          .on(_map).at(e.latlng).layers('all:2').tolerance(2)
-          .run((err, fc) => {
-            if (err || !fc || !fc.features.length) return;
-            const p = fc.features[0].properties;
-            const key = p.Classe || '';
-            show(p, ALMADA_COLORS[key] || { fill: '#888888', label: key }, key);
-          });
-      }
-    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetCascaisReady?.() && _map.hasLayer(_cascaisLayer)) {
-      L.esri.identifyFeatures({ url: CASCAIS_BASE })
-        .on(_map).at(e.latlng).layers('visible:2').tolerance(2)
-        .run((err, fc) => {
-          if (err || !fc || !fc.features.length) return;
-          const p   = fc.features[0].properties;
-          const cat = p.Categoria || '';
-          const cfg = CASCAIS_COLORS[cat] || { fill: '#888888', label: cat };
-          _callbacks.onShowDetail?.(p, cfg, cat);
-        });
-    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetOeirasReady?.() && _map.hasLayer(_oeirasLayer)) {
-      L.esri.identifyFeatures({ url: CASCAIS_BASE })
-        .on(_map).at(e.latlng).layers('visible:3').tolerance(2)
-        .run((err, fc) => {
-          if (err || !fc || !fc.features.length) return;
-          const p   = fc.features[0].properties;
-          const cat = p.Categoria || '';
-          const cfg = OEIRAS_COLORS[cat] || { fill: '#888888', label: cat };
-          _callbacks.onShowDetail?.(p, cfg, cat);
-        });
-    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetLouresReady?.() && _map.hasLayer(_louresLayer)) {
-      L.esri.identifyFeatures({ url: CASCAIS_BASE })
-        .on(_map).at(e.latlng).layers('visible:6').tolerance(2)
-        .run((err, fc) => {
-          if (err || !fc || !fc.features.length) return;
-          const p   = fc.features[0].properties;
-          const cat = p.Categoria || '';
-          const cfg = LOURES_COLORS[cat] || { fill: '#888888', label: cat };
-          _callbacks.onShowDetail?.(p, cfg, cat);
-        });
-    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetAlmadaReady?.() && _map.hasLayer(_almadaLayer)) {
-      L.esri.identifyFeatures({ url: AML_PDM1_BASE })
-        .on(_map).at(e.latlng).layers('all:2').tolerance(2)
-        .run((err, fc) => {
-          if (err || !fc || !fc.features.length) return;
-          const p   = fc.features[0].properties;
-          const cat = p.Classe || '';
-          const cfg = ALMADA_COLORS[cat] || { fill: '#888888', label: cat };
-          _callbacks.onShowDetail?.(p, cfg, cat);
-        });
-    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetBarreiroReady?.() && _map.hasLayer(_barreiroLayer)) {
-      L.esri.identifyFeatures({ url: AML_PDM1_BASE })
-        .on(_map).at(e.latlng).layers('all:2').tolerance(2)
-        .run((err, fc) => {
-          if (err || !fc || !fc.features.length) return;
-          const p   = fc.features[0].properties;
-          const cat = p.Classe || '';
-          const cfg = BARREIRO_COLORS[cat] || { fill: '#888888', label: cat };
-          _callbacks.onShowDetail?.(p, cfg, cat);
-        });
-    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetAlcocheteReady?.() && _map.hasLayer(_alcocheteLayer)) {
-      L.esri.identifyFeatures({ url: AML_PDM1_BASE })
-        .on(_map).at(e.latlng).layers('all:2').tolerance(2)
-        .run((err, fc) => {
-          if (err || !fc || !fc.features.length) return;
-          const p   = fc.features[0].properties;
-          const cat = p.Classe || '';
-          const cfg = ALCOCHETE_COLORS[cat] || { fill: '#888888', label: cat };
-          _callbacks.onShowDetail?.(p, cfg, cat);
-        });
-    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetOdivelasReady?.() && _map.hasLayer(_odivelaLayer)) {
-      L.esri.identifyFeatures({ url: CASCAIS_BASE })
-        .on(_map).at(e.latlng).layers('visible:8').tolerance(2)
-        .run((err, fc) => {
-          if (err || !fc || !fc.features.length) return;
-          const p   = fc.features[0].properties;
-          const cat = p.Categoria || '';
-          const cfg = ODIVELAS_COLORS[cat] || { fill: '#888888', label: cat };
-          _callbacks.onShowDetail?.(p, cfg, cat);
-        });
-    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetVfxiraReady?.() && _map.hasLayer(_vfxiraLayer)) {
-      L.esri.identifyFeatures({ url: CASCAIS_BASE })
-        .on(_map).at(e.latlng).layers('visible:10').tolerance(2)
-        .run((err, fc) => {
-          if (err || !fc || !fc.features.length) return;
-          const p   = fc.features[0].properties;
-          const cls = p.Classe || '';
-          const cfg = VFX_COLORS[cls] || { fill: '#888888', label: cls };
-          _callbacks.onShowDetail?.(p, cfg, cls);
-        });
-    } else if (_activeLayer === 'zoning' && _activeMunicipality !== 'grande-lisboa' && _callbacks.onGetMoitaReady?.() && _map.hasLayer(_moitaLayer)) {
-      L.esri.identifyFeatures({ url: CASCAIS_BASE })
-        .on(_map).at(e.latlng).layers('visible:4').tolerance(2)
-        .run((err, fc) => {
-          if (err || !fc || !fc.features.length) return;
-          const p   = fc.features[0].properties;
-          const cat = p.Categoria || '';
-          const cfg = MOITA_COLORS[cat] || { fill: '#888888', label: cat };
-          _callbacks.onShowDetail?.(p, cfg, cat);
-        });
-    } else if (_activeLayer === 'incendio') {
+    if (_activeLayer === 'incendio') {
       const def = OVERLAY_DEFS.find(d => d.id === 'incendio');
       L.esri.identifyFeatures({ url: CONDICIONANTES_BASE })
         .on(_map).at(e.latlng).layers('visible:371').tolerance(3)
