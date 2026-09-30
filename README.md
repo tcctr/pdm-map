@@ -8,6 +8,8 @@ Mapear is a map of the land-use plans (PDM — Plano Diretor Municipal) for the 
 
 - Shows how the land is classified (Qualificação do Solo) for Alcochete, Almada, Amadora, Barreiro, Cascais, Lisboa, Loures, Mafra, Moita, Montijo, Odivelas, Oeiras, Palmela, Seixal, Sesimbra, Setúbal, Sintra and Vila Franca de Xira
 - Tap a zone to see its category and details
+- Jump to a municipality from the picker, or just move the map: zoning is only downloaded for the municipalities on screen
+- Extra layers for some municipalities (Sintra has coastal, natural risk, fire and heritage layers)
 - Toggle the **Cadastro** layer to see land parcels from the national registry. Tapping a parcel shows its zoning and whether it falls inside REN or RAN
 - Address search and GPS location
 - Street and satellite basemaps

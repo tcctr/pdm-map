@@ -3,12 +3,12 @@
 // ============================================================
 
 import {
-  MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM,
+  MUNICIPALITIES, OVERLAY_DEFS, MIN_DATA_ZOOM, MIN_LOAD_ZOOM, MUNI_BOUNDS,
   CONDICIONANTES_BASE, CRUS_COLORS,
   URBAN_COLORS, RURAL_COLORS, AMADORA_COLORS, LISBOA_COLORS, MAFRA_COLORS,
   MONTIJO_COLORS, PALMELA_COLORS, SEIXAL_COLORS, SESIMBRA_COLORS, SETUBAL_COLORS,
 } from './config.js';
-import { crusKey } from './layers.js';
+import { crusKey, ensureMuniLoaded, isMuniRequested, getPendingLoads } from './layers.js';
 
 // ── Module-level state ───────────────────────────────────────
 let _map            = null;
@@ -40,12 +40,14 @@ let _callbacks               = {};
 
 let _activeLayer        = 'zoning';
 let _activeMunicipality = 'grande-lisboa';
+let _focusMunicipality  = null; // municipality under the map centre, null when zoomed out
 
 // ── Active-state getters / setters ───────────────────────────
 
 export function getActiveLayer()        { return _activeLayer; }
 export function setActiveLayer(v)       { _activeLayer = v; }
 export function getActiveMunicipality() { return _activeMunicipality; }
+export function getFocusMunicipality()  { return _focusMunicipality; }
 
 // ── Map creation ─────────────────────────────────────────────
 // Creates the Leaflet map, adds the base tile layer and attribution
@@ -401,12 +403,69 @@ export function updateLayerVisibility() {
     }
   }
 
-  // chip-grande-lisboa — single chip replaces all individual chips when region view is active
-  const glEl = document.getElementById('chip-grande-lisboa');
-  if (glEl) {
-    glEl.style.display = isGL ? '' : 'none';
-    if (isGL) _callbacks.onSetChip?.('chip-grande-lisboa', 'ok', 'AML');
+  updateAreaChip();
+}
+
+// ── On-demand loading by viewport ─────────────────────────────
+
+function munisIntersecting(bounds) {
+  return Object.keys(MUNI_BOUNDS).filter(id => bounds.intersects(L.latLngBounds(MUNI_BOUNDS[id])));
+}
+
+function munisAt(latlng) {
+  return Object.keys(MUNI_BOUNDS).filter(id => L.latLngBounds(MUNI_BOUNDS[id]).contains(latlng));
+}
+
+// Loads zoning for every municipality in view (only when zoomed in enough),
+// then works out which municipality is under the map centre.
+function loadVisibleMunis() {
+  if (_map.getZoom() >= MIN_LOAD_ZOOM) {
+    munisIntersecting(_map.getBounds()).forEach(id => ensureMuniLoaded(id).then(updateFocus));
   }
+  updateFocus();
+  updateAreaChip();
+}
+
+function updateFocus() {
+  let focus = null;
+  if (_map.getZoom() >= MIN_LOAD_ZOOM) {
+    const center = _map.getCenter();
+    const candidates = munisAt(center);
+    // Bounding boxes overlap, so prefer the one whose polygons actually contain the centre
+    const cfgs = zoningCfgs();
+    focus = candidates.find(id => scanZoning(center, cfgs[id])) || null;
+    if (!focus && candidates.length) {
+      const area = id => { const [[s, w], [n, e]] = MUNI_BOUNDS[id]; return (n - s) * (e - w); };
+      focus = candidates.sort((a, b) => area(a) - area(b))[0];
+    }
+  }
+  if (focus !== _focusMunicipality) {
+    _focusMunicipality = focus;
+    _callbacks.onFocusChange?.(focus);
+  }
+}
+
+export function updateAreaChip() {
+  if (!_map) return;
+  const pending = getPendingLoads();
+  const missing = munisIntersecting(_map.getBounds()).some(id => !isMuniRequested(id));
+  if (pending > 0) {
+    _callbacks.onSetChip?.('chip-grande-lisboa', 'loading', 'A carregar zonas…', true);
+  } else if (_activeLayer === 'zoning' && missing && _map.getZoom() < MIN_LOAD_ZOOM) {
+    _callbacks.onSetChip?.('chip-grande-lisboa', 'warn', 'Aproxime para ver as zonas');
+  } else {
+    _callbacks.onSetChip?.('chip-grande-lisboa', 'ok', 'AML');
+  }
+}
+
+// Jump to a municipality (picker). Loads it right away even if the view ends up
+// below MIN_LOAD_ZOOM.
+export function goToMunicipality(id) {
+  const cfg = MUNICIPALITIES.find(m => m.id === id);
+  if (!cfg) return;
+  if (id === 'grande-lisboa') { _map.setView(cfg.center, cfg.zoom); return; }
+  ensureMuniLoaded(id);
+  _map.setView(cfg.center, Math.max(cfg.zoom, MIN_LOAD_ZOOM));
 }
 
 // ── Municipality switching ────────────────────────────────────
@@ -608,11 +667,8 @@ function scanZoning(latlng, cfgs) {
   return null;
 }
 
-// Queries the active municipality's zoning at a given latlng.
-// Returns a Promise<{label, fill, props}|null>. The scan runs in a setTimeout so the
-// detail panel and the network requests go out before the CPU-heavy loop.
-function queryZoningAtPoint(latlng) {
-  const geojsonCfg = {
+function zoningCfgs() {
+  return {
     sintra:    [{ layer: _urbanLayer,    field: 'CAT',            colors: URBAN_COLORS    },
                 { layer: _ruralLayer,    field: 'Ord_Categ',      colors: RURAL_COLORS    }],
     amadora:   [{ layer: _amadoraLayer,  field: 'Categoria_2021', colors: AMADORA_COLORS  }],
@@ -633,10 +689,18 @@ function queryZoningAtPoint(latlng) {
     alcochete: [{ layer: _alcocheteLayer, crus: true }],
     moita:     [{ layer: _moitaLayer,     crus: true }],
   };
-  const cfgs = _activeMunicipality === 'grande-lisboa'
-    ? Object.values(geojsonCfg).flat()
-    : geojsonCfg[_activeMunicipality];
-  if (!cfgs) return Promise.resolve(null);
+}
+
+// Queries zoning at a latlng. Returns a Promise<{label, fill, props}|null>.
+// Municipalities under the point are loaded first if they weren't yet (e.g. a parcel
+// tapped while zoomed out). The scan runs in a setTimeout so the detail panel and
+// the network requests go out before the CPU-heavy loop.
+async function queryZoningAtPoint(latlng) {
+  const ids = _activeMunicipality === 'grande-lisboa' ? munisAt(latlng) : [_activeMunicipality];
+  await Promise.all(ids.map(ensureMuniLoaded));
+  const all = zoningCfgs();
+  const cfgs = ids.flatMap(id => all[id] || []);
+  if (!cfgs.length) return null;
   return new Promise(resolve => setTimeout(() => resolve(scanZoning(latlng, cfgs)), 0));
 }
 
@@ -677,7 +741,7 @@ export function initMapHandlers({
   overlayShortName, loadOverlay, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady,
   onUpdateSintraChip, onSetChip, onGetChipLoadedState,
   onSetOverlayChip, onCloseDetail, onShowDetail, onShowOverlayDetail,
-  onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet,
+  onBuildOverlayPanel, onUpdateLayersBtnLabel, onCloseLayersSheet, onFocusChange,
   onUpdateZoningOverlayChip, onUpdateDetailZoning, onUpdateDetailRow,
 }) {
   _ovlState     = ovlState;
@@ -711,6 +775,7 @@ export function initMapHandlers({
     onBuildOverlayPanel,
     onUpdateLayersBtnLabel,
     onCloseLayersSheet,
+    onFocusChange,
     onUpdateZoningOverlayChip,
     onUpdateDetailZoning,
     onUpdateDetailRow,
@@ -728,6 +793,7 @@ export function initMapHandlers({
   };
 
   _map.on('zoomend', updateLayerVisibility);
+  _map.on('moveend', loadVisibleMunis);
 
   _map.on('click', e => {
     if (_cadastroHighlight) { _map.removeLayer(_cadastroHighlight); _cadastroHighlight = null; }

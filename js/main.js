@@ -2,11 +2,11 @@
 // MAIN — app entry point
 // ============================================================
 
-import { OVERLAY_DEFS } from './config.js';
+import { OVERLAY_DEFS, MUNICIPALITIES } from './config.js';
 import { initSearch, reverseGeocode } from './search.js';
 import { initLayers, loadOverlay, ovlState, overlayShortName, getLiveFallbackCount, getCascaisReady, getOeirasReady, getLouresReady, getAlmadaReady, getBarreiroReady, getAlcocheteReady, getOdivelasReady, getVfxiraReady, getMoitaReady, urbanLayer, ruralLayer, cascaisLayer, oeirasLayer, louresLayer, amadoraLayer, almadaLayer, barreiroLayer, lisboaLayer, vfxiraLayer, mafraLayer, odivelaLayer, alcocheteLayer, moitaLayer, montijoLayer, palmelaLayer, seixalLayer, sesimbraLayer, setubalLayer } from './layers.js';
 import { initUI, setChip, setChipLoaded, getChipLoadedState, setCacheMetaDate, updateCacheDateIndicator, updateSintraChip, showDetail, closeDetail, showOverlayDetail, openLayersSheet, buildOverlayPanel, updateDetailZoning, updateDetailRow } from './ui.js';
-import { initMap, initMapHandlers, initBasemapToggle, selectMunicipality, handleLayerSelect, updateLayerVisibility, getActiveLayer, getActiveMunicipality } from './map.js';
+import { initMap, initMapHandlers, initBasemapToggle, selectMunicipality, handleLayerSelect, updateLayerVisibility, updateAreaChip, goToMunicipality, getActiveLayer, getActiveMunicipality, getFocusMunicipality } from './map.js';
 
 // ============================================================
 // CACHE METADATA
@@ -90,6 +90,43 @@ function locateUser() {
   }
 }
 
+
+// ============================================================
+// MUNICIPALITY PICKER
+// ============================================================
+// The picker is a "go to": it flies to the municipality, and the label follows
+// whichever municipality is under the map centre as the user pans around.
+
+function updateMuniScrollFade() {
+  const dd = document.getElementById('muni-dropdown');
+  const canScrollMore = dd.scrollHeight - dd.scrollTop - dd.clientHeight > 4;
+  dd.classList.toggle('has-scroll', canScrollMore);
+}
+
+function toggleMuniDropdown() {
+  const btn  = document.getElementById('muni-picker-btn');
+  const dd   = document.getElementById('muni-dropdown');
+  const open = dd.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  if (open) requestAnimationFrame(updateMuniScrollFade);
+}
+
+function closeMuniDropdown() {
+  document.getElementById('muni-dropdown').classList.remove('open');
+  document.getElementById('muni-picker-btn').classList.remove('open');
+}
+
+function pickMunicipality(muni) {
+  closeMuniDropdown();
+  goToMunicipality(muni);
+}
+
+function onFocusChange(muni) {
+  const id = muni || 'grande-lisboa';
+  document.getElementById('muni-picker-label').textContent = MUNICIPALITIES.find(m => m.id === id)?.label || id;
+  document.querySelectorAll('.muni-option').forEach(opt => opt.classList.toggle('selected', opt.dataset.muni === id));
+  buildOverlayPanel();
+}
 
 // ============================================================
 // OVERLAY CHIP + ZONING STATUS
@@ -236,6 +273,7 @@ initSearch(map, {
 startGPS();
 
 initLayers(map, {
+  onMuniLoadChange:      () => updateAreaChip(),
   onFallback:            () => updateCacheDateIndicator(),
   onSintraStatus:        update => { Object.assign(sintraStatus, update); updateSintraChip(); },
   onCascaisStatus:       (state, text) => setChip('chip-cascais', state, text),
@@ -285,6 +323,7 @@ initUI({
   getSintraStatus:           () => sintraStatus,
   getActiveLayer,
   getActiveMunicipality,
+  getFocusMunicipality,
   onZoningOverlayChipUpdate: updateZoningOverlayChip,
 });
 
@@ -302,6 +341,7 @@ initMapHandlers({
   onBuildOverlayPanel:        buildOverlayPanel,
   onUpdateLayersBtnLabel:     updateLayersBtnLabel,
   onCloseLayersSheet:         closeLayersSheet,
+  onFocusChange,
   onUpdateZoningOverlayChip:  updateZoningOverlayChip,
   onUpdateDetailZoning:       updateDetailZoning,
   onUpdateDetailRow:          updateDetailRow,
@@ -314,6 +354,17 @@ loadCacheMetadata();
 // ============================================================
 // EVENT WIRING — replaces inline onclick/onchange attributes
 // ============================================================
+
+// Municipality picker
+document.getElementById('muni-picker-btn').addEventListener('click', toggleMuniDropdown);
+document.getElementById('muni-dropdown').addEventListener('scroll', updateMuniScrollFade, { passive: true });
+document.getElementById('muni-dropdown').addEventListener('click', e => {
+  const opt = e.target.closest('.muni-option');
+  if (opt) pickMunicipality(opt.dataset.muni);
+});
+document.addEventListener('click', e => {
+  if (!document.getElementById('muni-picker').contains(e.target)) closeMuniDropdown();
+});
 
 // Layers sheet
 document.getElementById('layers-btn').addEventListener('click', toggleLayersSheet);

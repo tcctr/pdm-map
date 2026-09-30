@@ -65,6 +65,32 @@ export const MOITA_WFS = 'https://servicos.dgterritorio.pt/SDISNITWFSCRUS_1506_1
 export const CADASTRO_WMS_URL = 'https://snicws.dgterritorio.gov.pt/geoserver/inspire/ows';
 
 export const MIN_DATA_ZOOM = 1;
+
+// Zoning is only downloaded for municipalities in view, and only from this zoom up.
+// Below it the whole AML fits on screen and loading everything would mean ~24 MB.
+export const MIN_LOAD_ZOOM = 11;
+
+// Bounding boxes [[south, west], [north, east]] computed from the cached zoning files.
+export const MUNI_BOUNDS = {
+  sintra:    [[38.739, -9.501], [38.932, -9.221]],
+  cascais:   [[38.676, -9.487], [38.769, -9.308]],
+  oeiras:    [[38.673, -9.330], [38.752, -9.211]],
+  loures:    [[38.775, -9.246], [38.941, -9.069]],
+  amadora:   [[38.722, -9.265], [38.797, -9.198]],
+  almada:    [[38.554, -9.263], [38.689, -9.131]],
+  barreiro:  [[38.578, -9.098], [38.691, -8.997]],
+  lisboa:    [[38.680, -9.238], [38.797, -9.086]],
+  vfxira:    [[38.793, -9.118], [39.032, -8.842]],
+  mafra:     [[38.862, -9.428], [39.065, -9.159]],
+  odivelas:  [[38.760, -9.241], [38.831, -9.150]],
+  alcochete: [[38.672, -9.024], [38.762, -8.810]],
+  moita:     [[38.601, -9.051], [38.697, -8.945]],
+  montijo:   [[38.645, -9.052], [38.844, -8.491]],
+  palmela:   [[38.507, -9.026], [38.745, -8.611]],
+  seixal:    [[38.541, -9.178], [38.656, -9.048]],
+  sesimbra:  [[38.409, -9.223], [38.580, -9.017]],
+  setubal:   [[38.454, -9.056], [38.581, -8.731]],
+};
 export const RETRY_DELAYS = [15000, 30000, 60000]; // 15 s, 30 s, 1 min
 
 // Color palette for Sintra Urban zones (CAT field, layer 55)
@@ -344,23 +370,6 @@ export const OVERLAY_DEFS = [
   { id: 'cadastro', name: 'Cadastro Predial', group: 'Cadastro', muni: 'both', color: '#f4a261', categorized: 'wms', wmsUrl: CADASTRO_WMS_URL, wmsLayers: 'cadastralparcel', wmsFormat: 'image/png', opacity: 0.45 },
   // ─── Reservas (REN/RAN) ─────────────────────────────────
   { id: 'ran',          name: 'RAN \u2014 Reserva Agr\u00edcola',   group: 'Reservas (REN/RAN)',                muni: 'both',    server: RAN_BASE,            layerId: 2,   color: '#b47832', hatch: 'hatch-ran', sintraSource: { server: CONDICIONANTES_BASE, layerId: 264 }, cascaisSource: { server: CASCAIS_BASE, layerId: 12 }, sintraCachedFile: 'ran-sintra.geojson', cascaisCachedFile: 'ran-cascais.geojson' },
-  { id: 'ren-cascais',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'cascais', server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-oeiras',   name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'oeiras',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-loures',   name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'loures',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-amadora',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'amadora', server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-almada',   name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'almada',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-lisboa',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-vfxira',  name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'vfxira',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-mafra',          name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'mafra',          server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-odivelas',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'odivelas',       server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-alcochete',     name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'alcochete',      server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-barreiro',     name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'barreiro',       server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-moita',        name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'moita',          server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-montijo',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'montijo',        server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-palmela',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'palmela',        server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-seixal',       name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'seixal',         server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-sesimbra',     name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'sesimbra',       server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
-  { id: 'ren-setubal',      name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'setubal',        server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'ren-grande-lisboa', name: 'REN \u2014 Reserva Ecol\u00f3gica', group: 'Reservas (REN/RAN)',                muni: 'grande-lisboa',  server: CASCAIS_BASE,        layerId: 11,  color: '#1a9850', hatch: 'hatch-ren', cachedFile: 'ren-cascais.geojson' },
   { id: 'faixa',     name: 'Faixa Costeira',                        group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 2,   color: '#4361ee', fillOpacity: 0.35, cachedFile: 'faixa.geojson' },
   { id: 'praias',    name: 'Praias',                                 group: 'Reservas (REN/RAN)',                muni: 'sintra',  server: REN_BASE,             layerId: 3,   color: '#e9c46a', fillOpacity: 0.5,  cachedFile: 'praias.geojson' },

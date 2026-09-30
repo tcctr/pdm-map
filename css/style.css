@@ -612,6 +612,14 @@ html, body {
   color: rgba(255,255,255,0.28);
   margin: 10px 4px 3px;
 }
+.overlay-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  margin: 16px 4px 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
 .overlay-item {
   display: flex;
   align-items: center;

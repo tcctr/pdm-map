@@ -2,7 +2,7 @@
 // UI — chips, detail panel, overlay panel, cache indicator
 // ============================================================
 
-import { OVERLAY_DEFS, FIRE_COLORS, MIN_DATA_ZOOM } from './config.js';
+import { OVERLAY_DEFS, FIRE_COLORS, MIN_DATA_ZOOM, MUNICIPALITIES } from './config.js';
 
 function escHtml(str) {
   return String(str)
@@ -21,6 +21,7 @@ let _getLiveFallbackCount      = null;
 let _getSintraStatus           = null;
 let _getActiveLayer            = null;
 let _getActiveMunicipality     = null;
+let _getFocusMunicipality      = null;
 let _onZoningOverlayChipUpdate = null;
 
 let _cacheMetaDate = null;
@@ -35,12 +36,12 @@ function syncStatusbar() {
   bar.style.display = hasVisible ? '' : 'none';
 }
 
-export function setChip(id, state, text) {
+export function setChip(id, state, text, forceShow = false) {
   const el = document.getElementById(id);
   if (!el) return;
   el.className = 'status-chip chip-' + state;
   el.innerHTML = `<div class="dot"></div><span>${text}</span>`;
-  el.style.display = (state === 'error' || state === 'warn') ? '' : 'none';
+  el.style.display = (forceShow || state === 'error' || state === 'warn') ? '' : 'none';
   syncStatusbar();
 }
 
@@ -278,30 +279,47 @@ export function openLayersSheet() {
 
 // ── Overlay panel builder ─────────────────────────────────────
 
+function overlayItemHtml(def, activeLayer) {
+  const dotBg = def.hatch
+    ? `background:repeating-linear-gradient(45deg,${def.color}66,${def.color}66 2px,transparent 2px,transparent 7px),${def.color}22`
+    : `background:${def.color}`;
+  return `<label class="overlay-item">
+    <input type="radio" name="active-layer" value="${def.id}" ${activeLayer === def.id ? 'checked' : ''} />
+    <span class="overlay-dot" style="${dotBg}"></span>
+    <span class="overlay-name">${def.name}</span>
+    <span class="overlay-spinner" id="ovl-spin-${def.id}" style="display:none">&#x21BB;</span>
+  </label>`;
+}
+
+function overlayGroupsHtml(defs, activeLayer) {
+  let html = '';
+  for (const grp of [...new Set(defs.map(d => d.group))]) {
+    html += `<div class="overlay-group-title">${grp}</div>`;
+    html += defs.filter(d => d.group === grp).map(d => overlayItemHtml(d, activeLayer)).join('');
+  }
+  return html;
+}
+
+// Region-wide layers first, then the layers that only exist for the municipality
+// under the map centre (plus the active one, so it doesn't vanish when you pan away).
 export function buildOverlayPanel() {
-  const activeMunicipality = _getActiveMunicipality();
+  const focus       = _getFocusMunicipality?.();
   const activeLayer = _getActiveLayer();
   const body = document.getElementById('overlay-body');
-  const visibleDefs = OVERLAY_DEFS.filter(d => d.muni === activeMunicipality || d.muni === 'both');
-  const groups = [...new Set(visibleDefs.map(d => d.group))];
+  const isRegional = d => d.muni === 'both' || d.muni === 'grande-lisboa';
+  const regional = OVERLAY_DEFS.filter(isRegional);
+  const local    = OVERLAY_DEFS.filter(d => !isRegional(d) && (d.muni === focus || d.id === activeLayer));
+
   let html = `<label class="overlay-item">
     <input type="radio" name="active-layer" value="zoning" ${activeLayer === 'zoning' ? 'checked' : ''} />
     <span class="overlay-dot" style="background:linear-gradient(135deg,#e63946 33%,#1a9850 33% 66%,#f4a261 66%)"></span>
-    <span class="overlay-name">Qualifica\u00e7\u00e3o do Solo</span>
+    <span class="overlay-name">Qualificação do Solo</span>
   </label>`;
-  for (const grp of groups) {
-    html += `<div class="overlay-group-title">${grp}</div>`;
-    for (const def of visibleDefs.filter(d => d.group === grp)) {
-      const dotBg = def.hatch
-        ? `background:repeating-linear-gradient(45deg,${def.color}66,${def.color}66 2px,transparent 2px,transparent 7px),${def.color}22`
-        : `background:${def.color}`;
-      html += `<label class="overlay-item">
-        <input type="radio" name="active-layer" value="${def.id}" ${activeLayer === def.id ? 'checked' : ''} />
-        <span class="overlay-dot" style="${dotBg}"></span>
-        <span class="overlay-name">${def.name}</span>
-        <span class="overlay-spinner" id="ovl-spin-${def.id}" style="display:none">&#x21BB;</span>
-      </label>`;
-    }
+  html += overlayGroupsHtml(regional, activeLayer);
+  for (const muni of [...new Set(local.map(d => d.muni))]) {
+    const label = MUNICIPALITIES.find(m => m.id === muni)?.label || muni;
+    html += `<div class="overlay-section-title">${label}</div>`;
+    html += overlayGroupsHtml(local.filter(d => d.muni === muni), activeLayer);
   }
   body.innerHTML = html;
   requestAnimationFrame(updateScrollFade);
@@ -329,6 +347,7 @@ export function initUI({
   getSintraStatus,
   getActiveLayer,
   getActiveMunicipality,
+  getFocusMunicipality,
   onZoningOverlayChipUpdate,
 }) {
   _map                       = map;
@@ -338,6 +357,7 @@ export function initUI({
   _getSintraStatus           = getSintraStatus;
   _getActiveLayer            = getActiveLayer;
   _getActiveMunicipality     = getActiveMunicipality;
+  _getFocusMunicipality      = getFocusMunicipality;
   _onZoningOverlayChipUpdate = onZoningOverlayChipUpdate;
 
   // Scroll fade on overlay list

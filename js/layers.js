@@ -1223,15 +1223,41 @@ export function initLayers(map, callbacks) {
     ovlState[def.id] = { active: false, loaded: false, loading: false, leafletLayer: null, retries: 0 };
   }
 
-  loadSintraUrban();
-  loadSintraRural();
-  loadAmadora();
-  loadLisboa();
-  loadMafra();
-  CRUS_MUNIS.forEach(m => loadCrusMuni(m));
-  loadMontijo();
-  loadPalmela();
-  loadSeixal();
-  loadSesimbra();
-  loadSetubal();
+  // Zoning is loaded on demand through ensureMuniLoaded()
 }
+
+// ── On-demand municipality loading ──────────────────────────
+// Each municipality's zoning is fetched the first time it's needed (in view, or
+// under a tapped parcel). The promise resolves once the first attempt finishes;
+// retries after a failure keep running in the background.
+
+const MUNI_LOADERS = {
+  sintra:   () => Promise.all([loadSintraUrban(), loadSintraRural()]),
+  amadora:  () => loadAmadora(),
+  lisboa:   () => loadLisboa(),
+  mafra:    () => loadMafra(),
+  montijo:  () => loadMontijo(),
+  palmela:  () => loadPalmela(),
+  seixal:   () => loadSeixal(),
+  sesimbra: () => loadSesimbra(),
+  setubal:  () => loadSetubal(),
+  ...Object.fromEntries(CRUS_MUNIS.map(m => [m.id, () => loadCrusMuni(m)])),
+};
+
+const _muniLoads = {};
+let _pendingLoads = 0;
+
+export function ensureMuniLoaded(id) {
+  if (!_muniLoads[id]) {
+    if (!MUNI_LOADERS[id]) return Promise.resolve();
+    _pendingLoads++;
+    _callbacks.onMuniLoadChange?.();
+    _muniLoads[id] = MUNI_LOADERS[id]()
+      .catch(e => console.error(`[${id}] load failed:`, e))
+      .finally(() => { _pendingLoads--; _callbacks.onMuniLoadChange?.(); });
+  }
+  return _muniLoads[id];
+}
+
+export function isMuniRequested(id) { return !!_muniLoads[id]; }
+export function getPendingLoads()   { return _pendingLoads; }
